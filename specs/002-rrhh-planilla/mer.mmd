@@ -1,0 +1,235 @@
+erDiagram
+    %% ===== Núcleo heredado de la estructura base =====
+    %% TRABAJADOR = Entity base (erp_base_module:entities)
+    %% LIQUIDACION = Document base (erp_base_module:documents)
+
+    TRABAJADOR {
+        string id PK "base"
+        string entity_id UK "base: id público"
+        string name "base: nombre legal"
+        string code UK "base: N° ficha"
+        string taxId UK "base: RUT"
+        string email "base"
+        string phone "base"
+        string address "base"
+        string category FK "base: cod. departamento"
+        date targetDate "base: fin contrato vigente"
+        number creditLimit "base: tope anticipo"
+        string paymentTerms "base: forma de pago"
+        date fechaNacimiento "custom"
+        date fechaIngreso "custom"
+        string genero "custom (sensible)"
+        string nombreSocial "custom"
+        string nacionalidad "custom"
+        string afp FK "custom"
+        string sistemaSalud FK "custom"
+        number planIsapreUF "custom"
+        string estadoLaboral "custom"
+    }
+
+    LIQUIDACION {
+        string id PK "base"
+        string entity_id FK "base: trabajador"
+        string series "base: LIQ"
+        number folio UK "base: correlativo"
+        date startDate "base: inicio periodo"
+        date endDate "base: fin periodo"
+        number quantity "base: dias trabajados"
+        number subtotal "base: total haberes"
+        number discount "base: total descuentos"
+        number taxAmount "base: impuesto unico"
+        number totalAmount "base: liquido a pagar"
+        string currency "base: CLP"
+        string status "base: ciclo de vida"
+        string periodoId FK "custom"
+        string contratoId FK "custom"
+        number totalImponible "custom"
+        number totalTributable "custom"
+        number costoEmpleador "custom"
+    }
+
+    %% ===== Extensiones del módulo RR.HH. y Planilla =====
+
+    CONTRATO {
+        string id PK
+        string entity_id FK
+        string cargo_id FK
+        string tipoContrato "indefinido|plazo_fijo|obra_faena"
+        date fechaInicio
+        date fechaTermino "nullable"
+        number jornadaHorasSemanales
+        number sueldoBase
+        string modalidadGratificacion "art47|art50|sin"
+        number asignacionColacion
+        number asignacionMovilizacion
+        string estado "vigente|terminado"
+        string causalTermino "nullable"
+    }
+
+    CARGO {
+        string id PK
+        string codigo UK
+        string nombre
+        string departamento_id FK
+        number bandaSalarialMin
+        number bandaSalarialMax
+    }
+
+    DEPARTAMENTO {
+        string id PK
+        string codigo UK
+        string nombre
+        string centroCosto "integra Contabilidad"
+        string jefatura_entity_id FK "nullable"
+    }
+
+    INSTITUCION_PREVISIONAL {
+        string id PK
+        string codigo UK
+        string nombre
+        string tipo "AFP|SALUD|MUTUAL|CCAF"
+        number tasa "porcentaje"
+        date vigenciaDesde
+    }
+
+    PERIODO_REMUNERACION {
+        string id PK
+        number anio
+        number mes
+        string estado "abierto|calculado|cerrado"
+        date fechaPago
+        number valorUF
+        number valorUTM
+        number ingresoMinimo
+    }
+
+    CONCEPTO_REMUNERACION {
+        string id PK
+        string codigo UK
+        string nombre
+        string tipo "haber_imp|haber_no_imp|desc_legal|desc_vol|aporte_emp"
+        bool imponible
+        bool tributable
+        string metodoCalculo "fijo|porcentaje|formula|novedad"
+        number valorDefecto
+        bool esSensible
+        string cuentaContable "integra Contabilidad"
+    }
+
+    LINEA_LIQUIDACION {
+        string id PK
+        string document_id FK
+        string concepto_id FK
+        string novedad_id FK "nullable"
+        number cantidad
+        number valorUnitario
+        number baseCalculo
+        number monto
+        string origen "automatico|manual|novedad"
+    }
+
+    NOVEDAD {
+        string id PK
+        string entity_id FK
+        string periodo_id FK
+        string concepto_id FK "nullable"
+        string tipo "horas_extra|licencia|vacaciones|ausencia|bono|anticipo"
+        date fechaInicio
+        date fechaFin
+        number cantidad
+        string unidad "horas|dias|pesos"
+        string estado "registrada|aprobada|rechazada|aplicada"
+    }
+
+    CARGA_FAMILIAR {
+        string id PK
+        string entity_id FK
+        string nombre
+        string rut
+        string parentesco
+        date fechaNacimiento
+        date vigenteDesde
+        date vigenteHasta
+    }
+
+    PARAMETRO_LEGAL {
+        string id PK
+        string codigo "IMM|TOPE_AFP_UF|TASA_AFC..."
+        number valor
+        string unidad "pct|UF|UTM|CLP|horas"
+        date vigenciaDesde
+        date vigenciaHasta
+        string fuente
+    }
+
+    TRAMO_IMPUESTO {
+        string id PK
+        number desdeUTM
+        number hastaUTM
+        number factor
+        number rebajaUTM
+        date vigenciaDesde
+    }
+
+    TRAMO_ASIGNACION_FAMILIAR {
+        string id PK
+        string tramo "A|B|C|D"
+        number ingresoDesde
+        number ingresoHasta
+        number montoPorCarga
+        date vigenciaDesde
+    }
+
+    CONSENTIMIENTO_DATOS {
+        string id PK
+        string entity_id FK
+        string finalidad
+        string version
+        date otorgadoAt
+        date revocadoAt "nullable"
+        string evidencia
+    }
+
+    REGISTRO_AUDITORIA {
+        string id PK
+        date fecha
+        string rolActor
+        string accion "crear|editar|eliminar|ver_sensible|exportar|cambio_estado"
+        string tabla
+        string registroId
+        string camposModificados "solo claves"
+        string motivo
+    }
+
+    %% ===== Relaciones =====
+    TRABAJADOR ||--o{ LIQUIDACION : "recibe"
+    TRABAJADOR ||--o{ CONTRATO : "firma"
+    TRABAJADOR ||--o{ NOVEDAD : "registra"
+    TRABAJADOR ||--o{ CARGA_FAMILIAR : "declara"
+    TRABAJADOR ||--o{ CONSENTIMIENTO_DATOS : "otorga"
+    DEPARTAMENTO ||--o{ TRABAJADOR : "agrupa"
+    DEPARTAMENTO }o--o| TRABAJADOR : "dirigido por"
+    INSTITUCION_PREVISIONAL ||--o{ TRABAJADOR : "afilia"
+    DEPARTAMENTO ||--o{ CARGO : "contiene"
+    CARGO ||--o{ CONTRATO : "define"
+    CONTRATO ||--o{ LIQUIDACION : "origina"
+    PERIODO_REMUNERACION ||--o{ LIQUIDACION : "agrupa"
+    PERIODO_REMUNERACION ||--o{ NOVEDAD : "contiene"
+    LIQUIDACION ||--|{ LINEA_LIQUIDACION : "detalla"
+    CONCEPTO_REMUNERACION ||--o{ LINEA_LIQUIDACION : "clasifica"
+    CONCEPTO_REMUNERACION |o--o{ NOVEDAD : "tipifica"
+    NOVEDAD |o--o{ LINEA_LIQUIDACION : "genera"
+    PERIODO_REMUNERACION }o..o{ PARAMETRO_LEGAL : "usa vigentes"
+    PERIODO_REMUNERACION }o..o{ TRAMO_IMPUESTO : "usa vigentes"
+    CARGA_FAMILIAR }o..|| TRAMO_ASIGNACION_FAMILIAR : "se valoriza por"
+    REGISTRO_AUDITORIA }o..o| TRABAJADOR : "traza"
+    REGISTRO_AUDITORIA }o..o| LIQUIDACION : "traza"
+
+    classDef base fill:#dbeafe,stroke:#1d4ed8,stroke-width:2px
+    classDef nucleo fill:#fef3c7,stroke:#b45309
+    classDef catalogo fill:#ecfccb,stroke:#4d7c0f
+    classDef riesgo fill:#fce7f3,stroke:#be185d
+    class TRABAJADOR,LIQUIDACION base
+    class CONTRATO,NOVEDAD,LINEA_LIQUIDACION,PERIODO_REMUNERACION,CARGA_FAMILIAR nucleo
+    class CARGO,DEPARTAMENTO,INSTITUCION_PREVISIONAL,CONCEPTO_REMUNERACION,PARAMETRO_LEGAL,TRAMO_IMPUESTO,TRAMO_ASIGNACION_FAMILIAR catalogo
+    class CONSENTIMIENTO_DATOS,REGISTRO_AUDITORIA riesgo

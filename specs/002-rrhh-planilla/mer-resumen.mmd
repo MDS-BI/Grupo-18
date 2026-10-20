@@ -1,0 +1,33 @@
+erDiagram
+    %% ===== Relaciones =====
+    TRABAJADOR ||--o{ LIQUIDACION : "recibe"
+    TRABAJADOR ||--o{ CONTRATO : "firma"
+    TRABAJADOR ||--o{ NOVEDAD : "registra"
+    TRABAJADOR ||--o{ CARGA_FAMILIAR : "declara"
+    TRABAJADOR ||--o{ CONSENTIMIENTO_DATOS : "otorga"
+    DEPARTAMENTO ||--o{ TRABAJADOR : "agrupa"
+    DEPARTAMENTO }o--o| TRABAJADOR : "dirigido por"
+    INSTITUCION_PREVISIONAL ||--o{ TRABAJADOR : "afilia"
+    DEPARTAMENTO ||--o{ CARGO : "contiene"
+    CARGO ||--o{ CONTRATO : "define"
+    CONTRATO ||--o{ LIQUIDACION : "origina"
+    PERIODO_REMUNERACION ||--o{ LIQUIDACION : "agrupa"
+    PERIODO_REMUNERACION ||--o{ NOVEDAD : "contiene"
+    LIQUIDACION ||--|{ LINEA_LIQUIDACION : "detalla"
+    CONCEPTO_REMUNERACION ||--o{ LINEA_LIQUIDACION : "clasifica"
+    CONCEPTO_REMUNERACION |o--o{ NOVEDAD : "tipifica"
+    NOVEDAD |o--o{ LINEA_LIQUIDACION : "genera"
+    PERIODO_REMUNERACION }o..o{ PARAMETRO_LEGAL : "usa vigentes"
+    PERIODO_REMUNERACION }o..o{ TRAMO_IMPUESTO : "usa vigentes"
+    CARGA_FAMILIAR }o..|| TRAMO_ASIGNACION_FAMILIAR : "se valoriza por"
+    REGISTRO_AUDITORIA }o..o| TRABAJADOR : "traza"
+    REGISTRO_AUDITORIA }o..o| LIQUIDACION : "traza"
+
+    classDef base fill:#dbeafe,stroke:#1d4ed8,stroke-width:2px
+    classDef nucleo fill:#fef3c7,stroke:#b45309
+    classDef catalogo fill:#ecfccb,stroke:#4d7c0f
+    classDef riesgo fill:#fce7f3,stroke:#be185d
+    class TRABAJADOR,LIQUIDACION base
+    class CONTRATO,NOVEDAD,LINEA_LIQUIDACION,PERIODO_REMUNERACION,CARGA_FAMILIAR nucleo
+    class CARGO,DEPARTAMENTO,INSTITUCION_PREVISIONAL,CONCEPTO_REMUNERACION,PARAMETRO_LEGAL,TRAMO_IMPUESTO,TRAMO_ASIGNACION_FAMILIAR catalogo
+    class CONSENTIMIENTO_DATOS,REGISTRO_AUDITORIA riesgo

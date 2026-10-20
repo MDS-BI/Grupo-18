@@ -1,5 +1,9 @@
 # ERP Software Base Module (Vite + Vanilla JS)
 
+> **Grupo 18 — Módulo de Recursos Humanos y Planilla.** El diseño de nuestro módulo está en [`specs/002-rrhh-planilla/`](specs/002-rrhh-planilla/):
+> - [Plan de trabajo (`plan.md`)](specs/002-rrhh-planilla/plan.md)
+> - [Modelo Entidad-Relación y diccionario de datos (`data-model.md`)](specs/002-rrhh-planilla/data-model.md) · [imagen del MER](specs/002-rrhh-planilla/mer.png) · [MER resumido](specs/002-rrhh-planilla/mer-resumen.png)
+
 Minimal single-page app serving as an Enterprise Resource Planning (ERP) software base module. It provides the common foundation for building custom ERP modules: master data management (Entities) and linked transactional documents (Documents) with create/edit/delete/search, validation, and browser localStorage persistence — using Vite and vanilla HTML, CSS, and JavaScript.
 
 The user interface is fully in **Spanish** (default terms: Entidad / Documento; module name: Módulo Base ERP), including labels, validation messages, empty states, and dialogs.
