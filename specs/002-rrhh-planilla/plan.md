@@ -17,7 +17,7 @@ Además del cálculo, el diseño incluye **gobierno de datos**: clasificación d
 
 ## 2. Problema y propuesta de valor
 
-**Problema.** En muchas PyMEs las remuneraciones se calculan en planillas Excel: fórmulas copiadas mes a mes, parámetros legales escritos a mano (que cambian varias veces al año), sin historial de quién modificó qué, y con datos personales y de salud guardados sin control de acceso. Los errores de cálculo generan multas, reclamos de trabajadores y diferencias con la contabilidad.
+**Problema.** En muchas Pymes o Empresas las remuneraciones se calculan en planillas Excel: fórmulas copiadas mes a mes, parámetros legales escritos a mano (que cambian varias veces al año), sin historial de quién modificó qué, y con datos personales y de salud guardados sin control de acceso. Los errores de cálculo generan multas, reclamos de trabajadores y diferencias con la contabilidad.
 
 **Propuesta.** Un módulo que:
 
@@ -30,7 +30,7 @@ Además del cálculo, el diseño incluye **gobierno de datos**: clasificación d
 
 ## 3. Cliente y usuarios
 
-**Cliente objetivo**: PyME chilena de 20 a 200 trabajadores (por ejemplo, una empresa de servicios o comercio en el Gran Concepción) que hoy calcula sueldos en Excel o terceriza todo en un contador externo.
+**Cliente objetivo**: Pyme chilena de 20 a 200 trabajadores (por ejemplo, una empresa de servicios o comercio en el Gran Concepción) que hoy calcula sueldos en Excel o terceriza todo en un contador externo.
 
 | Usuario | Necesidad principal | Qué hace en el módulo |
 |---|---|---|
