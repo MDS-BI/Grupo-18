@@ -86,7 +86,9 @@ Como usuario de negocio, quiero una pantalla dedicada donde pueda añadir, edita
 Como trabajador o analista, quiero visualizar la liquidación línea por línea con su fórmula explicativa y contar con una vista lista para imprimir o guardar en PDF, para asegurar absoluta transparencia en los montos pagados. 
 
 **Por qué esta prioridad**: La transparencia de los cálculos genera confianza y reduce drásticamente las consultas y reclamos internos.
+
 **Prueba Independiente**: Al hacer clic en cualquier línea de la liquidación, el sistema despliega el desglose matemático y el parámetro legal utilizado.
+
 **Escenarios de Aceptación**:
 
 1. **Dado** una liquidación calculada, **cuando** el usuario selecciona una línea (ej. gratificación o impuesto), **entonces** se muestra la base de cálculo, la tasa y la fórmula aplicada.
