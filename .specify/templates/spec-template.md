@@ -52,17 +52,17 @@
 
 ---
 
-### User Story 3 - [Brief Title] (Priority: P3)
+### User Story 3 - [registro y aprobación de novedades del mes] (Priority: P1)
 
-[Describe this user journey in plain language]
+Como analista de remuneraciones o jefatura, quiero registrar y aprobar las novedades del período (horas extra, licencias médicas y ausencias) para que el motor de cálculo procese únicamente montos validados
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: Las variables mensuales modifican el sueldo proporcional y son críticas para evitar pagos incorrectos.
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: Una jefatura registra novedades para su equipo y el sistema exige su aprobación antes de procesar la planilla.
 
 **Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** el registro de una licencia médica, **When** se ingresa, **Then** el sistema registra el tipo y los días sin permitir almacenar diagnósticos por privacidad (Ley 21.719).
+2. **Given** que existen novedades ingresadas, **When** el período está abierto, **Then** deben ser aprobadas antes de proceder al cálculo masivo.
 
 ---
 
