@@ -329,6 +329,52 @@
 
 ---
 
+## Fase 19: Historia de Usuario 5 (RRHH/Planilla) - Vista Explicativa e Impresión de Liquidaciones (Prioridad: P1)
+
+**Objetivo**: Implementar la vista explicativa de liquidaciones que muestre cada línea (haber/descuento) con su base de cálculo, tasa y fórmula matemática aplicada, además de una vista lista para imprimir/guardar en PDF sin barras laterales ni botones.
+
+**Enunciado**: Como trabajador o analista, quiero visualizar la liquidación línea por línea con su fórmula explicativa y contar con una vista lista para imprimir o guardar en PDF, para asegurar absoluta transparencia en los montos pagados.
+
+**Prueba Independiente**: Al abrir una liquidación, el usuario puede seleccionar una línea de haber o descuento y ver la base, tasa y fórmula explicativa; al pulsar "Imprimir/Exportar a PDF" se muestra una versión limpia sin barras laterales ni botones, apta para impresión/PDF.
+
+### Pruebas para la Historia de Usuario 5 (RRHH/Planilla)
+
+- [ ] T082 [P] [US5-RRHH] Añadir pruebas unitarias para el cálculo/derivación de fórmula explicativa (base, tasa, fórmula) en tests/unit/rrhh-liquidacion.test.js
+- [ ] T083 [P] [US5-RRHH] Añadir pruebas de integración para la vista `src/rrhh/views/liquidacion.js` (renderizado línea por línea, panel explicativo al seleccionar línea, totales) en tests/integration/rrhh-liquidacion-view.test.js
+- [ ] T084 [P] [US5-RRHH] Añadir pruebas para estilos/funcionalidad de impresión (@media print) y modo impresión limpia en tests/integration/rrhh-liquidacion-print.test.js
+
+### Implementación de la Historia de Usuario 5 (RRHH/Planilla)
+
+#### Estructura y datos
+- [ ] T085 [P] [US5-RRHH] Crear la estructura de carpetas `src/rrhh/`, `src/rrhh/views/`, `src/rrhh/components/`, `src/rrhh/utils/` si no existen
+- [ ] T086 [US5-RRHH] Definir/validar el modelo de lectura de `LIQUIDACION` y `LINEA_LIQUIDACION` en `src/rrhh/utils/liquidacion-data.js` (mapeo de campos: id, empleado, periodo, fecha, haberes/descuentos, totales, base, tasa, formula, concepto, tipo)
+- [ ] T087 [US5-RRHH] Implementar loader/servicio para obtener cabecera `LIQUIDACION` y detalle `LINEA_LIQUIDACION` por id de liquidación desde almacenamiento/configurado (compatibilidad con `src/storage.js` o fuente de datos RRHH) en `src/rrhh/utils/liquidacion-service.js`
+
+#### Vista principal de liquidación
+- [ ] T088 [P] [US5-RRHH] Crear la vista `src/rrhh/views/liquidacion.js` con layout: cabecera de liquidación (empleado, periodo, fecha), listado línea por línea de haberes y descuentos, totales (haberes, descuentos, líquido), y panel "Vista Explicativa" lateral/inferior
+- [ ] T089 [US5-RRHH] Implementar renderizado línea por línea: para cada `LINEA_LIQUIDACION` mostrar concepto, tipo (haber/descuento), monto, y estado seleccionable (click/focus)
+- [ ] T090 [US5-RRHH] Implementar lógica para calcular/mostrar al seleccionar una línea: base de cálculo, tasa (% o valor), fórmula matemática aplicada (p. ej. `Base * Tasa = Monto`, con valores numéricos formateados). Soportar fórmulas almacenadas en `formula` o derivadas desde `base`/`tasa`
+- [ ] T091 [US5-RRHH] Añadir validaciones/defensas para líneas sin datos explicativos (mostrar mensaje claro "Sin fórmula explicativa disponible" y valores por defecto seguros)
+
+#### Impresión / Exportar a PDF
+- [ ] T092 [P] [US5-RRHH] Añadir botón "Imprimir / Guardar en PDF" en `src/rrhh/views/liquidacion.js` con acción para activar modo impresión limpia
+- [ ] T093 [US5-RRHH] Implementar modo impresión: añadir clase `print-clean` al contenedor/root, ocultar barras laterales, navegación, cabecera de app, botones de acción y cualquier elemento no relevante antes de `window.print()`
+- [ ] T094 [US5-RRHH] Añadir estilos de impresión en `src/styles.css` con `@media print` para `.rrhh-liquidacion`, `.print-clean`, ocultando `.sidebar`, `.topbar`, `.app-nav`, botones, controles y asegurando layout en una columna, colores legibles, saltos de página apropiados (`page-break-inside: avoid`) para cabecera/filas/totales
+- [ ] T095 [US5-RRHH] Asegurar que tras imprimir se restaure el estado normal (remover clase `print-clean`) y que el formato sea limpio (sin elementos interactivos visibles)
+
+#### Integración y navegación
+- [ ] T096 [US5-RRHH] Integrar la vista en enrutamiento/navegación del módulo RRHH/Planilla (añadir ruta/vista accesible desde módulo correspondiente) respetando el marco ERP (barra superior/sidebar) o permitiendo vista independiente según flujo
+- [ ] T097 [US5-RRHH] Conectar con datos reales de `LIQUIDACION`/`LINEA_LIQUIDACION` (usar `liquidacion-service.js`) con datos mock para desarrollo si no existen
+- [ ] T098 [US5-RRHH] Garantizar accesibilidad: foco en línea seleccionada, `aria-selected`, labels descriptivos para panel explicativo, botón de impresión accesible
+
+#### Pruebas y verificación
+- [ ] T099 [US5-RRHH] Ejecutar pruebas unitarias e integración relacionadas con liquidación y corregir fallos
+- [ ] T100 [US5-RRHH] Verificación manual: seleccionar haber/descuento mostrando base/tasa/fórmula; impresión/PDF sin barras laterales/botones; responsive/impresión legible
+
+**Punto de control**: La vista explicativa de liquidaciones muestra fórmula línea por línea y permite impresión/PDF limpia cumpliendo los criterios de aceptación.
+
+---
+
 ## Dependencias y Orden de Ejecución
 
 ### Dependencias entre Fases
