@@ -81,20 +81,17 @@ Como usuario de negocio, quiero una pantalla dedicada donde pueda añadir, edita
 
 ---
 
-### Historia de Usuario 5 - Definir un perfil de configuración del módulo (Prioridad: P1)
+### Historia de Usuario 5 - Vista Explicativa e Impresión de Liquidaciones (Prioridad: P2)
 
-Como desarrollador de módulos, quiero declarar un único archivo de configuración que defina la identidad, terminología, campos personalizados y reglas de mi módulo, para adaptar el módulo base en un módulo específico sin modificar su código central.
+Como trabajador o analista, quiero visualizar la liquidación línea por línea con su fórmula explicativa y contar con una vista lista para imprimir o guardar en PDF, para asegurar absoluta transparencia en los montos pagados. 
 
-**Por qué esta prioridad**: La adaptación mediante configuración es lo que convierte este proyecto de una aplicación fija en una base reutilizable. Sin ella, cada módulo personalizado requeriría editar archivos fuente centrales, lo que frustra el propósito de la plantilla; todas las historias de personalización posteriores dependen de que este mecanismo exista primero.
-
-**Prueba Independiente**: Un desarrollador proporciona un archivo de configuración que define un perfil de Ventas (nombre del módulo, mapeos Entidad→Cliente, campos personalizados, ciclo de vida), y la aplicación se presenta plenamente como un módulo de Ventas; al quitar el archivo se restauran los valores predeterminados de la base sin errores.
-
+**Por qué esta prioridad**: La transparencia de los cálculos genera confianza y reduce drásticamente las consultas y reclamos internos.
+**Prueba Independiente**: Al hacer clic en cualquier línea de la liquidación, el sistema despliega el desglose matemático y el parámetro legal utilizado.
 **Escenarios de Aceptación**:
 
-1. **Dado** que un archivo de configuración define el nombre del módulo, **cuando** la aplicación carga, **entonces** el panel de inicio y el marco del espacio de trabajo muestran el nombre configurado.
-2. **Dada** una configuración completa (nombre, mapeos de términos, campos personalizados, ciclo de vida), **cuando** la aplicación carga, **entonces** el módulo se presenta plenamente bajo la identidad configurada sin que se vean términos del módulo base en ningún sitio.
-3. **Dado** que no se proporciona configuración, **cuando** la aplicación carga, **entonces** la aplicación retrocede a los valores predeterminados integrados Entidad/Documento sin errores.
-4. **Dada** una configuración con valores inválidos o conflictivos, **cuando** la aplicación carga, **entonces** el sistema informa del problema con claridad en lugar de fallar silenciosamente.
+1. **Dado** una liquidación calculada, **cuando** el usuario selecciona una línea (ej. gratificación o impuesto), **entonces** se muestra la base de cálculo, la tasa y la fórmula aplicada.
+2. **Dado** que se requiere entregar el comprobante, **cuando** el usuario presiona imprimir, **entonces** se presenta un formato limpio adaptado para papel o PDF.
+
 
 ---
 
