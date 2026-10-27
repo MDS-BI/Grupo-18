@@ -23,18 +23,18 @@
   - Demonstrated to users independently
 -->
 
-### User Story 1 - [Brief Title] (Priority: P1)
+### User Story 1 - [Gestion de fichas de trabajadores y catalogos de base] (Priority: P1)
 
-[Describe this user journey in plain language]
+[Como administrador/a de RR.HH., quiero registrar, buscar y actualizar la ficha de los trabajadores y los catálogos base (cargos, departamentos y centros de costo) para mantener la dotación de personal organizada y al día]
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: [Es la base operativa indispensable para calcular cualquier remuneración y asociar costos]
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: [Un usuario crea un trabajador con su RUT validado y un cargo asociado, y puede buscarlo y editarlo correctamente en la lista.]
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** [Dado que el usuario crea un trabajador, cuando ingresa un RUT válido y los datos obligatorios, entonces el sistema valida el dígito verificador y guarda la ficha.]
+2. **Given** [Dado que un trabajador tiene liquidaciones cerradas, cuando se requiere desvincularlo, entonces el sistema aplica una baja lógica para preservar el historial exigido por ley.]
 
 ---
 
