@@ -49,17 +49,32 @@
 
 ## Fase 3: Historia de Usuario 2 - Gestión de contratos y alertas de plazo (Prioridad: P1)
 
-**Objetivo**: Registrar contratos de trabajo y notificar visualmente cuando están próximos a vencer.
+**Enunciado**: Como analista de remuneraciones, quiero registrar los contratos de trabajo (sueldo base, jornada y tipo de contrato) y recibir alertas de vencimiento para controlar las condiciones vigentes del personal.
 
-**Prueba Independiente**: Un contrato asociado a un trabajador activa una alerta visual cuando faltan 30 días o menos para vencer; además, un cambio de sueldo se guarda históricamente por período.
+**Por qué esta prioridad**: El contrato define los parámetros fundamentales del cálculo de sueldos y previene riesgos laborales por contratos vencidos.
+
+**Prueba Independiente**: Se asocia un contrato a un trabajador y el panel advierte sobre contratos a plazo fijo que vencen dentro de los próximos 30 días. Al registrar un nuevo contrato o anexo por un cambio de sueldo, se conserva el registro anterior y cada condición queda asociada a su período de vigencia.
+
+### Criterios de aceptación para US2
+
+1. Dado un contrato a plazo fijo cercano a vencer, cuando faltan 30 días o menos, entonces el panel principal muestra una alerta visual.
+2. Dado que se modifica el sueldo base, cuando se registra un nuevo contrato o anexo, entonces el sistema lo asocia al período correspondiente de forma histórica.
+
+### Pruebas para US2
+
+- [ ] T020 [P] [US2] [Persona 2] Añadir pruebas unitarias de validación del contrato, asociación obligatoria al trabajador y fechas de vigencia en `tests/unit/contracts.test.js`
+- [ ] T021 [P] [US2] [Persona 2] Añadir pruebas unitarias de alertas: vencimiento dentro de 30 días inclusive, más de 30 días, contrato indefinido y contrato vencido en `tests/unit/contracts.test.js`
+- [ ] T022 [P] [US2] [Persona 2] Añadir pruebas unitarias para registrar un cambio de sueldo como nuevo contrato o anexo, conservar el sueldo anterior y asociar ambos registros a sus períodos en `tests/unit/contracts.test.js`
+- [ ] T023 [P] [US2] [Persona 2] Añadir pruebas de integración para crear un contrato asociado a un trabajador y visualizar la alerta de vencimiento en el panel principal en `tests/integration/contracts.test.js`
 
 ### Implementación para US2
 
-- [ ] T020 [P] [US2] [Persona 2] Definir y validar la entidad de contrato y su historial en `src/storage.js`
-- [ ] T021 [P] [US2] [Persona 2] Crear formulario de contrato con sueldo base, jornada, tipo de contrato, inicio y término en `src/components/contract-form.js`
-- [ ] T022 [US2] [Persona 2] Conectar la creación, edición y persistencia de contratos en `src/app.js`
-- [ ] T023 [US2] [Persona 2] Implementar la lógica de vencimiento y alertas de 30 días en `src/app.js` y `src/components/summary-panel.js`
-- [ ] T024 [US2] [Persona 2] Garantizar historia del sueldo base por período sin sobreescrituras en `src/storage.js`
+- [ ] T024 [P] [US2] [Persona 2] Definir y validar el modelo persistente del contrato, incluyendo trabajador, sueldo base, jornada, tipo de contrato y período de vigencia, en `src/storage.js`
+- [ ] T025 [P] [US2] [Persona 2] Crear el formulario de contrato con sueldo base, jornada, tipo de contrato, fecha de inicio y fecha de término en `src/components/contract-form.js`
+- [ ] T026 [US2] [Persona 2] Conectar la creación, edición y persistencia de contratos vinculados al trabajador en `src/app.js`
+- [ ] T027 [US2] [Persona 2] Implementar la selección de contratos a plazo fijo cuya fecha de término ocurre entre hoy y los próximos 30 días, excluyendo contratos ya vencidos, en `src/contract-alerts.js`
+- [ ] T028 [US2] [Persona 2] Registrar cambios de sueldo como un nuevo contrato o anexo con su período de vigencia, sin sobrescribir los registros históricos, en `src/storage.js`
+- [ ] T029 [US2] [Persona 2] Mostrar las alertas de vencimiento de contratos en el panel principal usando el resultado de `src/contract-alerts.js` en `src/components/dashboard.js`
 
 **Punto de control**: US2 funciona de forma independiente y puede entregarse sin depender de US3/US4.
 
