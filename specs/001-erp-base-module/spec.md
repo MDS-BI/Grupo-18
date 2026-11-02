@@ -11,8 +11,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
-### Historia de Usuario 1 - Crear y organizar entidades (Prioridad: P1)
-Como usuario de negocio, quiero crear entradas de entidad con detalles claros para poder construir y mantener los datos maestros del módulo.
+### Historia de Usuario 1 - Gestion de fichas de trabajadores y catalogos de base (Prioridad: P1)
+Como administrador/a de RR.HH., quiero registrar, buscar y actualizar la ficha de los trabajadores y los catálogos base (cargos, departamentos y centros de costo) para mantener la dotación de personal organizada y al día.
 
 **Por qué esta prioridad**: Este es el valor central del producto porque, sin crear entidades, el resto de la experiencia no puede aportar valor.
 

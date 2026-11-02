@@ -1,139 +1,179 @@
 # Tareas: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
-**Prerrequisitos**: plan.md (obligatorio), spec.md (obligatorio para las historias de usuario), research.md, data-model.md, contracts/
+**Prerrequisitos**: plan.md (obligatorio), spec.md (obligatorio), research.md, data-model.md, contracts/entity-storage.md, quickstart.md
+**Pruebas**: Incluidas porque la constitución del proyecto exige pruebas automatizadas y el plan confirma cobertura de los flujos centrales.
 
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
+- **[P]**: Puede ejecutarse en paralelo (archivos distintos, sin dependencias pendientes)
+- **[Historia]**: Historia de usuario a la que pertenece la tarea (US1, US2, ...)
+- Cada tarea incluye una ruta de archivo exacta.
+
+## Convenciones de Ruta
+
+- Aplicación de un solo proyecto: `src/`, `tests/` en la raíz del repositorio.
+- Vistas en `index.html`; lógica de aplicación en `src/app.js`; entrada en `src/main.js`.
+- Persistencia y reglas base en `src/storage.js`, `src/validation.js`, `src/search.js`, `src/utils.js`.
+- Componentes de interfaz en `src/components/`; estilos globales en `src/styles.css`.
+
+---
+
 ## Fase 1: Configuración (Infraestructura Compartida)
 
-**Propósito**: Inicializar la estructura del proyecto Vite y las herramientas compartidas.
+**Propósito**: Inicializar el proyecto Vite, las dependencias y las herramientas de prueba.
 
-- [X] T001 Crear la estructura de la aplicación Vite con src/, tests/, y archivos de configuración
-- [X] T002 Instalar las dependencias Vite y Vitest para el proyecto
-- [X] T003 [P] Configurar el linting y formateo para la aplicación JavaScript ligera
+- [ ] T001 Crear la estructura de aplicación Vite de una sola página con `index.html`, `src/`, `src/components/`, `tests/unit/`, `tests/integration/` y `tests/setup/` según `plan.md`
+- [ ] T002 Inicializar `package.json` con los scripts `dev`, `build`, `preview` y `test`, e instalar Vite, Vitest y jsdom en `package.json`
+- [ ] T003 [P] Configurar linting y formateo de JavaScript en `eslint.config.js` y `.prettierrc`
+- [ ] T004 [P] Configurar Vitest con entorno jsdom y ayudantes de montaje en `vitest.config.mjs` y `tests/setup/dom.js`
 
 ---
 
 ## Fase 2: Fundacional (Prerrequisitos Bloqueantes)
 
-**Propósito**: Crear la capa de almacenamiento y el esqueleto de la aplicación de los que dependen todas las historias.
+**Propósito**: Crear la capa de almacenamiento, validación, búsqueda, sanitización, navegación y estilos de los que dependen todas las historias.
 
-- [X] T004 Crear el modelo de datos de entidad y los ayudantes de validación en src/storage.js
-- [X] T005 Implementar la persistencia en localStorage del navegador para registros de entidad en src/storage.js
-- [X] T006 Crear el esqueleto principal de la aplicación y renderizar el estado vacío inicial en src/app.js
-- [X] T007 [P] Construir una base de hoja de estilos compartida para diseño, formularios y estados de retroalimentación en src/styles.css
+**⚠️ CRÍTICO**: Ninguna historia de usuario puede comenzar hasta completar esta fase.
+
+- [ ] T005 [P] Implementar la capa de almacenamiento en `src/storage.js`: `loadEntities`, `saveEntities`, `addEntity`, `updateEntity`, `deleteEntity`, `loadDocuments`, `saveDocuments`, `addDocument`, `updateDocument`, `deleteDocument` y `deleteDocumentsForEntity`; generar `id` y `entity_id` únicos automáticamente, asignar `createdAt`/`updatedAt` en ISO, preservar el orden de la lista y eliminar en cascada los documentos al borrar una entidad
+- [ ] T006 [P] Implementar ayudantes de validación en `src/validation.js` con las restricciones de `data-model.md`: `name` obligatorio y no vacío; `code` obligatorio, no vacío y único comparado sin distinguir mayúsculas ni espacios extremos; `taxId`, `phone`, `address`, `category`, `description` y `paymentTerms` opcionales recortados; `email` opcional con formato válido; `targetDate` opcional con fecha de calendario válida `YYYY-MM-DD`; `creditLimit` opcional numérico no negativo; documento con `entity_id` existente, `folio` entero positivo obligatorio, `startDate`/`endDate` válidas con fin igual o posterior al inicio, `quantity` entero positivo opcional, `subtotal`/`discount`/`taxAmount`/`totalAmount` no negativos y `discount` no mayor que `subtotal`
+- [ ] T007 [P] Implementar la normalización y el filtrado de búsqueda en `src/search.js`: coincidencia parcial (substring), sin distinguir mayúsculas ni acentos, sobre `name`, `code`, `taxId`, `email`, `phone`, `address`, `category`, `description`, `targetDate` y valores de campos personalizados declarados
+- [ ] T008 [P] Implementar ayudantes de escape de HTML y atributos para todo contenido introducido por el usuario en `src/utils.js`
+- [ ] T009 Crear el esqueleto de la aplicación y el punto de montaje con las vistas Panel, Entidades, Documentos y Buscar en `index.html`, `src/main.js` y `src/app.js`
+- [ ] T010 Implementar el enrutador de vistas en `src/router.js` que sincroniza la URL (`#/dashboard`, `#/entities`, `#/documents`, `#/search`) con la pantalla actual y maneja recarga, enlaces profundos y atrás/adelante sin perder datos almacenados
+- [ ] T011 [P] Construir los tokens de diseño, el diseño base, formularios, listas y estados vacíos/error en `src/styles.css`
+- [ ] T012 [P] Crear datos de prueba reutilizables para entidades, documentos y configuración en `tests/setup/domFixture.js`
+
+**Punto de control**: La base está lista; las historias pueden implementarse y probarse de forma independiente.
 
 ---
 
 ## Fase 3: Historia de Usuario 1 - Crear y organizar entidades (Prioridad: P1) 🎯 MVP
 
-**Objetivo**: Permitir a los usuarios añadir entidades y verlas en la lista.
+**Objetivo**: Permitir crear entidades con nombre y código obligatorios, código único, y verlas en la lista.
 
-**Prueba Independiente**: Un usuario puede abrir la aplicación, enviar un formulario de entidad y ver la nueva entidad aparecer.
+**Prueba Independiente**: Un usuario abre la aplicación, crea una entidad y la ve aparecer en la lista; dejar nombre o código en blanco, o repetir un código, impide guardar con una explicación clara.
 
 ### Pruebas para la Historia de Usuario 1
 
-- [X] T008 [P] [US1] Añadir pruebas unitarias para la validación de entidades en tests/unit/storage.test.js
-- [X] T009 [P] [US1] Añadir pruebas de integración para crear una entidad en tests/integration/create-entity.test.js
+- [ ] T013 [P] [US1] Añadir pruebas unitarias de validación de entidad (nombre/código obligatorios, código único recortado y sin distinguir mayúsculas, email, `creditLimit`, `targetDate`) en `tests/unit/validation.test.js`
+- [ ] T014 [P] [US1] Añadir pruebas de integración para crear una entidad, verla en la lista y mostrar errores por campos obligatorios y código duplicado en `tests/integration/us1-create-entity.test.js`
 
-### Implementación de la Historia de Usuario 1
+### Implementación para la Historia de Usuario 1
 
-- [X] T010 [P] [US1] Crear la interfaz del formulario de entidad en src/components/entity-form.js
-- [X] T011 [US1] Conectar el envío del formulario para crear y persistir una nueva entidad en src/app.js
-- [X] T012 [US1] Renderizar la lista de entidades y mostrar retroalimentación de validación en src/components/entity-list.js
+- [ ] T015 [P] [US1] Crear el componente de formulario de entidad con los campos base (`name`, `code`, `taxId`, `email`, `phone`, `address`, `category`, `description`, `targetDate`, `creditLimit`, `paymentTerms`) en `src/components/entity-form.js`
+- [ ] T016 [P] [US1] Crear el componente de lista de entidades que muestre nombre, código y campos base en `src/components/entity-list.js`
+- [ ] T017 [US1] Conectar el envío del formulario con `addEntity`, refrescar la lista y limpiar el formulario en `src/app.js`
+- [ ] T018 [US1] Mostrar retroalimentación de validación para campos obligatorios, código duplicado, email inválido, número negativo y fecha inválida en `src/components/entity-form.js` y `src/app.js`
+- [ ] T019 [US1] Renderizar la lista de entidades en la vista de búsqueda como listado base sin filtro y mostrar un estado vacío claro en `src/app.js` y `src/components/entity-list.js`
+- [ ] T020 [US1] Añadir estilos del formulario y la lista de entidades en `src/styles.css`
 
-**Punto de control**: La Historia de Usuario 1 debe estar completamente funcional y ser comprobable de forma independiente.
+**Punto de control**: La Historia de Usuario 1 es completamente funcional y comprobable de forma independiente (MVP).
 
 ---
 
 ## Fase 4: Historia de Usuario 2 - Editar y eliminar entidades (Prioridad: P1)
 
-**Objetivo**: Permitir a los usuarios actualizar o eliminar entidades almacenadas, manteniendo la capacidad de respuesta con conjuntos de datos grandes.
+**Objetivo**: Actualizar o eliminar entidades existentes, con confirmación de borrado, código único en edición y eliminación en cascada de documentos.
 
-**Prueba Independiente**: Un usuario puede editar una entidad existente o eliminarla, y la lista se actualiza correctamente.
+**Prueba Independiente**: Un usuario edita una entidad y ve el cambio; al eliminar, se solicita confirmación, la entidad desaparece y sus documentos también se eliminan; editar hacia un código duplicado se rechaza.
 
 ### Pruebas para la Historia de Usuario 2
 
-- [X] T013 [P] [US2] Añadir pruebas unitarias para actualizar y eliminar entidades en tests/unit/storage.test.js
-- [X] T014 [P] [US2] Añadir pruebas de integración para editar y eliminar una entidad en tests/integration/edit-delete-entity.test.js
+- [ ] T021 [P] [US2] Añadir pruebas unitarias para actualizar y eliminar entidades, rechazar código duplicado en edición y eliminar documentos en cascada en `tests/unit/storage.test.js`
+- [ ] T022 [P] [US2] Añadir pruebas de integración para editar, confirmar/cancelar eliminación y refrescar la lista en `tests/integration/us2-edit-delete-entity.test.js`
 
-### Implementación de la Historia de Usuario 2
+### Implementación para la Historia de Usuario 2
 
-- [X] T015 [P] [US2] Añadir controles de edición y eliminación a la interfaz de la lista de entidades en src/components/entity-list.js
-- [X] T016 [US2] Conectar las acciones de edición para poblar el formulario y actualizar los datos persistidos en src/app.js
-- [X] T017 [US2] Gestionar las acciones de eliminación y quitar registros del almacenamiento y la interfaz en src/app.js
+- [ ] T023 [P] [US2] Añadir el selector de entidad con acciones de cargar y eliminar a la vista de gestión en `index.html`
+- [ ] T024 [US2] Poblar el formulario al seleccionar una entidad y persistir cambios con `updateEntity` en `src/app.js`
+- [ ] T025 [US2] Implementar un diálogo de confirmación explícita antes de eliminar una entidad y ejecutar la eliminación en cascada en `src/app.js` y `src/storage.js`
+- [ ] T026 [US2] Rechazar códigos duplicados durante la edición y mostrar una explicación clara en `src/validation.js` y `src/app.js`
+- [ ] T027 [US2] Añadir estilos para selectores, acciones de edición/eliminación y diálogo de confirmación en `src/styles.css`
 
-**Punto de control**: Las Historias de Usuario 1 y 2 deben funcionar de forma independiente.
-
----
-
-## Fase 5: Historia de Usuario 3 (original) - Pantalla de bienvenida con navegación (Prioridad: P1)
-
-**Objetivo**: Proporcionar la pantalla de punto de entrada con dos botones claramente etiquetados que llevan a gestión y búsqueda. *(Sustituida por el rediseño del panel de la Fase 17; se conserva como historial del trabajo entregado.)*
-
-**Prueba Independiente**: Un usuario abre la aplicación, ve la pantalla de bienvenida y llega a ambas pantallas desde sus botones.
-
-### Implementación de la Historia de Usuario 3
-
-- [x] T018 [P] [US3] [SUPERSEDIDA por Fase 17] Añadir una vista de pantalla de bienvenida con dos botones de navegación claramente etiquetados en index.html
-- [x] T019 [P] [US3] [SUPERSEDIDA por Fase 17] Añadir lógica de cambio de vista para las pantallas de bienvenida, gestión y búsqueda en src/app.js
-
-**Punto de control**: La Historia de Usuario 3 debe estar completamente funcional y ser comprobable de forma independiente.
+**Punto de control**: Las Historias de Usuario 1 y 2 funcionan de forma independiente.
 
 ---
 
-## Fase 6: Historia de Usuario 4 (pestañas originales) - Gestionar entidades y documentos en una pantalla dedicada (Prioridad: P1)
+## Fase 5: Historia de Usuario 3 - Panel de inicio con acciones rápidas y estadísticas (Prioridad: P1)
 
-**Objetivo**: Proporcionar la pantalla de gestión con la pestaña de navegación horizontal Entidades/Documentos/Inicio y formularios de gestión completos, sin mostrar la lista de entidades. *(La navegación por pestañas fue sustituida por el marco de barra lateral de la Fase 16; los flujos de gestión siguen vigentes.)*
+**Objetivo**: Reemplazar la vista de bienvenida por un panel ERP con al menos cuatro acciones rápidas y estadísticas de registros en vivo.
 
-**Prueba Independiente**: Desde la pantalla de bienvenida, un usuario llega a la pantalla de gestión, cambia de pestaña y añade, edita y elimina una entidad y un documento.
+**Prueba Independiente**: La aplicación abre en un panel con acciones para nueva entidad, nuevo documento, abrir gestión de entidades y buscar registros; cada acción lleva al lugar correcto y las tarjetas de estadísticas coinciden con los registros almacenados.
 
-### Implementación de la Historia de Usuario 4
+### Pruebas para la Historia de Usuario 3
 
-- [x] T020 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir una pestaña de navegación horizontal con botones Entidades, Documentos e Inicio a la vista de gestión en index.html
-- [x] T021 [P] [US4] [SUPERSEDIDA por Fase 16] Organizar la vista de gestión en paneles de entidades y documentos y eliminar la lista de entidades en index.html
-- [x] T022 [US4] [SUPERSEDIDA por Fase 16] Añadir lógica de cambio de pestaña y navegación a Inicio desde la pantalla de gestión en src/app.js
-- [x] T023 [US4] [SUPERSEDIDA por Fase 16] Añadir edición y eliminación mediante selectores para entidades y documentos en src/app.js
-- [x] T024 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir pruebas de integración para la pestaña de navegación de gestión en tests/integration/manage-tabs.test.js
-- [x] T025 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir estilos para la pestaña de navegación horizontal en src/styles.css
+- [ ] T028 [P] [US3] Añadir pruebas de integración para las acciones rápidas del panel y las estadísticas en vivo en `tests/integration/us3-dashboard.test.js`
 
-**Punto de control**: Las Historias de Usuario 1-4 deben estar completamente funcionales y ser comprobables de forma independiente.
+### Implementación para la Historia de Usuario 3
+
+- [ ] T029 [P] [US3] Crear el componente del panel con encabezado, cuatro acciones rápidas y tarjetas de estadísticas en `src/components/dashboard.js`
+- [ ] T030 [US3] Establecer el panel como vista inicial y añadir su marcado en `index.html` y `src/app.js`
+- [ ] T031 [US3] Conectar las acciones rápidas: nueva entidad/nuevo documento abren la gestión correspondiente con formulario vacío, gestión de entidades abre la vista de entidades y buscar abre la búsqueda con el campo enfocado en `src/app.js`
+- [ ] T032 [US3] Renderizar y refrescar los recuentos de entidades y documentos cada vez que se muestra el panel en `src/components/dashboard.js` y `src/app.js`
+- [ ] T033 [US3] Añadir estilos del panel, acciones rápidas y tarjetas de estadísticas en `src/styles.css`
+
+**Punto de control**: La aplicación abre en un panel funcional y cada tarea ERP clave está a un clic.
+
+---
+
+## Fase 6: Historia de Usuario 4 - Gestionar entidades y documentos en una pantalla dedicada (Prioridad: P1)
+
+**Objetivo**: Proporcionar una pantalla de gestión enfocada con formularios de entidades y documentos, sin mostrar la lista de entidades.
+
+**Prueba Independiente**: El usuario navega a la gestión, alterna entre entidades y documentos, crea/edita/elimina registros, no ve la lista de entidades y vuelve al panel.
+
+### Pruebas para la Historia de Usuario 4
+
+- [ ] T034 [P] [US4] Añadir pruebas de integración para la navegación de gestión, formularios, ausencia de la lista de entidades y retorno al panel en `tests/integration/us4-management.test.js`
+
+### Implementación para la Historia de Usuario 4
+
+- [ ] T035 [P] [US4] Construir las vistas de gestión de entidades y documentos sin incluir la lista de entidades en `index.html`
+- [ ] T036 [US4] Implementar la navegación por barra lateral para Panel, Entidades y Documentos con resaltado del módulo activo en `src/app.js`
+- [ ] T037 [US4] Conectar las acciones de crear, editar y eliminar entidades y documentos desde la pantalla de gestión en `src/app.js`
+- [ ] T038 [US4] Añadir estilos del diseño de gestión y del estado activo de la barra lateral en `src/styles.css`
+
+**Punto de control**: La gestión central de datos maestros y documentos funciona sin mostrar la lista de entidades.
 
 ---
 
 ## Fase 7: Historia de Usuario 5 - Definir un perfil de configuración del módulo (Prioridad: P1)
 
-**Objetivo**: Introducir `src/module-config.js` para que los desarrolladores puedan adaptar la identidad del módulo sin editar el código central, con valores predeterminados seguros e informes de error claros.
+**Objetivo**: Introducir `src/module-config.js` para adaptar identidad, terminología, campos personalizados, ciclo de vida y color de acento sin editar código central.
 
-**Prueba Independiente**: Un desarrollador suministra una configuración de Ventas; la aplicación carga mostrándola. Al quitar el archivo se restauran los valores predeterminados Entity/Document sin errores.
+**Prueba Independiente**: Un desarrollador proporciona una configuración de Ventas y la aplicación se presenta como tal; al quitarla se restauran los valores predeterminados; una configuración inválida se informa con claridad.
 
 ### Pruebas para la Historia de Usuario 5
 
-- [X] T026 [P] [US5] Añadir pruebas unitarias para carga de configuración, retroceso a predeterminados e informes de configuración inválida en tests/unit/module-config.test.js
+- [ ] T039 [P] [US5] Añadir pruebas unitarias para carga de configuración, valores predeterminados, validación de `moduleName`, `labels`, `customFields`, `statusLifecycle` y `theme.accentColor`, e informes de configuración inválida en `tests/unit/module-config.test.js`
 
-### Implementación de la Historia de Usuario 5
+### Implementación para la Historia de Usuario 5
 
-- [X] T027 [US5] Crear el cargador de configuración con valores predeterminados, validación e informes de error claros en src/module-config.js
-- [X] T028 [US5] Cargar la configuración al arrancar y pasarla a todas las vistas en src/main.js y src/app.js
+- [ ] T040 [US5] Crear el cargador de configuración con valores predeterminados y validación en `src/module-config.js`: `moduleName` obligatorio no vacío; `labels` opcional con retroceso a Entidad/Documento; `customFields` opcional con `target` `entity|document`, `key`, `label`, `type` `text|number|date|select`, `required` y `options` opcional, sin colisión con campos base; `statusLifecycle` opcional con estados y transiciones; `theme.accentColor` opcional válido con retroceso seguro
+- [ ] T041 [US5] Cargar la configuración al arrancar y pasarla a todas las vistas en `src/main.js` y `src/app.js`
+- [ ] T042 [US5] Mostrar un aviso claro de configuración inválida o conflictiva en lugar de fallar silenciosamente en `src/app.js`
 
-**Punto de control**: La configuración aún no impulsa nada visible, pero carga de forma fiable y valida limpiamente.
+**Punto de control**: La configuración carga de forma fiable y valida limpiamente, con retroceso seguro.
 
 ---
 
 ## Fase 8: Historia de Usuario 6 - Reetiquetar pantallas desde la configuración (Prioridad: P1)
 
-**Objetivo**: Derivar todas las etiquetas visibles para el usuario de la configuración para que los módulos adaptados hablen su idioma de dominio en todo momento.
+**Objetivo**: Derivar todas las etiquetas visibles de la configuración para que el módulo adaptado use su terminología en todo momento.
 
-**Prueba Independiente**: Con mapeos Entidad→Cliente y Documento→Pedido de Venta, cada pestaña, botón, etiqueta de formulario, encabezado y mensaje muestra los términos mapeados en las tres pantallas; el comportamiento no cambia.
+**Prueba Independiente**: Con Entidad→Cliente y Documento→Pedido de Venta, cada pestaña, botón, etiqueta de formulario, encabezado y estado vacío usa los términos configurados sin cambiar la navegación.
 
 ### Pruebas para la Historia de Usuario 6
 
-- [X] T029 [P] [US6] Añadir pruebas de integración que verifiquen las etiquetas configuradas en las pantallas de bienvenida, gestión y búsqueda en tests/integration/relabeling.test.js
+- [ ] T043 [P] [US6] Añadir pruebas de integración que verifiquen las etiquetas configuradas en panel, gestión y búsqueda en `tests/integration/us6-labels.test.js`
 
-### Implementación de la Historia de Usuario 6
+### Implementación para la Historia de Usuario 6
 
-- [X] T030 [US6] Derivar todas las etiquetas visibles para el usuario de la configuración en lugar de texto codificado en index.html, src/app.js y los archivos de componentes
+- [ ] T044 [US6] Sustituir las etiquetas codificadas por etiquetas derivadas de la configuración en `index.html`, `src/app.js` y `src/components/`
+- [ ] T045 [US6] Garantizar que la navegación y el comportamiento no cambian al remapear etiquetas en `src/app.js`
+- [ ] T046 [US6] Aplicar los términos predeterminados Entidad/Documento cuando no se proporcionan mapeos en `src/module-config.js`
 
 **Punto de control**: Un módulo configurado se presenta completamente bajo su propia terminología.
 
@@ -141,191 +181,167 @@
 
 ## Fase 9: Historia de Usuario 7 - Declarar campos personalizados para los registros (Prioridad: P1)
 
-**Objetivo**: Permitir que los campos personalizados declarados fluyan automáticamente por formularios, validación, persistencia, listas y búsqueda.
+**Objetivo**: Hacer que los campos personalizados fluyan automáticamente por formularios, validación, persistencia, listas y búsqueda, y conservar valores huérfanos sin mostrarlos.
 
-**Prueba Independiente**: Declarar un campo numérico obligatorio en las entidades renderiza una entrada numérica que bloquea guardados en blanco, muestra valores en listas y coincide en búsquedas; sin declaraciones la aplicación se comporta como la base sin modificar.
+**Prueba Independiente**: Un campo numérico obligatorio declarado aparece como entrada numérica, bloquea guardados en blanco, se muestra en listas y coincide en búsquedas; al quitar la declaración el valor se oculta pero se conserva, y al volver a declararla reaparece.
 
 ### Pruebas para la Historia de Usuario 7
 
-- [X] T031 [P] [US7] Añadir pruebas unitarias para validación y persistencia de campos personalizados en tests/unit/storage.test.js
-- [X] T032 [P] [US7] Añadir pruebas de integración para el renderizado de campos personalizados en formularios, listas y búsqueda en tests/integration/custom-fields.test.js
+- [ ] T047 [P] [US7] Añadir pruebas unitarias para validación y persistencia de campos personalizados, y para ocultar/conservar/restaurar valores huérfanos en `tests/unit/custom-fields.test.js`
+- [ ] T048 [P] [US7] Añadir pruebas de integración para campos personalizados en formularios, listas y búsqueda, incluida la retirada y redeclaración de configuración en `tests/integration/us7-custom-fields.test.js`
 
-### Implementación de la Historia de Usuario 7
+### Implementación para la Historia de Usuario 7
 
-- [X] T033 [P] [US7] Renderizar dinámicamente los campos personalizados declarados en los formularios de entidad y documento en src/components/entity-form.js y src/components/document-form.js
-- [X] T034 [US7] Incluir los campos personalizados en validación, persistencia, listas y búsqueda en src/storage.js y src/app.js
+- [ ] T049 [P] [US7] Renderizar dinámicamente los campos personalizados declarados según su tipo (`text`, `number`, `date`, `select`) en `src/components/entity-form.js` y `src/components/document-form.js`
+- [ ] T050 [US7] Incluir los campos personalizados en la validación (obligatoriedad y tipo) y en la persistencia sin cambios de esquema en `src/validation.js` y `src/storage.js`
+- [ ] T051 [US7] Incluir los campos personalizados en el renderizado de listas y en la búsqueda en `src/components/entity-list.js`, `src/components/document-list.js` y `src/search.js`
+- [ ] T052 [US7] Implementar el manejo de valores huérfanos: ocultar de formularios, listas y búsqueda los campos no declarados o con tipo cambiado, conservar sus valores y restaurarlos si el campo se vuelve a declarar en `src/app.js` y `src/storage.js`
+- [ ] T053 [US7] Añadir estilos para campos personalizados y controles de selección en `src/styles.css`
 
-**Punto de control**: Los datos específicos del módulo requieren cero cambios de código de interfaz.
-
----
-
-## Fase 10: Historia de Usuario 8 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
-
-**Objetivo**: Permitir a los usuarios buscar y filtrar entidades rápidamente, manteniendo la capacidad de respuesta con conjuntos de datos grandes.
-
-**Prueba Independiente**: Un usuario puede introducir un término de búsqueda y ver solo las entidades coincidentes.
-
-### Pruebas para la Historia de Usuario 8
-
-- [X] T035 [P] [US8] Añadir pruebas unitarias para la lógica de filtrado de búsqueda en tests/unit/storage.test.js
-- [X] T036 [P] [US8] Añadir pruebas de integración para el comportamiento de búsqueda en tests/integration/search-entities.test.js
-
-### Implementación de la Historia de Usuario 8
-
-- [X] T037 [P] [US8] Crear la interfaz de la barra de búsqueda en src/components/search-bar.js
-- [X] T038 [US8] Conectar la entrada de búsqueda al filtrado y al comportamiento de estado vacío en src/app.js
-- [X] T039 [US8] Asegurar que los resultados de búsqueda permanecen sincronizados con las acciones de crear, editar y eliminar en src/app.js
-
-**Punto de control**: Las historias centrales de datos y la búsqueda deben estar ahora funcionalmente independientes.
+**Punto de control**: Los datos específicos del módulo requieren cero cambios de código de interfaz y los valores huérfanos no se pierden.
 
 ---
 
-## Fase 11: Historia de Usuario 9 - Registrar una fecha objetivo (Prioridad: P2)
+## Fase 10: Historia de Usuario 13 - Marco de espacio de trabajo ERP con marca (Prioridad: P1)
 
-**Objetivo**: Permitir a los usuarios adjuntar una fecha objetivo opcional a una entidad.
+**Objetivo**: Envolver cada pantalla en un marco persistente con barra superior con logotipo derivado y nombre del módulo, barra lateral con Panel/Entidades/Documentos/Buscar, resaltado activo, color de acento y contracción responsiva.
 
-**Prueba Independiente**: Un usuario puede fijar una fecha en una entidad y verla mostrada en la lista.
-
-### Pruebas para la Historia de Usuario 9
-
-- [X] T040 [P] [US9] Añadir pruebas unitarias para validación y persistencia de la fecha objetivo en tests/unit/storage.test.js
-
-### Implementación de la Historia de Usuario 9
-
-- [X] T041 [P] [US9] Añadir la entrada de fecha objetivo al formulario de entidad en index.html
-- [X] T042 [US9] Incluir targetDate en la lógica de validación, creación, actualización y búsqueda en src/storage.js
-- [X] T043 [US9] Conectar targetDate al envío del formulario, poblado de edición y visualización de errores en src/app.js
-- [X] T044 [US9] Mostrar la fecha objetivo en la lista de entidades en src/app.js
-
-**Punto de control**: La Historia de Usuario 9 debe estar completamente funcional y ser comprobable de forma independiente.
-
----
-
-## Fase 12: Historia de Usuario 10 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
-
-**Objetivo**: Permitir a los usuarios registrar detalles de documentos para una entidad y verlos juntos, con la eliminación en cascada protegiendo la integridad referencial.
-
-**Prueba Independiente**: Un usuario puede añadir un documento a una entidad y ver los detalles mostrados con esa entidad; eliminar la entidad elimina sus documentos.
-
-### Pruebas para la Historia de Usuario 10
-
-- [X] T045 [P] [US10] Añadir pruebas unitarias para generación de entity_id y validación de documentos en tests/unit/storage.test.js
-- [X] T046 [P] [US10] Añadir pruebas de integración para añadir un documento a una entidad en tests/integration/add-document.test.js
-- [X] T047 [P] [US10] Añadir pruebas de integración para edición, eliminación y eliminación en cascada de documentos en tests/integration/manage-document.test.js
-
-### Implementación de la Historia de Usuario 10
-
-- [X] T048 [P] [US10] Crear la interfaz del formulario de documento en src/components/document-form.js
-- [X] T049 [P] [US10] Crear la interfaz de la lista de documentos en src/components/document-list.js
-- [X] T050 [US10] Conectar las acciones de crear, editar y eliminar documentos para persistirlos en src/app.js
-- [X] T051 [US10] Añadir entity_id a la creación de entidades y mostrar los documentos con su entidad en src/app.js
-- [X] T052 [US10] Eliminar en cascada los documentos cuando se elimina una entidad en src/storage.js
-
-**Punto de control**: Los datos maestros y los documentos transaccionales deben estar completamente vinculados.
-
----
-
-## Fase 13: Historia de Usuario 11 - Buscar entidades en una pantalla dedicada (Prioridad: P2)
-
-**Objetivo**: Proporcionar la pantalla de búsqueda dedicada accesible desde la pantalla de bienvenida, manteniendo la edición en la pantalla de gestión.
-
-**Prueba Independiente**: Un usuario navega desde la pantalla de bienvenida a la pantalla de búsqueda, busca, ve resultados o un estado vacío, y vuelve a Inicio.
-
-### Implementación de la Historia de Usuario 11
-
-- [x] T053 [P] [US11] Añadir la entrada de búsqueda y la lista de resultados a la vista de búsqueda dedicada en index.html
-- [x] T054 [US11] Conectar la entrada de búsqueda al filtrado de resultados y mostrar un estado vacío en la pantalla de búsqueda en src/app.js
-- [x] T055 [US11] Añadir navegación al Panel desde la pantalla de búsqueda en index.html
-
-**Punto de control**: Todas las historias del usuario de negocio deben estar completamente funcionales y ser comprobables de forma independiente.
-
----
-
-## Fase 14: Historia de Usuario 12 - Configurar el ciclo de vida de estados de documentos (Prioridad: P2)
-
-**Objetivo**: Aplicar los estados y transiciones configurados en los documentos manteniendo el estado de texto libre cuando no hay configuración.
-
-**Prueba Independiente**: Con cotización→pedido→facturado configurado, solo se ofrecen los estados siguientes válidos, los inválidos se rechazan con explicaciones, y el estado es visible de un vistazo; sin configuración, el estado permanece como texto libre.
-
-### Pruebas para la Historia de Usuario 12
-
-- [X] T056 [P] [US12] Añadir pruebas unitarias para la aplicación de transiciones de estado en tests/unit/storage.test.js
-
-### Implementación de la Historia de Usuario 12
-
-- [X] T057 [US12] Restringir las opciones de estado de documento a las transiciones permitidas y aplicarlas al guardar en src/components/document-form.js y src/storage.js
-
-**Punto de control**: La cadena de personalización (HU5 → HU6/HU7/HU12) está completa de extremo a extremo.
-
----
-
-## Fase 15: Pulido y Preocupaciones Transversales
-
-**Propósito**: Mejorar la calidad, accesibilidad, fiabilidad y el comportamiento con conjuntos de datos grandes en todas las historias.
-
-- [X] T058 [P] Añadir refinamientos de accesibilidad para etiquetas, foco de teclado y estructura semántica
-- [X] T059 [P] Añadir pulido final de UX para estados vacíos, mensajes de validación y diseño responsivo
-- [X] T060 Verificar que el renderizado de listas y la búsqueda permanecen responsivos y correctos con 500 registros (FR-032, SC-004)
-- [X] T061 Ejecutar la suite completa de pruebas y probar manualmente los flujos principales de usuario
-- [X] T062 [P] Añadir estilos para la pantalla de bienvenida y la navegación de vistas en src/styles.css
-- [X] T063 Ejecutar la suite completa de pruebas y la compilación de producción para verificar que no hay regresiones
-
----
-
-## Fase 16: Historia de Usuario 13 - Marco de espacio de trabajo ERP con marca (Prioridad: P1)
-
-**Objetivo**: Envolver cada pantalla en un marco ERP persistente: una barra superior con logotipo derivado y nombre del módulo, más una barra lateral de botones de módulo con resaltado de módulo activo y contracción responsiva.
-
-**Prueba Independiente**: En cada pantalla la barra superior y la barra lateral son visibles, el módulo activo está resaltado, la navegación entre módulos preserva los datos, y la barra lateral se contrae a una columna de iconos en ventanas gráficas estrechas.
+**Prueba Independiente**: En cada pantalla se ven la barra superior y la barra lateral, el módulo activo está resaltado, la navegación preserva los datos y la barra lateral se contrae a iconos en ventanas estrechas.
 
 ### Pruebas para la Historia de Usuario 13
 
-- [X] T064 [P] [US13] Añadir pruebas unitarias para validación del color de acento en tests/unit/module-config.test.js
-- [X] T065 [P] [US13] Añadir pruebas de integración que afirmen que el marco (logotipo, nombre del módulo, botones de barra lateral, resaltado activo) aparece en todas las pantallas en tests/integration/workspace-shell.test.js
+- [ ] T054 [P] [US13] Añadir pruebas unitarias para validación y retroceso del color de acento en `tests/unit/module-config.test.js`
+- [ ] T055 [P] [US13] Añadir pruebas de integración que afirmen el marco con marca en todas las pantallas, el resaltado activo, la preservación de datos y la contracción responsiva en `tests/integration/us13-shell.test.js`
 
-### Implementación de la Historia de Usuario 13
+### Implementación para la Historia de Usuario 13
 
-- [X] T066 [P] [US13] Añadir el marcado del marco del espacio de trabajo (barra superior, montaje de logotipo SVG en línea, botones de módulo en barra lateral, región de contenido principal) a index.html
-- [X] T067 [P] [US13] Crear src/components/shell.js para renderizar el logotipo monograma SVG a partir del nombre del módulo, aplicar las etiquetas configuradas a los botones de módulo, gestionar el resaltado de módulo activo y exponer eventos de navegación
-- [X] T068 [US13] Reemplazar las pestañas horizontales de gestión y la navegación independiente hacia atrás por enrutamiento de módulos mediante la barra lateral en src/app.js
-- [X] T069 [P] [US13] Construir la hoja de estilos de tokens de diseño ERP (variables de color, escala de espaciado, tipografía) más estilos de barra superior, barra lateral y tarjetas en src/styles.css
-- [X] T070 [US13] Soportar un theme.accentColor opcional en la validación de src/module-config.js y aplicarlo como propiedad personalizada de CSS en src/app.js
-- [X] T071 [US13] Contraer la barra lateral a una columna de iconos en ventanas gráficas estrechas en src/styles.css
-- [X] T072 [P] [US13] Actualizar las pruebas de integración existentes (manage-tabs.test.js, relabeling.test.js) para apuntar al marco de barra lateral en lugar de los botones de pestañas/bienvenida
+- [ ] T056 [P] [US13] Crear el componente de marco que renderiza la barra superior, el logotipo monograma SVG derivado del nombre del módulo, los botones de la barra lateral y el resaltado del módulo activo en `src/components/shell.js`
+- [ ] T057 [US13] Integrar el marco en todas las vistas y reemplazar la navegación básica en `index.html` y `src/app.js`
+- [ ] T058 [US13] Aplicar `theme.accentColor` como propiedad personalizada de CSS con retroceso seguro en `src/app.js` y `src/styles.css`
+- [ ] T059 [US13] Contraer la barra lateral a una columna de iconos con etiquetas accesibles en ventanas estrechas en `src/styles.css` y `src/components/shell.js`
+- [ ] T060 [US13] Garantizar que la navegación entre módulos conserva todas las entidades y documentos almacenados en `src/app.js`
 
-**Punto de control**: Todas las pantallas se renderizan dentro del marco con marca con navegación por barra lateral funcional y sin pérdida de datos.
+**Punto de control**: Todas las pantallas se renderizan dentro del marco con marca y la navegación por barra lateral preserva los datos.
 
 ---
 
-## Fase 17: Historia de Usuario 3 (revisada) - Panel de inicio con acciones rápidas y estadísticas (Prioridad: P1)
+## Fase 11: Historia de Usuario 8 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
 
-**Objetivo**: Reemplazar la vista de bienvenida de dos botones por un panel ERP que ofrece múltiples botones de acción rápida y estadísticas de registros en vivo.
+**Objetivo**: Buscar entidades por detalles clave con coincidencia parcial insensible a mayúsculas y acentos, con estado vacío y buen rendimiento para 500 registros.
 
-**Prueba Independiente**: La aplicación abre en un panel con acciones rápidas para nueva entidad, nuevo documento, gestión de entidades y buscar registros; activarlas aterriza en el lugar correcto listo para introducir datos, y las tarjetas de estadísticas coinciden con los registros almacenados.
+**Prueba Independiente**: El usuario introduce un término y ve solo las entidades coincidentes; una búsqueda sin coincidencias muestra un estado vacío claro y permite reintentar.
 
-### Pruebas para la Historia de Usuario 3
+### Pruebas para la Historia de Usuario 8
 
-- [X] T073 [P] [US3] Añadir pruebas de integración para las acciones rápidas del panel y las estadísticas en vivo en tests/integration/dashboard.test.js
+- [ ] T061 [P] [US8] Añadir pruebas unitarias para normalización y coincidencia de búsqueda (substring, mayúsculas y acentos) en `tests/unit/search.test.js`
+- [ ] T062 [P] [US8] Añadir pruebas de integración para resultados de búsqueda y estado vacío en `tests/integration/us8-search.test.js`
 
-### Implementación de la Historia de Usuario 3
+### Implementación para la Historia de Usuario 8
 
-- [X] T074 [P] [US3] Añadir el marcado del panel (encabezado, cuadrícula de acciones rápidas, tarjetas de estadísticas) a index.html reemplazando la vista de bienvenida de dos botones
-- [X] T075 [US3] Conectar los botones de acción rápida para abrir la gestión de entidades, la gestión de documentos (formularios limpiados) y la búsqueda (entrada enfocada) en src/app.js
-- [X] T076 [US3] Renderizar y refrescar los recuentos de entidades/documentos desde el almacenamiento cada vez que se muestra el panel en src/components/dashboard.js
-- [X] T077 [P] [US3] Dar estilo al encabezado del panel, las tarjetas de acción rápida y los mosaicos de estadísticas en src/styles.css
+- [ ] T063 [P] [US8] Crear el componente de barra de búsqueda en `src/components/search-bar.js`
+- [ ] T064 [US8] Conectar la entrada de búsqueda con `searchEntities` y renderizar los resultados en `src/app.js`
+- [ ] T065 [US8] Mantener los resultados sincronizados tras crear, editar o eliminar registros en `src/app.js`
+- [ ] T066 [US8] Optimizar el filtrado y el renderizado de listas para al menos 500 entidades en `src/search.js` y `src/components/entity-list.js`
 
-**Punto de control**: La aplicación abre en un panel funcional; cada tarea ERP clave está a un clic.
+**Punto de control**: La búsqueda es rápida, predecible y consistente con los cambios de datos.
 
 ---
 
-## Fase 18: Pulido y Regresión (Aspecto ERP)
+## Fase 12: Historia de Usuario 9 - Registrar una fecha objetivo (Prioridad: P2)
 
-**Propósito**: Unificar el estilo visual en toda la aplicación rediseñada y protegerse contra regresiones.
+**Objetivo**: Adjuntar una fecha objetivo opcional a una entidad y mostrarla en la lista.
 
-- [X] T078 [P] Rediseñar formularios, listas, insignias, mensajes de error y estados vacíos según el sistema de tokens de diseño en src/styles.css
-- [X] T079 [P] Verificar el orden de foco del teclado y aria-current en los botones de módulo de la barra lateral (pase de accesibilidad del nuevo marco)
-- [X] T080 Actualizar README.md con las secciones del marco del espacio de trabajo, panel y tematización
-- [X] T081 Ejecutar la suite completa de pruebas y la compilación de producción para verificar que no hay regresiones (FR-032, SC-004)
+**Prueba Independiente**: El usuario fija una fecha y la ve en la lista; dejar la fecha en blanco guarda la entidad sin fecha.
+
+### Pruebas para la Historia de Usuario 9
+
+- [ ] T067 [P] [US9] Añadir pruebas unitarias para validación y persistencia de `targetDate` en `tests/unit/validation.test.js`
+
+### Implementación para la Historia de Usuario 9
+
+- [ ] T068 [P] [US9] Añadir la entrada de fecha objetivo al formulario de entidad en `src/components/entity-form.js`
+- [ ] T069 [US9] Incluir `targetDate` en creación, actualización, búsqueda y visualización de la lista en `src/app.js` y `src/components/entity-list.js`
+
+**Punto de control**: La fecha objetivo es opcional, válida y visible.
+
+---
+
+## Fase 13: Historia de Usuario 10 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
+
+**Objetivo**: Añadir, editar y eliminar documentos vinculados a una entidad, con validación de campos obligatorios, confirmación de borrado y eliminación en cascada.
+
+**Prueba Independiente**: El usuario añade un documento a una entidad, lo edita y lo elimina con confirmación; al eliminar la entidad sus documentos también se eliminan; dejar campos obligatorios en blanco impide guardar.
+
+### Pruebas para la Historia de Usuario 10
+
+- [ ] T070 [P] [US10] Añadir pruebas unitarias para validación de documentos (`folio`, fechas, importes), vínculo por `entity_id`, eliminación en cascada y confirmación en `tests/unit/document-validation.test.js`
+- [ ] T071 [P] [US10] Añadir pruebas de integración para crear, editar y eliminar documentos y para la cascada al eliminar la entidad en `tests/integration/us10-documents.test.js`
+
+### Implementación para la Historia de Usuario 10
+
+- [ ] T072 [P] [US10] Crear el formulario de documento con selector de entidad y campos base (`series`, `folio`, `startDate`, `endDate`, `quantity`, `subtotal`, `discount`, `taxAmount`, `totalAmount`, `currency`, `paymentTerms`, `notes`, `status`) en `src/components/document-form.js`
+- [ ] T073 [P] [US10] Crear el componente de lista de documentos en `src/components/document-list.js`
+- [ ] T074 [US10] Conectar crear, editar y eliminar documentos con el almacenamiento y la asociación por `entity_id` en `src/app.js`
+- [ ] T075 [US10] Solicitar confirmación explícita antes de eliminar un documento en `src/app.js`
+- [ ] T076 [US10] Eliminar en cascada los documentos cuando se elimina una entidad y reflejarlo en la interfaz en `src/storage.js` y `src/app.js`
+
+**Punto de control**: Los datos maestros y los documentos transaccionales están completamente vinculados y protegidos.
+
+---
+
+## Fase 14: Historia de Usuario 11 - Buscar entidades en una pantalla dedicada (Prioridad: P2)
+
+**Objetivo**: Proporcionar una pantalla de búsqueda dedicada accesible desde la barra lateral y la acción rápida, sin formularios de edición.
+
+**Prueba Independiente**: El usuario abre la búsqueda desde la barra lateral o el panel, introduce un término, ve resultados o un estado vacío, y vuelve al panel.
+
+### Pruebas para la Historia de Usuario 11
+
+- [ ] T077 [P] [US11] Añadir pruebas de integración para navegación a la búsqueda, foco inicial, resultados, estado vacío y retorno al panel en `tests/integration/us11-search-view.test.js`
+
+### Implementación para la Historia de Usuario 11
+
+- [ ] T078 [US11] Construir la vista de búsqueda dedicada con entrada, resultados y estado vacío en `index.html` y `src/components/search-bar.js`
+- [ ] T079 [US11] Conectar la barra lateral y la acción rápida del panel con la vista de búsqueda y enfocar el campo al entrar en `src/app.js`
+- [ ] T080 [US11] Asegurar que la vista de búsqueda no muestra formularios de edición en `index.html`
+
+**Punto de control**: La búsqueda dedicada está enfocada y es accesible desde los dos puntos de entrada.
+
+---
+
+## Fase 15: Historia de Usuario 12 - Configurar el ciclo de vida de estados de documentos (Prioridad: P2)
+
+**Objetivo**: Aplicar los estados y transiciones configurados en documentos, rechazando transiciones inválidas y manteniendo texto libre cuando no hay configuración.
+
+**Prueba Independiente**: Con cotización→pedido→facturado configurado, solo se ofrecen los estados siguientes válidos, las transiciones inválidas se rechazan con explicación y el estado es visible en listas; sin configuración, el estado sigue siendo texto libre.
+
+### Pruebas para la Historia de Usuario 12
+
+- [ ] T081 [P] [US12] Añadir pruebas unitarias para transiciones válidas/inválidas y retroceso a texto libre sin configuración en `tests/unit/status-lifecycle.test.js`
+- [ ] T082 [P] [US12] Añadir pruebas de integración para opciones de estado, rechazo de transiciones y visualización del estado en `tests/integration/us12-lifecycle.test.js`
+
+### Implementación para la Historia de Usuario 12
+
+- [ ] T083 [US12] Implementar la validación del ciclo de vida y transiciones permitidas en `src/validation.js`
+- [ ] T084 [US12] Renderizar un selector con solo los estados siguientes válidos y una entrada de texto libre cuando no hay ciclo de vida en `src/components/document-form.js`
+- [ ] T085 [US12] Aplicar las transiciones configuradas al guardar por cualquier vía en `src/app.js`
+- [ ] T086 [US12] Mostrar el estado actual de forma identificable en listas y detalles de documentos en `src/components/document-list.js`
+
+**Punto de control**: El ciclo de vida configurado se aplica de extremo a extremo y el modo de texto libre sigue funcionando.
+
+---
+
+## Fase 16: Pulido y Preocupaciones Transversales
+
+**Propósito**: Mejorar accesibilidad, seguridad, rendimiento, documentación y verificación final.
+
+- [ ] T087 [P] Añadir refinamientos de accesibilidad (etiquetas, foco de teclado, estructura semántica, `aria-current`) en `index.html` y `src/components/shell.js`
+- [ ] T088 [P] Reforzar la seguridad escapando todo contenido de usuario antes de renderizarlo en el DOM en `src/utils.js` y `src/components/`
+- [ ] T089 [P] Verificar y ajustar el diseño responsivo y la contracción de la barra lateral en ventanas estrechas en `src/styles.css`
+- [ ] T090 Añadir una prueba de rendimiento con 500 entidades para listado y búsqueda en `tests/integration/performance.test.js`
+- [ ] T091 [P] Actualizar `README.md` y `quickstart.md` con configuración, tematización, navegación y las reglas clarificadas (código único, búsqueda sin acentos, confirmación de borrado, valores huérfanos, URL)
+- [ ] T092 Ejecutar la suite completa de pruebas y la compilación de producción; corregir cualquier regresión en `package.json`
+- [ ] T093 Validar manualmente los flujos de `quickstart.md` en el navegador y registrar los resultados en `specs/001-erp-base-module/quickstart.md`
 
 ---
 
@@ -333,33 +349,131 @@
 
 ### Dependencias entre Fases
 
-- Configuración (Fase 1): Sin dependencias
-- Fundacional (Fase 2): Depende de completar Configuración
-- Historia de Usuario 1 (Fase 3): Depende de completar Fundacional
-- Historia de Usuario 2 (Fase 4): Depende de completar la implementación de la Historia de Usuario 1
-- Historia de Usuario 3 (Fase 5): Depende de completar Fundacional
-- Historia de Usuario 4 (Fase 6): Depende de completar la Historia de Usuario 3 y se beneficia de que los formularios de las Historias de Usuario 1-2 estén disponibles
-- Historia de Usuario 5 (Fase 7): Depende de completar Fundacional; desbloquea HU6, HU7, HU12
-- Historia de Usuario 6 (Fase 8): Depende de completar la Historia de Usuario 5
-- Historia de Usuario 7 (Fase 9): Depende de completar la Historia de Usuario 5
-- Historia de Usuario 8 (Fase 10): Depende de completar Fundacional y puede proceder después de la Historia de Usuario 1
-- Historia de Usuario 9 (Fase 11): Depende de completar Fundacional y puede proceder después de la Historia de Usuario 1
-- Historia de Usuario 10 (Fase 12): Depende de completar la implementación de la Historia de Usuario 1 y del campo entity_id
-- Historia de Usuario 11 (Fase 13): Depende de la Historia de Usuario 8 (lógica de búsqueda) y la Historia de Usuario 3 (navegación)
-- Historia de Usuario 12 (Fase 14): Depende de la Historia de Usuario 5 (configuración) y la Historia de Usuario 10 (documentos)
-- Pulido (Fase 15): Depende de que todas las historias de usuario deseadas estén completas
-- Historia de Usuario 13 (Fase 16): Depende de que las Fases 1-15 estén completas; reestructura la navegación entregada por HU3/HU4 dentro del marco
-- Historia de Usuario 3 revisada (Fase 17): Depende de la Fase 16 (el enrutamiento por barra lateral debe existir antes de que las acciones del panel lo usen)
-- Pulido Aspecto ERP (Fase 18): Depende de que las Fases 16 y 17 estén completas
+- **Configuración (Fase 1)**: Sin dependencias.
+- **Fundacional (Fase 2)**: Depende de completar Configuración; bloquea todas las historias.
+- **US1 (Fase 3)**: Depende de Fundacional; es el MVP.
+- **US2 (Fase 4)**: Depende de US1 (formulario, almacenamiento y lista de entidades).
+- **US3 (Fase 5)**: Depende de Fundacional y de US1; la acción "nuevo documento" alcanza su forma completa cuando US10 está implementada.
+- **US4 (Fase 6)**: Depende de US1 y US2 para los formularios de gestión; su vista no muestra la lista de entidades.
+- **US5 (Fase 7)**: Depende de Fundacional; desbloquea US6, US7, US12 y US13.
+- **US6 (Fase 8)**: Depende de US5.
+- **US7 (Fase 9)**: Depende de US5 y de US1/US10 para los formularios de ambos tipos de registro.
+- **US13 (Fase 10)**: Depende de US5 (nombre, etiquetas y color) y de US4 (navegación base).
+- **US8 (Fase 11)**: Depende de US1 y Fundacional; comparte la utilidad de búsqueda con US11.
+- **US9 (Fase 12)**: Depende de US1.
+- **US10 (Fase 13)**: Depende de US1 (entidad y `entity_id`).
+- **US11 (Fase 14)**: Depende de US8 (lógica de búsqueda) y US13 (barra lateral).
+- **US12 (Fase 15)**: Depende de US5 (configuración) y US10 (documentos).
+- **Pulido (Fase 16)**: Depende de todas las historias deseadas.
 
-### Oportunidades Paralelas
+### Dependencias entre Historias de Usuario
 
-- T003 puede ejecutarse en paralelo con las tareas de configuración
-- T007 puede completarse junto al trabajo de almacenamiento y esqueleto de la aplicación
-- Las pruebas de cada historia pueden crearse en paralelo con las tareas de implementación de la misma historia
-- Después de la Fase 7 (perfil de configuración), HU6 (Fase 8) y HU7 (Fase 9) pueden proceder en paralelo
-- HU8 (Fase 10) y HU9 (Fase 11) son independientes y pueden proceder en paralelo después de la Historia de Usuario 1
-- En la Fase 15, T058-T060 pueden ejecutarse en paralelo antes de las tareas finales de verificación T061-T063
-- En la Fase 16, T064-T067 y T069 pueden ejecutarse en paralelo; T072 aterriza junto al cambio de enrutamiento T068
-- En la Fase 17, T073/T074/T077 pueden ejecutarse en paralelo con T075/T076
-- En la Fase 18, T078 y T079 pueden ejecutarse en paralelo antes de la verificación final T080-T081
+- **US1**: Puede empezar tras Fundacional; sin dependencias de otras historias.
+- **US2**: Requiere US1.
+- **US3**: Requiere US1; para la prueba completa de "nuevo documento" requiere US10.
+- **US4**: Requiere US1 y US2.
+- **US5**: Requiere Fundacional.
+- **US6**: Requiere US5.
+- **US7**: Requiere US5; los formularios de entidad y documento provienen de US1 y US10.
+- **US13**: Requiere US5 y US4.
+- **US8**: Requiere US1.
+- **US9**: Requiere US1.
+- **US10**: Requiere US1.
+- **US11**: Requiere US8 y US13.
+- **US12**: Requiere US5 y US10.
+
+### Dentro de Cada Historia
+
+- Las pruebas (si se incluyen) se escriben primero y deben fallar antes de implementar.
+- Modelos/almacenamiento antes de servicios; servicios antes de la interfaz.
+- La implementación central antes de la integración.
+- Cada historia debe completarse y validarse antes de pasar a la siguiente prioridad.
+
+---
+
+## Oportunidades Paralelas
+
+- T003 y T004 pueden ejecutarse en paralelo tras T001/T002.
+- T005, T006, T007, T008 y T011 pueden ejecutarse en paralelo dentro de la Fase 2; T009/T010 integran el esqueleto y el enrutador.
+- En US1, T013/T014 (pruebas), T015/T016 (componentes) pueden ejecutarse en paralelo; T017-T019 integran.
+- En US2, T021/T022 (pruebas) y T023 (marcado) pueden ejecutarse en paralelo; T024-T026 integran.
+- En US3, T028/T029 pueden ejecutarse en paralelo con T030; T031/T032 integran.
+- En US4, T034/T035 pueden ejecutarse en paralelo con T036; T037 integra.
+- En US5, T039 y T040 pueden ejecutarse en paralelo; T041/T042 integran.
+- En US6, T043 puede ejecutarse en paralelo con T044/T046.
+- En US7, T047/T048 (pruebas), T049 (formularios) y T051 (listas/búsqueda) pueden ejecutarse en paralelo; T050/T052 integran.
+- En US13, T054/T055 (pruebas) y T056 pueden ejecutarse en paralelo; T057-T060 integran.
+- En US8, T061/T062 (pruebas) y T063 pueden ejecutarse en paralelo; T064-T066 integran.
+- En US9, T067 y T068 pueden ejecutarse en paralelo; T069 integra.
+- En US10, T070/T071 (pruebas), T072 y T073 pueden ejecutarse en paralelo; T074-T076 integran.
+- En US11, T077 y T078 pueden ejecutarse en paralelo; T079/T080 integran.
+- En US12, T081/T082 (pruebas) y T083 pueden ejecutarse en paralelo; T084-T086 integran.
+- En la Fase 16, T087, T088, T089 y T091 pueden ejecutarse en paralelo; T090, T092 y T093 son verificaciones finales.
+
+### Ejemplo Paralelo: Historia de Usuario 1
+
+```bash
+# Lanzar las pruebas de US1 juntas:
+Task: "Añadir pruebas unitarias de validación de entidad en tests/unit/validation.test.js"
+Task: "Añadir pruebas de integración para crear una entidad en tests/integration/us1-create-entity.test.js"
+
+# Lanzar los componentes de US1 juntos:
+Task: "Crear el componente de formulario de entidad en src/components/entity-form.js"
+Task: "Crear el componente de lista de entidades en src/components/entity-list.js"
+```
+
+### Ejemplo Paralelo: Historia de Usuario 7
+
+```bash
+Task: "Añadir pruebas unitarias de campos personalizados en tests/unit/custom-fields.test.js"
+Task: "Añadir pruebas de integración de campos personalizados en tests/integration/us7-custom-fields.test.js"
+Task: "Renderizar campos personalizados en formularios en src/components/entity-form.js y src/components/document-form.js"
+Task: "Incluir campos personalizados en listas y búsqueda en src/components/entity-list.js y src/search.js"
+```
+
+---
+
+## Estrategia de Implementación
+
+### MVP Primero (Solo Historia de Usuario 1)
+
+1. Completar Fase 1: Configuración.
+2. Completar Fase 2: Fundacional (CRÍTICO, bloquea todas las historias).
+3. Completar Fase 3: US1.
+4. **DETENERSE Y VALIDAR**: Probar US1 de forma independiente (crear entidad, verla en la lista, validar nombre/código obligatorios y código único).
+5. Desplegar o demostrar si está listo.
+
+### Entrega Incremental
+
+1. Configuración + Fundacional → base lista.
+2. US1 → validar → desplegar/demostrar (MVP).
+3. US2 → validar → desplegar/demostrar.
+4. US3 y US4 → validar el panel y la gestión.
+5. US5 → validar la configuración; después US6, US7 y US13.
+6. US8 y US9 → validar búsqueda y fecha objetivo.
+7. US10, US11 y US12 → validar documentos, búsqueda dedicada y ciclo de vida.
+8. Fase 16 → pulido, rendimiento y verificación final.
+
+### Estrategia de Equipo Paralelo
+
+Con varios desarrolladores:
+
+1. El equipo completa Configuración + Fundacional en conjunto.
+2. Tras el Fundacional:
+   - Desarrollador A: US1 → US2 → US9.
+   - Desarrollador B: US5 → US6 → US7 → US13.
+   - Desarrollador C: US3 → US4 → US8 → US11.
+   - Desarrollador D: US10 → US12.
+3. Las historias se integran y validan de forma independiente; US3/US4 y US8/US11 coordinan sus puntos de entrada compartidos.
+
+---
+
+## Notas
+
+- `[P]` indica tareas sobre archivos distintos y sin dependencias pendientes.
+- `[USx]` mapea cada tarea a su historia para trazabilidad.
+- Cada historia debe poder completarse y probarse de forma independiente.
+- Verificar que las pruebas fallen antes de implementar.
+- Confirmar después de cada tarea o grupo lógico.
+- Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias entre historias que rompan la independencia.
+- Las reglas clarificadas se reflejan en: FR-040 (valores huérfanos, T052), FR-041 (búsqueda sin acentos, T007/T061), FR-042 (código único, T006/T013/T026), FR-043 (confirmación de borrado, T025/T075) y FR-044 (URL/atrás/recarga, T010).
