@@ -23,18 +23,18 @@
   - Demonstrated to users independently
 -->
 
-### User Story 1 - [Brief Title] (Priority: P1)
+### User Story 1 - [Gestion de fichas de trabajadores y catalogos de base] (Priority: P1)
 
-[Describe this user journey in plain language]
+[Como administrador/a de RR.HH., quiero registrar, buscar y actualizar la ficha de los trabajadores y los catálogos base (cargos, departamentos y centros de costo) para mantener la dotación de personal organizada y al día]
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: [Es la base operativa indispensable para calcular cualquier remuneración y asociar costos]
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: [Un usuario crea un trabajador con su RUT validado y un cargo asociado, y puede buscarlo y editarlo correctamente en la lista.]
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** [Dado que el usuario crea un trabajador, cuando ingresa un RUT válido y los datos obligatorios, entonces el sistema valida el dígito verificador y guarda la ficha.]
+2. **Given** [Dado que un trabajador tiene liquidaciones cerradas, cuando se requiere desvincularlo, entonces el sistema aplica una baja lógica para preservar el historial exigido por ley.]
 
 ---
 
@@ -52,17 +52,17 @@
 
 ---
 
-### User Story 3 - [Brief Title] (Priority: P3)
+### User Story 3 - [registro y aprobación de novedades del mes] (Priority: P1)
 
-[Describe this user journey in plain language]
+Como analista de remuneraciones o jefatura, quiero registrar y aprobar las novedades del período (horas extra, licencias médicas y ausencias) para que el motor de cálculo procese únicamente montos validados
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: Las variables mensuales modifican el sueldo proporcional y son críticas para evitar pagos incorrectos.
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: Una jefatura registra novedades para su equipo y el sistema exige su aprobación antes de procesar la planilla.
 
 **Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** el registro de una licencia médica, **When** se ingresa, **Then** el sistema registra el tipo y los días sin permitir almacenar diagnósticos por privacidad (Ley 21.719).
+2. **Given** que existen novedades ingresadas, **When** el período está abierto, **Then** deben ser aprobadas antes de proceder al cálculo masivo.
 
 ---
 
