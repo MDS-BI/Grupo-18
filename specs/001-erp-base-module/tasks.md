@@ -2,6 +2,7 @@
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: plan.md (obligatorio), spec.md (obligatorio para las historias de usuario), research.md, data-model.md, contracts/
+**Actualizado**: 2026-11-01 — alineado con la Historia de Usuario 5 revisada (vista explicativa e impresión de liquidaciones, P2)
 
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
@@ -102,20 +103,22 @@
 
 ---
 
-## Fase 7: Historia de Usuario 5 - Definir un perfil de configuración del módulo (Prioridad: P1)
+## Fase 7: Habilitadores de Configuración del Módulo (Transversal)
 
 **Objetivo**: Introducir `src/module-config.js` para que los desarrolladores puedan adaptar la identidad del módulo sin editar el código central, con valores predeterminados seguros e informes de error claros.
 
-**Prueba Independiente**: Un desarrollador suministra una configuración de Ventas; la aplicación carga mostrándola. Al quitar el archivo se restauran los valores predeterminados Entity/Document sin errores.
+**Prueba Independiente**: Un desarrollador suministra una configuración de Ventas; la aplicación carga mostrándola. Al quitar el archivo se restauran los valores predeterminados Entidad/Documento sin errores.
 
-### Pruebas para la Historia de Usuario 5
+> **Nota**: Esta fase no corresponde a una historia de usuario propia. Provee el perfil de configuración que consumen las Historias de Usuario 6, 7, 12 y 13.
 
-- [X] T026 [P] [US5] Añadir pruebas unitarias para carga de configuración, retroceso a predeterminados e informes de configuración inválida en tests/unit/module-config.test.js
+### Pruebas de los Habilitadores de Configuración
 
-### Implementación de la Historia de Usuario 5
+- [X] T026 [P] Añadir pruebas unitarias para carga de configuración, retroceso a predeterminados e informes de configuración inválida en tests/unit/module-config.test.js
 
-- [X] T027 [US5] Crear el cargador de configuración con valores predeterminados, validación e informes de error claros en src/module-config.js
-- [X] T028 [US5] Cargar la configuración al arrancar y pasarla a todas las vistas en src/main.js y src/app.js
+### Implementación de los Habilitadores de Configuración
+
+- [X] T027 Crear el cargador de configuración con valores predeterminados, validación e informes de error claros en src/module-config.js
+- [X] T028 Cargar la configuración al arrancar y pasarla a todas las vistas en src/main.js y src/app.js
 
 **Punto de control**: La configuración aún no impulsa nada visible, pero carga de forma fiable y valida limpiamente.
 
@@ -255,7 +258,7 @@
 
 - [X] T057 [US12] Restringir las opciones de estado de documento a las transiciones permitidas y aplicarlas al guardar en src/components/document-form.js y src/storage.js
 
-**Punto de control**: La cadena de personalización (HU5 → HU6/HU7/HU12) está completa de extremo a extremo.
+**Punto de control**: La cadena de personalización (habilitadores de configuración → HU6/HU7/HU12) está completa de extremo a extremo.
 
 ---
 
@@ -329,49 +332,55 @@
 
 ---
 
-## Fase 19: Historia de Usuario 5 (RRHH/Planilla) - Vista Explicativa e Impresión de Liquidaciones (Prioridad: P1)
+## Fase 19: Historia de Usuario 5 - Vista Explicativa e Impresión de Liquidaciones (Prioridad: P2)
 
-**Objetivo**: Implementar la vista explicativa de liquidaciones que muestre cada línea (haber/descuento) con su base de cálculo, tasa y fórmula matemática aplicada, además de una vista lista para imprimir/guardar en PDF sin barras laterales ni botones.
+**Objetivo**: Mostrar cada liquidación línea por línea con su base de cálculo, tasa o factor, fórmula y parámetro legal vigente, y ofrecer una vista limpia lista para imprimir o guardar en PDF.
 
-**Enunciado**: Como trabajador o analista, quiero visualizar la liquidación línea por línea con su fórmula explicativa y contar con una vista lista para imprimir o guardar en PDF, para asegurar absoluta transparencia en los montos pagados.
+**Prueba Independiente**: Al seleccionar una línea de haber, descuento o impuesto se despliega su desglose (base, tasa, fórmula y parámetro legal con vigencia) y el monto coincide con el de la línea; al pulsar imprimir se obtiene un comprobante sin barras laterales, menús ni botones, apto para papel o PDF.
 
-**Prueba Independiente**: Al abrir una liquidación, el usuario puede seleccionar una línea de haber o descuento y ver la base, tasa y fórmula explicativa; al pulsar "Imprimir/Exportar a PDF" se muestra una versión limpia sin barras laterales ni botones, apta para impresión/PDF.
+### Pruebas para la Historia de Usuario 5
 
-### Pruebas para la Historia de Usuario 5 (RRHH/Planilla)
+- [ ] T082 [P] [US5] Añadir pruebas unitarias para derivación y formato de la explicación (base, tasa o factor, fórmula, parámetro legal con fecha de vigencia y motivo de líneas manuales) en tests/unit/rrhh-liquidacion.test.js
+- [ ] T083 [P] [US5] Añadir pruebas de integración para la vista src/rrhh/views/liquidacion.js (renderizado línea por línea, panel explicativo al seleccionar, totales) en tests/integration/rrhh-liquidacion-view.test.js
+- [ ] T084 [P] [US5] Añadir pruebas de integración para el modo de impresión limpia, las reglas @media print y la restauración del estado tras imprimir en tests/integration/rrhh-liquidacion-print.test.js
+- [ ] T085 [P] [US5] Añadir pruebas de integración para casos límite (línea manual sin fórmula, parámetro no vigente, liquidación en borrador, datos faltantes del emisor, cancelación de impresión) en tests/integration/rrhh-liquidacion-edge-cases.test.js
 
-- [ ] T082 [P] [US5-RRHH] Añadir pruebas unitarias para el cálculo/derivación de fórmula explicativa (base, tasa, fórmula) en tests/unit/rrhh-liquidacion.test.js
-- [ ] T083 [P] [US5-RRHH] Añadir pruebas de integración para la vista `src/rrhh/views/liquidacion.js` (renderizado línea por línea, panel explicativo al seleccionar línea, totales) en tests/integration/rrhh-liquidacion-view.test.js
-- [ ] T084 [P] [US5-RRHH] Añadir pruebas para estilos/funcionalidad de impresión (@media print) y modo impresión limpia en tests/integration/rrhh-liquidacion-print.test.js
-
-### Implementación de la Historia de Usuario 5 (RRHH/Planilla)
+### Implementación de la Historia de Usuario 5
 
 #### Estructura y datos
-- [ ] T085 [P] [US5-RRHH] Crear la estructura de carpetas `src/rrhh/`, `src/rrhh/views/`, `src/rrhh/components/`, `src/rrhh/utils/` si no existen
-- [ ] T086 [US5-RRHH] Definir/validar el modelo de lectura de `LIQUIDACION` y `LINEA_LIQUIDACION` en `src/rrhh/utils/liquidacion-data.js` (mapeo de campos: id, empleado, periodo, fecha, haberes/descuentos, totales, base, tasa, formula, concepto, tipo)
-- [ ] T087 [US5-RRHH] Implementar loader/servicio para obtener cabecera `LIQUIDACION` y detalle `LINEA_LIQUIDACION` por id de liquidación desde almacenamiento/configurado (compatibilidad con `src/storage.js` o fuente de datos RRHH) en `src/rrhh/utils/liquidacion-service.js`
 
-#### Vista principal de liquidación
-- [ ] T088 [P] [US5-RRHH] Crear la vista `src/rrhh/views/liquidacion.js` con layout: cabecera de liquidación (empleado, periodo, fecha), listado línea por línea de haberes y descuentos, totales (haberes, descuentos, líquido), y panel "Vista Explicativa" lateral/inferior
-- [ ] T089 [US5-RRHH] Implementar renderizado línea por línea: para cada `LINEA_LIQUIDACION` mostrar concepto, tipo (haber/descuento), monto, y estado seleccionable (click/focus)
-- [ ] T090 [US5-RRHH] Implementar lógica para calcular/mostrar al seleccionar una línea: base de cálculo, tasa (% o valor), fórmula matemática aplicada (p. ej. `Base * Tasa = Monto`, con valores numéricos formateados). Soportar fórmulas almacenadas en `formula` o derivadas desde `base`/`tasa`
-- [ ] T091 [US5-RRHH] Añadir validaciones/defensas para líneas sin datos explicativos (mostrar mensaje claro "Sin fórmula explicativa disponible" y valores por defecto seguros)
+- [ ] T086 [P] [US5] Crear la estructura de carpetas src/rrhh/, src/rrhh/views/, src/rrhh/components/ y src/rrhh/utils/ si no existen
+- [ ] T087 [US5] Definir y validar el modelo de lectura de LIQUIDACION y LINEA_LIQUIDACION en src/rrhh/utils/liquidacion-data.js (encabezado: trabajador, período, fecha de emisión; líneas: concepto, tipo, monto, base, tasa, fórmula, parámetro legal)
+- [ ] T088 [US5] Implementar el servicio de carga de la cabecera y las líneas por identificador de liquidación, con datos de demostración cuando no existan, en src/rrhh/utils/liquidacion-service.js
 
-#### Impresión / Exportar a PDF
-- [ ] T092 [P] [US5-RRHH] Añadir botón "Imprimir / Guardar en PDF" en `src/rrhh/views/liquidacion.js` con acción para activar modo impresión limpia
-- [ ] T093 [US5-RRHH] Implementar modo impresión: añadir clase `print-clean` al contenedor/root, ocultar barras laterales, navegación, cabecera de app, botones de acción y cualquier elemento no relevante antes de `window.print()`
-- [ ] T094 [US5-RRHH] Añadir estilos de impresión en `src/styles.css` con `@media print` para `.rrhh-liquidacion`, `.print-clean`, ocultando `.sidebar`, `.topbar`, `.app-nav`, botones, controles y asegurando layout en una columna, colores legibles, saltos de página apropiados (`page-break-inside: avoid`) para cabecera/filas/totales
-- [ ] T095 [US5-RRHH] Asegurar que tras imprimir se restaure el estado normal (remover clase `print-clean`) y que el formato sea limpio (sin elementos interactivos visibles)
+#### Vista explicativa
 
-#### Integración y navegación
-- [ ] T096 [US5-RRHH] Integrar la vista en enrutamiento/navegación del módulo RRHH/Planilla (añadir ruta/vista accesible desde módulo correspondiente) respetando el marco ERP (barra superior/sidebar) o permitiendo vista independiente según flujo
-- [ ] T097 [US5-RRHH] Conectar con datos reales de `LIQUIDACION`/`LINEA_LIQUIDACION` (usar `liquidacion-service.js`) con datos mock para desarrollo si no existen
-- [ ] T098 [US5-RRHH] Garantizar accesibilidad: foco en línea seleccionada, `aria-selected`, labels descriptivos para panel explicativo, botón de impresión accesible
+- [ ] T089 [P] [US5] Crear la vista src/rrhh/views/liquidacion.js con encabezado (trabajador, período, fecha de emisión), listado de haberes y descuentos, totales y panel de "Vista Explicativa"
+- [ ] T090 [US5] Renderizar cada línea con concepto, tipo (haber, descuento o impuesto), monto y estado seleccionable por clic y teclado (aria-selected) en src/rrhh/views/liquidacion.js
+- [ ] T091 [US5] Mostrar al seleccionar una línea la base de cálculo, la tasa o factor aplicado, la fórmula con valores formateados y el monto resultante en src/rrhh/views/liquidacion.js
+- [ ] T092 [US5] Identificar en el desglose el parámetro legal aplicado y su fecha de vigencia, usando los valores congelados del período en src/rrhh/utils/liquidacion-data.js y src/rrhh/views/liquidacion.js
+- [ ] T093 [US5] Mostrar el motivo registrado en las líneas manuales en lugar de una fórmula, y un mensaje claro cuando no exista fórmula o parámetro legal, sin omitir la línea en src/rrhh/views/liquidacion.js
 
-#### Pruebas y verificación
-- [ ] T099 [US5-RRHH] Ejecutar pruebas unitarias e integración relacionadas con liquidación y corregir fallos
-- [ ] T100 [US5-RRHH] Verificación manual: seleccionar haber/descuento mostrando base/tasa/fórmula; impresión/PDF sin barras laterales/botones; responsive/impresión legible
+#### Impresión y PDF
 
-**Punto de control**: La vista explicativa de liquidaciones muestra fórmula línea por línea y permite impresión/PDF limpia cumpliendo los criterios de aceptación.
+- [ ] T094 [P] [US5] Añadir la acción "Imprimir / Guardar en PDF" que active el modo de impresión limpia en src/rrhh/views/liquidacion.js
+- [ ] T095 [US5] Implementar el modo de impresión: aplicar la clase print-clean, ocultar barra superior, barra lateral, navegación y botones antes de window.print(), y restaurar el estado al terminar en src/rrhh/views/liquidacion.js
+- [ ] T096 [US5] Añadir estilos @media print en src/styles.css para .rrhh-liquidacion y .print-clean: ocultar .topbar, .sidebar, .app-nav y controles, una sola columna, colores legibles, tamaño carta/A4 vertical y page-break-inside: avoid en encabezado, filas y totales
+- [ ] T097 [US5] Incluir en el comprobante imprimible la identificación del emisor, del trabajador y del período, el detalle de haberes, descuentos e impuestos, los totales, el líquido a pagar y la fecha de emisión, garantizando que los montos impresos coincidan con la liquidación en src/rrhh/views/liquidacion.js
+
+#### Integración, permisos y accesibilidad
+
+- [ ] T098 [US5] Integrar la vista en la navegación de RRHH/Planilla dentro del marco ERP existente en src/app.js y src/module-config.js
+- [ ] T099 [US5] Respetar los permisos de acceso vigentes: ocultar las líneas y explicaciones no autorizadas tanto en pantalla como en el comprobante, usando la matriz de roles de src/rrhh/seguridad/roles.js (crear la verificación mínima si el módulo aún no la expone)
+- [ ] T100 [US5] Garantizar accesibilidad: foco visible en la línea seleccionada, aria-selected, etiquetas descriptivas del panel explicativo y botón de impresión accesible en src/rrhh/views/liquidacion.js
+
+#### Verificación
+
+- [ ] T101 [US5] Ejecutar las pruebas unitarias y de integración de la vista explicativa e impresión, y corregir los fallos
+- [ ] T102 [US5] Verificar manualmente los escenarios de aceptación y casos límite (desglose, parámetro legal, línea manual, período cerrado, borrador, cancelación de impresión) y registrar el resultado
+- [ ] T103 [US5] Comprobar los criterios de éxito SC-011 a SC-016: tiempo de despliegue del desglose, tiempo para obtener el comprobante, comprensión de los montos, coincidencia de montos impresos y ausencia de controles de edición en la vista imprimible
+
+**Punto de control**: La vista explicativa de liquidaciones muestra base, tasa, fórmula y parámetro legal línea por línea, y permite obtener un comprobante imprimible o PDF limpio y consistente con los montos calculados.
 
 ---
 
@@ -385,18 +394,19 @@
 - Historia de Usuario 2 (Fase 4): Depende de completar la implementación de la Historia de Usuario 1
 - Historia de Usuario 3 (Fase 5): Depende de completar Fundacional
 - Historia de Usuario 4 (Fase 6): Depende de completar la Historia de Usuario 3 y se beneficia de que los formularios de las Historias de Usuario 1-2 estén disponibles
-- Historia de Usuario 5 (Fase 7): Depende de completar Fundacional; desbloquea HU6, HU7, HU12
-- Historia de Usuario 6 (Fase 8): Depende de completar la Historia de Usuario 5
-- Historia de Usuario 7 (Fase 9): Depende de completar la Historia de Usuario 5
+- Habilitadores de configuración (Fase 7): Depende de completar Fundacional; desbloquea HU6, HU7, HU12 y HU13
+- Historia de Usuario 6 (Fase 8): Depende de completar los habilitadores de configuración (Fase 7)
+- Historia de Usuario 7 (Fase 9): Depende de completar los habilitadores de configuración (Fase 7)
 - Historia de Usuario 8 (Fase 10): Depende de completar Fundacional y puede proceder después de la Historia de Usuario 1
 - Historia de Usuario 9 (Fase 11): Depende de completar Fundacional y puede proceder después de la Historia de Usuario 1
 - Historia de Usuario 10 (Fase 12): Depende de completar la implementación de la Historia de Usuario 1 y del campo entity_id
 - Historia de Usuario 11 (Fase 13): Depende de la Historia de Usuario 8 (lógica de búsqueda) y la Historia de Usuario 3 (navegación)
-- Historia de Usuario 12 (Fase 14): Depende de la Historia de Usuario 5 (configuración) y la Historia de Usuario 10 (documentos)
+- Historia de Usuario 12 (Fase 14): Depende de los habilitadores de configuración (Fase 7) y la Historia de Usuario 10 (documentos)
 - Pulido (Fase 15): Depende de que todas las historias de usuario deseadas estén completas
 - Historia de Usuario 13 (Fase 16): Depende de que las Fases 1-15 estén completas; reestructura la navegación entregada por HU3/HU4 dentro del marco
 - Historia de Usuario 3 revisada (Fase 17): Depende de la Fase 16 (el enrutamiento por barra lateral debe existir antes de que las acciones del panel lo usen)
 - Pulido Aspecto ERP (Fase 18): Depende de que las Fases 16 y 17 estén completas
+- Historia de Usuario 5 (Fase 19): Depende del marco ERP (Fase 16) y de que existan liquidaciones y líneas calculadas; al ser P2 se aborda después de las historias P1
 
 ### Oportunidades Paralelas
 
@@ -409,3 +419,46 @@
 - En la Fase 16, T064-T067 y T069 pueden ejecutarse en paralelo; T072 aterriza junto al cambio de enrutamiento T068
 - En la Fase 17, T073/T074/T077 pueden ejecutarse en paralelo con T075/T076
 - En la Fase 18, T078 y T079 pueden ejecutarse en paralelo antes de la verificación final T080-T081
+- En la Fase 19, las pruebas T082-T085 son paralelas entre sí; T086/T087 y T089/T094 pueden iniciarse en paralelo; T091-T093 comparten archivo y avanzan en secuencia
+
+### Ejemplo Paralelo: Historia de Usuario 5
+
+```text
+# Lanzar en paralelo las pruebas de la Historia de Usuario 5:
+Tarea: "Pruebas unitarias de la explicación (base, tasa, fórmula, parámetro legal) en tests/unit/rrhh-liquidacion.test.js"
+Tarea: "Pruebas de integración de la vista en tests/integration/rrhh-liquidacion-view.test.js"
+Tarea: "Pruebas de integración de impresión limpia en tests/integration/rrhh-liquidacion-print.test.js"
+Tarea: "Pruebas de integración de casos límite en tests/integration/rrhh-liquidacion-edge-cases.test.js"
+
+# Iniciar en paralelo la base de datos y la estructura de la vista:
+Tarea: "Crear carpetas src/rrhh/ y src/rrhh/views/"
+Tarea: "Definir el modelo de lectura de LIQUIDACION y LINEA_LIQUIDACION en src/rrhh/utils/liquidacion-data.js"
+Tarea: "Crear el layout de la vista en src/rrhh/views/liquidacion.js"
+Tarea: "Añadir la acción Imprimir / Guardar en PDF en src/rrhh/views/liquidacion.js"
+```
+
+---
+
+## Estrategia de Implementación
+
+### Primero el MVP (solo Historia de Usuario 1)
+
+1. Completar la Fase 1: Configuración
+2. Completar la Fase 2: Fundacional (CRÍTICO: bloquea todas las historias)
+3. Completar la Fase 3: Historia de Usuario 1
+4. **DETENERSE Y VALIDAR**: probar la Historia de Usuario 1 de forma independiente
+5. Desplegar o demostrar si está lista
+
+### Entrega Incremental
+
+1. Completar Configuración + Fundacional → base lista
+2. Añadir Historia de Usuario 1 → probar y demostrar (MVP)
+3. Añadir el resto de historias P1 (HU2, HU3, HU4, HU6, HU7, HU13) en orden de dependencias
+4. Añadir las historias P2 (HU8, HU9, HU10, HU11, HU12) y finalmente HU5 (Fase 19)
+5. Cada historia añade valor sin romper las anteriores
+
+### Estrategia de Equipo en Paralelo
+
+1. El equipo completa Configuración + Fundacional en conjunto
+2. Con la base lista, repartir historias independientes por desarrollador
+3. Las historias se completan e integran de forma independiente; HU5 se integra al final por depender de liquidaciones calculadas

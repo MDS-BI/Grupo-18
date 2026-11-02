@@ -2,6 +2,7 @@
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de proceder a la planificación
 **Creada**: 2026-07-08
+**Actualizada**: 2026-11-01 (incorporación de la Historia de Usuario 5)
 **Funcionalidad**: [Enlace a spec.md](spec.md)
 
 ## Calidad del Contenido
@@ -32,3 +33,4 @@
 ## Notas
 
 - La especificación está lista para la planificación y la implementación.
+- 2026-11-01: Historia de Usuario 5 (vista explicativa e impresión de liquidaciones) formalizada con 5 escenarios de aceptación, 11 requisitos funcionales (FR-040 a FR-050), 6 criterios de éxito (SC-011 a SC-016), 3 entidades clave y 7 casos límite.

@@ -2,8 +2,10 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
+**Actualizada**: 2026-11-01  
 **Estado**: Borrador  
-**Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."
+**Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
+**Última incorporación**: Historia de Usuario 5 — Vista Explicativa e Impresión de Liquidaciones (P2).
 
 ## Propósito
 
@@ -83,17 +85,19 @@ Como usuario de negocio, quiero una pantalla dedicada donde pueda añadir, edita
 
 ### Historia de Usuario 5 - Vista Explicativa e Impresión de Liquidaciones (Prioridad: P2)
 
-Como trabajador o analista, quiero visualizar la liquidación línea por línea con su fórmula explicativa y contar con una vista lista para imprimir o guardar en PDF, para asegurar absoluta transparencia en los montos pagados. 
+Como trabajador o analista, quiero visualizar la liquidación línea por línea con su fórmula explicativa y contar con una vista lista para imprimir o guardar en PDF, para asegurar absoluta transparencia en los montos pagados.
 
-**Por qué esta prioridad**: La transparencia de los cálculos genera confianza y reduce drásticamente las consultas y reclamos internos.
+**Por qué esta prioridad**: La explicabilidad de los cálculos genera confianza y reduce drásticamente las consultas y reclamos internos. Aporta valor una vez que las liquidaciones ya se calculan, por lo que mejora la experiencia sin bloquear el flujo principal de gestión.
 
-**Prueba Independiente**: Al hacer clic en cualquier línea de la liquidación, el sistema despliega el desglose matemático y el parámetro legal utilizado.
+**Prueba Independiente**: Al hacer clic en cualquier línea de la liquidación, el sistema despliega el desglose matemático y el parámetro legal utilizado; al imprimir, se obtiene un comprobante limpio y legible.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** una liquidación calculada, **cuando** el usuario selecciona una línea (ej. gratificación o impuesto), **entonces** se muestra la base de cálculo, la tasa y la fórmula aplicada.
-2. **Dado** que se requiere entregar el comprobante, **cuando** el usuario presiona imprimir, **entonces** se presenta un formato limpio adaptado para papel o PDF.
-
+1. **Dado** una liquidación calculada, **cuando** el usuario selecciona una línea (p. ej., gratificación o impuesto), **entonces** se muestra la base de cálculo, la tasa o factor aplicado y la fórmula utilizada.
+2. **Dado** que se requiere entregar el comprobante, **cuando** el usuario presiona imprimir, **entonces** se presenta un formato limpio adaptado para papel o PDF, sin menús, botones de edición ni controles de navegación.
+3. **Dado** un desglose desplegado, **cuando** el usuario lo revisa, **entonces** identifica el parámetro legal utilizado con su fecha de vigencia y el monto explicado coincide con el de la línea.
+4. **Dado** un período cerrado o una liquidación pagada, **cuando** el usuario consulta una línea, **entonces** la explicación muestra los valores congelados del período y no los parámetros vigentes actuales.
+5. **Dado** que el usuario cancela el diálogo de impresión, **cuando** vuelve a la liquidación, **entonces** la vista y los datos permanecen sin cambios.
 
 ---
 
@@ -101,7 +105,7 @@ Como trabajador o analista, quiero visualizar la liquidación línea por línea 
 
 Como desarrollador de módulos, quiero que todas las etiquetas visibles para el usuario deriven de la configuración, para que un módulo adaptado hable su idioma de dominio de forma consistente en todo momento.
 
-**Por qué esta prioridad**: Los usuarios confían en un módulo que dice consistentemente "Cliente" y "Pedido de Venta" en lugar de dejar filtrarse una "Entidad" genérica por media interfaz; la terminología inconsistente hace que los módulos adaptados parezcan rotos. Esta historia depende del perfil de configuración (Historia de Usuario 5).
+**Por qué esta prioridad**: Los usuarios confían en un módulo que dice consistentemente "Cliente" y "Pedido de Venta" en lugar de dejar filtrarse una "Entidad" genérica por media interfaz; la terminología inconsistente hace que los módulos adaptados parezcan rotos. Esta historia depende del perfil de configuración del módulo.
 
 **Prueba Independiente**: Un desarrollador mapea Entidad→Cliente y Documento→Pedido de Venta en la configuración, y cada pestaña, botón, etiqueta de formulario, encabezado y mensaje en las tres pantallas usa los términos mapeados.
 
@@ -117,7 +121,7 @@ Como desarrollador de módulos, quiero que todas las etiquetas visibles para el 
 
 Como desarrollador de módulos, quiero declarar campos adicionales para entidades y documentos en la configuración, para que aparezcan automáticamente en formularios, listas, validación y búsqueda sin escribir código de interfaz.
 
-**Por qué esta prioridad** : Los módulos personalizados existen porque sus registros contienen datos específicos del dominio (el límite de crédito de un cliente, la fecha de vencimiento de una factura). Si agregar campos requiere editar formularios y validación a mano, la adaptación es propensa a errores y no escala. Esta historia depende del perfil de configuración (Historia de Usuario 5).
+**Por qué esta prioridad** : Los módulos personalizados existen porque sus registros contienen datos específicos del dominio (el límite de crédito de un cliente, la fecha de vencimiento de una factura). Si agregar campos requiere editar formularios y validación a mano, la adaptación es propensa a errores y no escala. Esta historia depende del perfil de configuración del módulo.
 
 **Prueba Independiente** : Un desarrollador declara un campo numérico obligatorio personalizado en las entidades; se muestra como entrada numérica en el formulario, bloquea el guardado cuando está en blanco, muestra los valores guardados en las listas y coinciden en las búsquedas.
 
@@ -199,7 +203,7 @@ Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontra
 
 Como desarrollador de módulos, quiero definir los estados permitidos de los documentos y las transiciones permitidas, para que los documentos sigan el ciclo de vida del dominio en lugar de aceptar texto de estado arbitrario.
 
-**Por qué esta prioridad** : Los módulos reales necesitan ciclos de vida controlados (p. ej., cotización → pedido → facturado), pero el estado de texto libre sigue siendo aceptable para extensiones simples, así que esto mejora la base sin ser necesario para la adaptación básica. Esta historia depende del perfil de configuración (Historia de Usuario 5).
+**Por qué esta prioridad** : Los módulos reales necesitan ciclos de vida controlados (p. ej., cotización → pedido → facturado), pero el estado de texto libre sigue siendo aceptable para extensiones simples, así que esto mejora la base sin ser necesario para la adaptación básica. Esta historia depende del perfil de configuración del módulo.
 
 **Prueba Independiente** : Un desarrollador configura un ciclo de vida cotización→pedido→facturado; el siguiente control de estado ofrece solo estados válidos, las transiciones inválidas se rechazan con una explicación, y el estado es visible de un vistazo en las listas.
 
@@ -216,7 +220,7 @@ Como desarrollador de módulos, quiero definir los estados permitidos de los doc
 
 Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, con una barra superior con marca y una barra lateral de módulos presentes en cada pantalla, para que la aplicación se sienta como un sistema empresarial coherente en lugar de páginas sueltas.
 
-**Por qué esta prioridad** : El marco aporta la marca y la navegación de todas las demás pantallas; construirlo como envoltorio evita tocar cada historia por separado y da al módulo su identidad ERP. Depende del perfil de configuración (Historia de Usuario 5) para el nombre del módulo y la terminología, y reestructura la navegación antes proporcionada por los botones de bienvenida y las pestañas de gestión (Historias de Usuario 3 y 4).
+**Por qué esta prioridad** : El marco aporta la marca y la navegación de todas las demás pantallas; construirlo como envoltorio evita tocar cada historia por separado y da al módulo su identidad ERP. Depende del perfil de configuración del módulo para el nombre del módulo y la terminología, y reestructura la navegación antes proporcionada por los botones de bienvenida y las pestañas de gestión (Historias de Usuario 3 y 4).
 
 **Prueba Independiente** : En cada pantalla, una barra superior muestra un logotipo derivado del nombre del módulo junto al nombre del módulo, una barra lateral ofrece botones de módulo para Panel, Entidades, Documentos y Buscar con el módulo activo resaltado visualmente, y navegar entre módulos nunca pierde datos.
 
@@ -249,6 +253,13 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - ¿Qué ocurre cuando el panel se abre con cero entidades o cero documentos (valores estadísticos)?
 - ¿Qué ocurre cuando el color de acento configurado no es un valor de color válido?
 - ¿Cómo mantiene la barra lateral contraída las etiquetas de módulo accesibles en ventanas gráficas estrechas?
+- ¿Qué ocurre cuando el usuario selecciona una línea de liquidación registrada manualmente que no tiene fórmula asociada?
+- ¿Qué ocurre cuando la línea seleccionada referencia un parámetro legal que no está vigente para el período liquidado?
+- ¿Qué ocurre cuando la liquidación aún está en borrador o no ha sido calculada y el usuario intenta ver el desglose o imprimirla?
+- ¿Qué ocurre si faltan datos de identificación del trabajador o de la empresa emisora al generar el comprobante?
+- ¿Qué ocurre cuando los valores mostrados en el desglose son redondeados y la suma de las líneas debe seguir cuadrando con el total?
+- ¿Qué ocurre cuando la liquidación tiene tantas líneas que el comprobante supera una página?
+- ¿Qué ocurre si el usuario cancela el diálogo de impresión o guarda el comprobante como PDF?
 
 ## Requisitos *(obligatorio)*
 
@@ -293,6 +304,17 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - **FR-037**: La barra lateral DEBE resaltar visualmente el módulo activo en cada pantalla.
 - **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura a los valores integrados cuando esté ausente o sea inválido.
 - **FR-039**: En ventanas gráficas estrechas, la barra lateral DEBE contraerse a una columna de iconos manteniéndose operable.
+- **FR-040**: El sistema DEBE presentar cada liquidación como una lista de líneas con su concepto y monto, indicando que cada línea puede expandirse para ver su explicación.
+- **FR-041**: Al seleccionar una línea, el sistema DEBE mostrar la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el monto resultante.
+- **FR-042**: La explicación DEBE identificar el parámetro legal aplicado y su fecha de vigencia.
+- **FR-043**: Las líneas registradas manualmente DEBEN mostrar el motivo ingresado por el usuario en lugar de una fórmula.
+- **FR-044**: La explicación DEBE conservar los valores del período calculado aunque los parámetros legales cambien con posterioridad.
+- **FR-045**: El sistema DEBE ofrecer una acción de imprimir que genere una vista limpia del comprobante, sin menús, botones de edición ni controles de navegación.
+- **FR-046**: La vista imprimible DEBE incluir la identificación del trabajador y del período, el detalle de haberes, descuentos e impuestos, el líquido a pagar, los totales y la fecha de emisión.
+- **FR-047**: Los montos de la vista imprimible DEBEN coincidir exactamente con los montos mostrados en la liquidación.
+- **FR-048**: La vista imprimible DEBE adaptarse a una hoja tamaño carta o A4 en orientación vertical y DEBE poder guardarse como PDF.
+- **FR-049**: La explicación y el comprobante DEBEN respetar los permisos de acceso vigentes del usuario.
+- **FR-050**: El sistema DEBE indicar claramente cuándo una línea no dispone de fórmula o parámetro legal asociado, sin omitir la línea del comprobante.
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -309,6 +331,9 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Entidad**: Un registro de datos maestros gestionado por el módulo, que incluye su nombre, código de negocio, detalles descriptivos, categoría de clasificación, una fecha objetivo opcional y un entity_id autogenerado. Los módulos personalizados definen qué representa una Entidad en el mundo real (p. ej., cliente, producto, activo).
 - **Documento**: Detalles transaccionales adjuntos a una entidad, vinculados a ella por el entity_id de la entidad. Los módulos personalizados definen qué representa un Documento (p. ej., pedido, factura, contrato).
 - **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados y el ciclo de vida de estados de documentos. Consulte data-model.md para su forma completa.
+- **Liquidación**: Documento que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales y líquido a pagar, junto con el estado del cálculo y la fecha de emisión del comprobante.
+- **Línea de Liquidación**: Cada concepto que compone una liquidación (haber, descuento o impuesto), con su monto, la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal que la respalda; las líneas manuales registran un motivo en lugar de una fórmula.
+- **Parámetro Legal**: Valor normativo vigente en una fecha determinada (tasa, tope, tramo o monto fijo) que sustenta el cálculo de una línea y que se conserva congelado para los períodos ya calculados.
 
 ## Criterios de Éxito *(obligatorio)*
 
@@ -324,13 +349,19 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-008**: Un desarrollador puede producir un módulo adaptado usando solo el archivo de configuración, con cero modificaciones en archivos fuente centrales.
 - **SC-009**: Cada pantalla presenta el mismo marco con marca, y los usuarios pueden identificar en qué módulo están de un vistazo.
 - **SC-010**: Las estadísticas de registros mostradas en el panel siempre coinciden con el número de entidades y documentos almacenados.
+- **SC-011**: El 100% de las líneas de una liquidación calculada muestra base, tasa o factor y fórmula al seleccionarlas, en menos de 1 segundo.
+- **SC-012**: Un usuario puede abrir una liquidación y obtener su comprobante impreso o en PDF en menos de 30 segundos.
+- **SC-013**: Al menos el 90% de los usuarios de prueba comprende de dónde proviene cada monto sin ayuda adicional.
+- **SC-014**: Las consultas internas sobre montos pagados se reducen al menos un 40% tras la adopción de la vista explicativa.
+- **SC-015**: El 100% de los comprobantes impresos coincide con los totales de la liquidación y se ajusta a un máximo de dos páginas.
+- **SC-016**: La vista imprimible no muestra controles de edición ni de navegación en ningún caso.
 
 ## Suposiciones
 
 - El módulo base gestiona datos para un único espacio de trabajo en lugar de una base de datos multiinquilino compartida.
 - La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales.
 - Cada entidad incluye información básica suficiente para identificación y seguimiento; los módulos personalizados aportan los campos específicos del dominio.
-- La versión inicial se centra en la gestión central de datos maestros y documentos en lugar de capacidades ERP avanzadas como flujos de aprobación, períodos de contabilización o informes.
+- La versión inicial se centra en la gestión central de datos maestros y documentos, además de la vista explicativa e impresión de liquidaciones de la Historia de Usuario 5, en lugar de capacidades ERP avanzadas como flujos de aprobación, períodos de contabilización o informes.
 - La búsqueda se realiza sobre los registros de entidad almacenados.
 - La pantalla de gestión consolida los formularios de añadir/editar entidad y añadir/editar documento en una sola pantalla de gestión.
 - La navegación entre áreas ocurre mediante una barra lateral persistente; la pantalla de gestión aloja ambos paneles de gestión y no muestra la lista de entidades.
@@ -341,4 +372,10 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - Los datos siguen persistiéndose en el localStorage del navegador y no se ven afectados por la navegación entre pantallas.
 - La pantalla de búsqueda se centra en encontrar y ver entidades; la edición permanece en la pantalla de gestión.
 - El contenido del usuario introducido por el usuario (nombres, descripciones, notas de documentos) DEBE sanitizarse antes de renderizarse en el DOM para prevenir ataques de inyección de scripts (XSS). El módulo base DEBE escapar HTML y atributos de eventos al mostrar datos de localStorage.
+- Las liquidaciones y sus líneas existen como resultado de un cálculo previo; esta historia no cubre las reglas de cálculo ni la generación de la planilla.
+- Cada línea conserva, desde el momento del cálculo, la base, la tasa o fórmula y el parámetro legal aplicado, de modo que la explicación no depende de parámetros posteriores.
+- La impresión se realiza mediante la función de impresión del navegador, que incluye la opción de guardar como PDF; no se requiere un generador de PDF dedicado.
+- Los datos de identificación de la empresa emisora están disponibles en la configuración del módulo.
+- Los montos se presentan en pesos chilenos con separador de miles.
+- El acceso a la explicación y al comprobante respeta los permisos vigentes del usuario.
 
