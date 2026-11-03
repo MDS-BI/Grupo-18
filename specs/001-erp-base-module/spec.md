@@ -2,12 +2,10 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Actualizada**: 2026-11-02  
 **Actualizada**: 2026-11-03  
 **Estado**: Borrador  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historia de Usuario 14 — Registro y Aprobación de Novedades del Mes (P1).
-**Última incorporación**: Seguridad, Roles y Gobierno de Datos (P2) — Historia de Usuario 14 en esta especificación.
+**Última incorporación**: Historia de Usuario 6 — Seguridad, Roles y Gobierno de Datos (P2); las historias posteriores se renumeraron en consecuencia.
 
 ## Propósito
 
@@ -103,7 +101,22 @@ Como trabajador o analista, quiero visualizar la liquidación línea por línea 
 
 ---
 
-### Historia de Usuario 6 - Reetiquetar pantallas desde la configuración (Prioridad: P1)
+### Historia de Usuario 6 - Seguridad, Roles y Gobierno de Datos (Prioridad: P2)
+
+Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuentas bancarias, cuotas sindicales) según el rol del usuario y registrar una bitácora de auditoría, para cumplir estrictamente con la normativa de protección de datos (Ley 21.719).
+
+**Por qué esta prioridad**: Protege la privacidad de la información personal y asegura la trazabilidad de cualquier modificación.
+
+**Prueba Independiente**: Al simular el rol de "Jefatura", la interfaz oculta automáticamente los sueldos y los datos financieros confidenciales.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** visualiza las novedades de su equipo pero no tiene acceso a las liquidaciones ni a los sueldos base.
+2. **Dado** cualquier cambio o consulta de información sensible, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
+
+---
+
+### Historia de Usuario 7 - Reetiquetar pantallas desde la configuración (Prioridad: P1)
 
 Como desarrollador de módulos, quiero que todas las etiquetas visibles para el usuario deriven de la configuración, para que un módulo adaptado hable su idioma de dominio de forma consistente en todo momento.
 
@@ -119,7 +132,7 @@ Como desarrollador de módulos, quiero que todas las etiquetas visibles para el 
 
 ---
 
-### Historia de Usuario 7 - Declarar campos personalizados para los registros (Prioridad: P1)
+### Historia de Usuario 8 - Declarar campos personalizados para los registros (Prioridad: P1)
 
 Como desarrollador de módulos, quiero declarar campos adicionales para entidades y documentos en la configuración, para que aparezcan automáticamente en formularios, listas, validación y búsqueda sin escribir código de interfaz.
 
@@ -135,7 +148,7 @@ Dado que no hay campos personalizados declarados, cuando se ejecuta la aplicaci�
 
 ---
 
-### Historia de Usuario 8 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
+### Historia de Usuario 9 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
 
 Como de negocio, quiero buscar mis entidades por detalles clave de usuario para encontrar rápidamente el registro que necesito.
 
@@ -151,7 +164,7 @@ Como de negocio, quiero buscar mis entidades por detalles clave de usuario para 
 
 ---
 
-### Historia de Usuario 9 - Registrar una fecha objetivo (Prioridad: P2)
+### Historia de Usuario 10 - Registrar una fecha objetivo (Prioridad: P2)
 
 Como de negocio, quiero adjuntar una fecha objetivo opcional a una entidad de usuario para planificar y ordenar los registros según cuándo vence algo.
 
@@ -167,7 +180,7 @@ Como de negocio, quiero adjuntar una fecha objetivo opcional a una entidad de us
 
 ---
 
-### Historia de Usuario 10 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
+### Historia de Usuario 11 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
 
 Como de negocio, quiero registrar detalles de documentos para una entidad usuario, para mantener la actividad transaccional organizada junto a cada registro de datos maestros.
 
@@ -184,7 +197,7 @@ Como de negocio, quiero registrar detalles de documentos para una entidad usuari
 
 ---
 
-### Historia de Usuario 11 - Buscar entidades en una pantalla dedicada (Prioridad: P2)
+### Historia de Usuario 12 - Buscar entidades en una pantalla dedicada (Prioridad: P2)
 
 Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontrar rápidamente entidades sin que los formularios de edición saturen la vista.
 
@@ -201,7 +214,7 @@ Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontra
 
 ---
 
-### Historia de Usuario 12 - Configurar el ciclo de vida de estados de documentos (Prioridad: P2)
+### Historia de Usuario 13 - Configurar el ciclo de vida de estados de documentos (Prioridad: P2)
 
 Como desarrollador de módulos, quiero definir los estados permitidos de los documentos y las transiciones permitidas, para que los documentos sigan el ciclo de vida del dominio en lugar de aceptar texto de estado arbitrario.
 
@@ -218,7 +231,7 @@ Como desarrollador de módulos, quiero definir los estados permitidos de los doc
 
 ---
 
-### Historia de Usuario 13 - Marco de espacio de trabajo ERP con marca (Prioridad: P1)
+### Historia de Usuario 14 - Marco de espacio de trabajo ERP con marca (Prioridad: P1)
 
 Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, con una barra superior con marca y una barra lateral de módulos presentes en cada pantalla, para que la aplicación se sienta como un sistema empresarial coherente en lugar de páginas sueltas.
 
@@ -237,7 +250,7 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 
 ---
 
-### Historia de Usuario 14 - Registro y Aprobación de Novedades del Mes (Prioridad: P1)
+### Historia de Usuario 15 - Registro y Aprobación de Novedades del Mes (Prioridad: P1)
 
 Como analista de remuneraciones o jefatura, quiero registrar y aprobar las novedades del período (horas extra, licencias médicas y ausencias) para que el motor de cálculo procese únicamente montos validados.
 
@@ -249,21 +262,6 @@ Como analista de remuneraciones o jefatura, quiero registrar y aprobar las noved
 
 1. **Dado** el registro de una licencia médica, **cuando** se ingresa, **entonces** el sistema registra el tipo y los días sin permitir almacenar diagnósticos por privacidad (Ley 21.719).
 2. **Dado** que existen novedades ingresadas, **cuando** el período está abierto, **entonces** deben ser aprobadas antes de proceder al cálculo masivo.
-
----
-
-### Historia de Usuario 14 - Seguridad, Roles y Gobierno de Datos (Prioridad: P2)
-
-Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuentas bancarias, cuotas sindicales) según el rol del usuario y registrar una bitácora de auditoría, para cumplir estrictamente con la normativa de protección de datos (Ley 21.719).
-
-**Por qué esta prioridad**: Protege la privacidad de la información personal y asegura la trazabilidad de cualquier modificación.
-
-**Prueba Independiente**: Al simular el rol de "Jefatura", la interfaz oculta automáticamente los sueldos y los datos financieros confidenciales.
-
-**Escenarios de Aceptación**:
-
-1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** visualiza las novedades de su equipo pero no tiene acceso a las liquidaciones ni a los sueldos base.
-2. **Dado** cualquier cambio o consulta de información sensible, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
 
 ---
 
