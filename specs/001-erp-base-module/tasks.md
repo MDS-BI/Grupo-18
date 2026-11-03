@@ -2,7 +2,9 @@
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: plan.md (obligatorio), spec.md (obligatorio para las historias de usuario), research.md, data-model.md, contracts/
-**Actualizado**: 2026-11-03 — incorporado el plan 002-rrhh-planilla al resumen del plan y al alcance: se añade la Historia de Usuario 15 (motor de cálculo, parámetros versionados, ciclo de vida de liquidaciones y cierre de período), se ajustan las aclaraciones de la Historia de Usuario 14 (registro y aprobación con motor de cálculo, roles Analista/Jefatura, período Abierto/Cerrado, vínculo con Entidad trabajador y eliminación en cascada) y se conserva la Historia de Usuario 5 (vista explicativa e impresión de liquidaciones, P2)
+**Actualizado**: 2026-11-03 — incorporado el plan 002-rrhh-planilla al resumen del plan y al alcance: se añade la Historia de Usuario 15 (motor de cálculo, parámetros versionados, ciclo de vida de liquidaciones y cierre de período), se ajustan las aclaraciones de la Historia de Usuario 14 (registro y aprobación con motor de cálculo, roles Analista/Jefatura, período Abierto/Cerrado, vínculo con Entidad trabajador y eliminación en cascada), se conserva la Historia de Usuario 5 (vista explicativa e impresión de liquidaciones, P2) y se incorpora la Historia de Usuario 6 — Seguridad, Roles y Gobierno de Datos como Fase 22.
+
+> **Nota de numeración**: `spec.md` renumera las historias posteriores al insertar Seguridad como HU6. Este archivo conserva los números históricos de las fases existentes (HU14 = Novedades, HU15 = Planilla) y agrega la seguridad como HU6 en la Fase 22 para no alterar los IDs de tarea ya publicados.
 
 ## Formato: `[ID] [P?] [Historia] Descripción con ruta de archivo`
 
@@ -503,7 +505,7 @@
 
 - [ ] T170 [US15] Ejecutar las pruebas unitarias y de integración de cálculo, parámetros, RUT, estados, cierre y auditoría en tests/unit/rrhh-*.test.js y tests/integration/rrhh-*.test.js, y corregir los fallos
 - [ ] T171 [US15] Verificar manualmente los escenarios de aceptación de HU15 y el caso de referencia del plan 002 siguiendo specs/001-erp-base-module/quickstart.md y registrar el resultado
-- [ ] T172 [US15] Comprobar SC-017 a SC-022: cálculo de 200 trabajadores en menos de 1 segundo, caso de referencia al peso, parámetros congelados, transiciones inválidas rechazadas, novedades no aprobadas excluidas y cero modificaciones al código central en tests/unit/rrhh-*.test.js, tests/integration/rrhh-*.test.js y specs/001-erp-base-module/quickstart.md
+- [ ] T172 [US15] Comprobar SC-022 a SC-027: cálculo de 200 trabajadores en menos de 1 segundo, caso de referencia al peso, parámetros congelados, transiciones inválidas rechazadas, novedades no aprobadas excluidas y cero modificaciones al código central en tests/unit/rrhh-*.test.js, tests/integration/rrhh-*.test.js y specs/001-erp-base-module/quickstart.md
 
 **Punto de control**: El período se calcula con contratos, novedades aprobadas y parámetros vigentes; cada liquidación conserva líneas explicables y snapshot; el ciclo de vida y el cierre del período son inmutables; el caso de referencia cuadra al peso.
 
@@ -534,6 +536,7 @@
 - Historia de Usuario 5 (Fase 19): Depende del marco ERP (Fase 16) y de que existan liquidaciones y líneas calculadas; al ser P2 se aborda después de las historias P1
 - Historia de Usuario 14 (Fase 20): Depende del marco ERP (Fase 16) y de la estructura base de RRHH/Planilla (Fase 19, tareas T086-T088) para compartir navegación y estilos; expone las novedades aprobadas al motor de cálculo de HU15. Los roles (T124, T128), períodos (T125-T126, T129-T132), vínculo/cascada (T127, T133) y aprobación (T104-T123) pueden avanzar en paralelo con HU5; la verificación T138-T140 requiere que todas las tareas de HU14 estén completas
 - Historia de Usuario 15 (Fase 21): Depende de la estructura RR.HH. (Fase 19, T086-T088), de las novedades aprobadas y períodos (Fase 20, T104-T140) y de los parámetros legales (T151, T156). El motor (T151-T155) puede avanzar en paralelo con las vistas (T164-T169); el cierre (T160) requiere el ciclo de vida (T159); la verificación T170-T172 requiere que todas las tareas de HU15 estén completas
+- Historia de Usuario 6 - Seguridad (Fase 22): Depende de la matriz de roles y del contexto de sesión definidos en HU14 (T124, T128) y de las vistas y servicios de HU5 (Fase 19) y HU15 (Fase 21). Las pruebas T173-T176 pueden avanzar en paralelo con la implementación T177-T184; la verificación T185-T187 requiere que todas las tareas de HU6 estén completas
 
 ### Oportunidades Paralelas
 
@@ -549,6 +552,7 @@
 - En la Fase 19, las pruebas T082-T085 son paralelas entre sí; T086/T087 y T089/T094 pueden iniciarse en paralelo; T091-T093 comparten archivo y avanzan en secuencia
 - En la Fase 20, las pruebas T104-T109 y T124-T127 son paralelas entre sí; T110, T118, T119, T122, T131 y T136 pueden iniciarse en paralelo; T111-T117 y T128-T135 comparten la capa de datos/servicio y avanzan en secuencia; T120 depende de T118-T119 y T121 depende de T120; T138-T140 son la verificación final
 - En la Fase 21, las pruebas T141-T149 son paralelas entre sí; T150-T155 (motor) pueden avanzar en paralelo con T164-T169 (vistas); T156-T163 comparten la capa de servicios y avanzan en secuencia; T160 depende de T159; T170-T172 son la verificación final
+- En la Fase 22, las pruebas T173-T176 son paralelas entre sí; T177-T178 y T184 pueden iniciarse en paralelo; T179-T183 comparten la capa de servicios y vistas y avanzan en secuencia; T185-T187 son la verificación final
 
 ### Ejemplo Paralelo: Historia de Usuario 5
 
@@ -628,12 +632,54 @@ Tarea: "Ejecutar T170-T172 y validar el caso de referencia"
 
 1. Completar Configuración + Fundacional → base lista
 2. Añadir Historia de Usuario 1 → probar y demostrar (MVP)
-3. Añadir el resto de historias P1 (HU2, HU3, HU4, HU6, HU7, HU13, HU14, HU15) en orden de dependencias
-4. Añadir las historias P2 (HU8, HU9, HU10, HU11, HU12) y finalmente HU5 (Fase 19), que consume las liquidaciones calculadas por HU15
+3. Añadir el resto de historias P1 (HU2, HU3, HU4, HU6 Reetiquetar, HU7, HU13, HU14 y HU15 Planilla) en orden de dependencias
+4. Añadir las historias P2 (HU8, HU9, HU10, HU11, HU12), luego HU5 (Fase 19), que consume las liquidaciones calculadas por HU15, y finalmente HU6 Seguridad (Fase 22)
 5. Cada historia añade valor sin romper las anteriores
 
 ### Estrategia de Equipo en Paralelo
 
 1. El equipo completa Configuración + Fundacional en conjunto
 2. Con la base lista, repartir historias independientes por desarrollador
-3. Las historias se completan e integran de forma independiente; HU14 registra y aprueba novedades y expone solo las aprobadas; HU15 implementa el motor de cálculo, el ciclo de vida y el cierre; HU5 se integra al final porque consume las liquidaciones ya calculadas
+3. Las historias se completan e integran de forma independiente; HU14 registra y aprueba novedades y expone solo las aprobadas; HU15 implementa el motor de cálculo, el ciclo de vida y el cierre; HU6 añade la seguridad, los roles y la auditoría transversal sobre las vistas y servicios de RR.HH.; HU5 se integra al final porque consume las liquidaciones ya calculadas
+
+---
+
+## Fase 22: Historia de Usuario 6 - Seguridad, Roles y Gobierno de Datos (Prioridad: P2)
+
+**Objetivo**: Restringir la visualización y consulta de datos sensibles (sueldos, cuentas bancarias y cuotas sindicales) según el rol del usuario, de modo que el rol Jefatura vea las novedades de su equipo sin acceder a liquidaciones ni sueldos base, y registrar automáticamente cada consulta o cambio de información sensible en una bitácora de auditoría de solo inserción.
+
+**Prueba Independiente**: Al simular el rol "Jefatura", la interfaz muestra las novedades de su equipo y oculta los sueldos, las cuentas bancarias, las cuotas sindicales y las liquidaciones; cada consulta o cambio de información sensible agrega un registro automático e inmutable a la bitácora de auditoría.
+
+### Pruebas para la Historia de Usuario 6
+
+- [ ] T173 [P] [US6] Añadir pruebas unitarias de la matriz de roles y permisos sobre datos sensibles (Administrador, Jefatura y Analista) en tests/unit/rrhh-seguridad.test.js
+- [ ] T174 [P] [US6] Añadir pruebas unitarias de la bitácora de auditoría: registro de consultas y cambios con usuario, rol, fecha y hora, acción y registro afectado; persistencia y rechazo de edición o eliminación (solo inserción) en tests/unit/rrhh-auditoria.test.js
+- [ ] T175 [P] [US6] Añadir pruebas de integración para el rol Jefatura: visualiza las novedades de su equipo y no tiene acceso a liquidaciones ni sueldos base en tests/integration/rrhh-seguridad-jefatura.test.js
+- [ ] T176 [P] [US6] Añadir pruebas de integración que verifiquen que cada consulta y cada cambio de información sensible (sueldos, cuentas bancarias y cuotas sindicales) genera un registro automático en la bitácora de auditoría en tests/integration/rrhh-auditoria.test.js
+
+### Implementación de la Historia de Usuario 6
+
+#### Roles y control de acceso
+
+- [ ] T177 [P] [US6] Definir los roles y la matriz de permisos sobre datos sensibles (sueldos, cuentas bancarias, cuotas sindicales y liquidaciones) en src/rrhh/seguridad/roles.js
+- [ ] T178 [P] [US6] Implementar la bitácora de auditoría de solo inserción en src/rrhh/seguridad/auditoria.js, con registro de usuario, rol, fecha y hora, acción y registro afectado, y rechazo de edición o eliminación
+- [ ] T179 [US6] Implementar el guard de acceso a datos sensibles por rol en src/rrhh/seguridad/acceso-datos.js
+- [ ] T180 [US6] Propagar el rol del usuario autenticado a las vistas y servicios de RRHH en src/app.js
+
+#### Registro automático de auditoría
+
+- [ ] T181 [US6] Registrar automáticamente las consultas y los cambios de información sensible desde los servicios de liquidaciones y novedades en src/rrhh/utils/liquidacion-service.js y src/rrhh/utils/novedades-service.js
+
+#### Interfaz según el rol
+
+- [ ] T182 [US6] Ocultar en la vista de liquidaciones los sueldos base y los datos financieros confidenciales cuando el rol del usuario no está autorizado en src/rrhh/views/liquidacion.js
+- [ ] T183 [US6] Mostrar al rol Jefatura únicamente las novedades de su equipo y ocultar las liquidaciones y sueldos base en src/rrhh/views/novedades.js
+- [ ] T184 [P] [US6] Añadir estilos para el contenido oculto y los mensajes de acceso denegado a datos sensibles en src/styles.css
+
+#### Verificación
+
+- [ ] T185 [US6] Ejecutar las pruebas unitarias y de integración de seguridad, roles y auditoría y corregir los fallos en tests/unit/rrhh-seguridad.test.js, tests/unit/rrhh-auditoria.test.js, tests/integration/rrhh-seguridad-jefatura.test.js y tests/integration/rrhh-auditoria.test.js
+- [ ] T186 [US6] Verificar manualmente los escenarios de aceptación de HU6 (Jefatura sin acceso a liquidaciones ni sueldos base y auditoría automática de solo inserción) y registrar el resultado
+- [ ] T187 [US6] Comprobar que la bitácora de auditoría no admite edición ni eliminación y que toda consulta o cambio de información sensible queda registrado en src/rrhh/seguridad/auditoria.js
+
+**Punto de control**: El rol Jefatura visualiza las novedades de su equipo sin acceso a liquidaciones ni sueldos base, y toda consulta o cambio de información sensible genera un registro automático e inmutable en la bitácora de auditoría.

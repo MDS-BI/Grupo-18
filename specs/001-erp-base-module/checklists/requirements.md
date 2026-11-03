@@ -2,7 +2,7 @@
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de proceder a la planificación
 **Creada**: 2026-07-08
-**Actualizada**: 2026-11-03 (incorporación de la Historia de Usuario 15 y del cálculo de planilla del plan 002)
+**Actualizada**: 2026-11-03 (incorporación de Seguridad, Roles y Gobierno de Datos y del cálculo de planilla del plan 002)
 **Funcionalidad**: [Enlace a spec.md](spec.md)
 
 ## Calidad del Contenido
@@ -34,4 +34,5 @@
 
 - La especificación está lista para la planificación y la implementación.
 - 2026-11-01: Historia de Usuario 5 (vista explicativa e impresión de liquidaciones) formalizada con 5 escenarios de aceptación, 11 requisitos funcionales (FR-040 a FR-050), 6 criterios de éxito (SC-011 a SC-016), 3 entidades clave y 7 casos límite.
-- 2026-11-03: Historia de Usuario 15 (cálculo de planilla y ciclo de vida de liquidaciones) incorporada desde `specs/002-rrhh-planilla/plan.md`, con 6 escenarios de aceptación, 18 requisitos funcionales (FR-064 a FR-081), 6 criterios de éxito (SC-017 a SC-022), 3 entidades clave adicionales y 8 casos límite.
+- 2026-11-03: Historia de Usuario 6 — Seguridad, Roles y Gobierno de Datos (P2) formalizada con 2 escenarios de aceptación, 9 requisitos funcionales (FR-051 a FR-059), 5 criterios de éxito (SC-017 a SC-021), 5 entidades clave y 8 casos límite nuevos; las historias posteriores se renumeraron (HU7 a HU15).
+- 2026-11-03: Historia de Usuario 16 — Cálculo de Planilla y Ciclo de Vida de Liquidaciones (P1) incorporada desde `specs/002-rrhh-planilla/plan.md`, con 6 escenarios de aceptación, 18 requisitos funcionales (FR-064 a FR-081), 6 criterios de éxito (SC-022 a SC-027), 3 entidades clave adicionales y 8 casos límite. Se renumera como HU16 para no colisionar con la Historia de Usuario 15 (Novedades) del esquema de `spec.md`.

@@ -2,10 +2,10 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Actualizada**: 2026-11-02  
+**Actualizada**: 2026-11-03  
 **Estado**: Borrador  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historia de Usuario 14 — Registro y Aprobación de Novedades del Mes (P1).
+**Última incorporación**: Historia de Usuario 6 — Seguridad, Roles y Gobierno de Datos (P2), que renumeró las historias posteriores, e Historia de Usuario 16 — Cálculo de Planilla y Ciclo de Vida de Liquidaciones (P1).
 
 ## Propósito
 
@@ -101,7 +101,22 @@ Como trabajador o analista, quiero visualizar la liquidación línea por línea 
 
 ---
 
-### Historia de Usuario 6 - Reetiquetar pantallas desde la configuración (Prioridad: P1)
+### Historia de Usuario 6 - Seguridad, Roles y Gobierno de Datos (Prioridad: P2)
+
+Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuentas bancarias, cuotas sindicales) según el rol del usuario y registrar una bitácora de auditoría, para cumplir estrictamente con la normativa de protección de datos (Ley 21.719).
+
+**Por qué esta prioridad**: Protege la privacidad de la información personal y asegura la trazabilidad de cualquier modificación.
+
+**Prueba Independiente**: Al simular el rol de "Jefatura", la interfaz oculta automáticamente los sueldos y los datos financieros confidenciales.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** visualiza las novedades de su equipo pero no tiene acceso a las liquidaciones ni a los sueldos base.
+2. **Dado** cualquier cambio o consulta de información sensible, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
+
+---
+
+### Historia de Usuario 7 - Reetiquetar pantallas desde la configuración (Prioridad: P1)
 
 Como desarrollador de módulos, quiero que todas las etiquetas visibles para el usuario deriven de la configuración, para que un módulo adaptado hable su idioma de dominio de forma consistente en todo momento.
 
@@ -117,7 +132,7 @@ Como desarrollador de módulos, quiero que todas las etiquetas visibles para el 
 
 ---
 
-### Historia de Usuario 7 - Declarar campos personalizados para los registros (Prioridad: P1)
+### Historia de Usuario 8 - Declarar campos personalizados para los registros (Prioridad: P1)
 
 Como desarrollador de módulos, quiero declarar campos adicionales para entidades y documentos en la configuración, para que aparezcan automáticamente en formularios, listas, validación y búsqueda sin escribir código de interfaz.
 
@@ -133,7 +148,7 @@ Dado que no hay campos personalizados declarados, cuando se ejecuta la aplicaci�
 
 ---
 
-### Historia de Usuario 8 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
+### Historia de Usuario 9 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
 
 Como de negocio, quiero buscar mis entidades por detalles clave de usuario para encontrar rápidamente el registro que necesito.
 
@@ -149,7 +164,7 @@ Como de negocio, quiero buscar mis entidades por detalles clave de usuario para 
 
 ---
 
-### Historia de Usuario 9 - Registrar una fecha objetivo (Prioridad: P2)
+### Historia de Usuario 10 - Registrar una fecha objetivo (Prioridad: P2)
 
 Como de negocio, quiero adjuntar una fecha objetivo opcional a una entidad de usuario para planificar y ordenar los registros según cuándo vence algo.
 
@@ -165,7 +180,7 @@ Como de negocio, quiero adjuntar una fecha objetivo opcional a una entidad de us
 
 ---
 
-### Historia de Usuario 10 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
+### Historia de Usuario 11 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
 
 Como de negocio, quiero registrar detalles de documentos para una entidad usuario, para mantener la actividad transaccional organizada junto a cada registro de datos maestros.
 
@@ -182,7 +197,7 @@ Como de negocio, quiero registrar detalles de documentos para una entidad usuari
 
 ---
 
-### Historia de Usuario 11 - Buscar entidades en una pantalla dedicada (Prioridad: P2)
+### Historia de Usuario 12 - Buscar entidades en una pantalla dedicada (Prioridad: P2)
 
 Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontrar rápidamente entidades sin que los formularios de edición saturen la vista.
 
@@ -199,7 +214,7 @@ Como usuario de negocio, quiero una pantalla de búsqueda dedicada para encontra
 
 ---
 
-### Historia de Usuario 12 - Configurar el ciclo de vida de estados de documentos (Prioridad: P2)
+### Historia de Usuario 13 - Configurar el ciclo de vida de estados de documentos (Prioridad: P2)
 
 Como desarrollador de módulos, quiero definir los estados permitidos de los documentos y las transiciones permitidas, para que los documentos sigan el ciclo de vida del dominio en lugar de aceptar texto de estado arbitrario.
 
@@ -216,7 +231,7 @@ Como desarrollador de módulos, quiero definir los estados permitidos de los doc
 
 ---
 
-### Historia de Usuario 13 - Marco de espacio de trabajo ERP con marca (Prioridad: P1)
+### Historia de Usuario 14 - Marco de espacio de trabajo ERP con marca (Prioridad: P1)
 
 Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, con una barra superior con marca y una barra lateral de módulos presentes en cada pantalla, para que la aplicación se sienta como un sistema empresarial coherente en lugar de páginas sueltas.
 
@@ -235,7 +250,7 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 
 ---
 
-### Historia de Usuario 14 - Registro y Aprobación de Novedades del Mes (Prioridad: P1)
+### Historia de Usuario 15 - Registro y Aprobación de Novedades del Mes (Prioridad: P1)
 
 Como analista de remuneraciones o jefatura, quiero registrar y aprobar las novedades del período (horas extra, licencias médicas y ausencias) para que el motor de cálculo procese únicamente montos validados.
 
@@ -247,6 +262,28 @@ Como analista de remuneraciones o jefatura, quiero registrar y aprobar las noved
 
 1. **Dado** el registro de una licencia médica, **cuando** se ingresa, **entonces** el sistema registra el tipo y los días sin permitir almacenar diagnósticos por privacidad (Ley 21.719).
 2. **Dado** que existen novedades ingresadas, **cuando** el período está abierto, **entonces** deben ser aprobadas antes de proceder al cálculo masivo.
+
+---
+
+### Historia de Usuario 16 - Cálculo de Planilla y Ciclo de Vida de Liquidaciones (Prioridad: P1)
+
+Como analista de remuneraciones, quiero ejecutar el motor de cálculo masivo para generar todas las liquidaciones del mes aplicando la ley chilena (imponibles, AFP, salud, seguro de cesantía e impuesto único) y cerrar el período para congelar los valores, para poder pagar sueldos correctos sin depender de planillas Excel propensas a errores.
+
+**Por qué esta prioridad**: El motor de cálculo es el núcleo del valor del módulo. Automatiza el proceso más complejo y propenso a errores de la gestión de remuneraciones, y sin él las historias de carga de contratos y novedades no generan ningún resultado utilizable.
+
+**Prueba Independiente**: Un analista ejecuta el cálculo sobre un período con datos de prueba, obtiene liquidaciones idénticas al caso de referencia oficial (cuadradas al peso), cierra el período y verifica que la UF y la UTM quedan congeladas y que ninguna liquidación o novedad puede modificarse.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un período abierto con contratos vigentes y novedades aprobadas, **cuando** el usuario ejecuta el cálculo, **entonces** el sistema genera una liquidación por cada trabajador detallando haberes imponibles y no imponibles, descuentos legales (AFP, salud, seguro de cesantía), impuesto único, líquido a pagar y aportes del empleador en menos de 1 segundo.
+2. **Dado** un trabajador cuya remuneración supera el tope imponible vigente, **cuando** se ejecuta el cálculo, **entonces** las cotizaciones de AFP y salud se calculan sobre el tope de 90 UF y el seguro de cesantía sobre el tope de 135,2 UF, usando la UF del período.
+3. **Dado** un trabajador con base tributable dentro de un tramo del impuesto único, **cuando** se ejecuta el cálculo, **entonces** el impuesto se determina restando las cotizaciones obligatorias de la renta tributable y aplicando la tabla mensual en UTM vigente para el período.
+4. **Dado** el caso de referencia oficial cargado como datos de prueba, **cuando** se ejecuta el cálculo, **entonces** cada línea de cada liquidación coincide al peso con el valor esperado.
+5. **Dado** un período ya calculado, **cuando** el usuario corrige una novedad y vuelve a ejecutar el cálculo, **entonces** el sistema reemplaza las liquidaciones en borrador sin duplicarlas y refleja la corrección.
+6. **Dado** un período calculado sin errores ni novedades pendientes, **cuando** el usuario cierra el período, **entonces** el sistema congela la UF, la UTM y las tasas utilizadas, registra quién y cuándo lo cerró, y cambia el estado del período a cerrado.
+7. **Dado** un período con trabajadores sin calcular o con novedades pendientes de aprobación, **cuando** el usuario intenta cerrarlo, **entonces** el sistema rechaza el cierre e indica qué registros lo impiden.
+8. **Dado** un período cerrado, **cuando** cualquier usuario o proceso intenta modificar una liquidación o novedad de ese período, **entonces** el sistema bloquea la operación y muestra un mensaje indicando que el período está cerrado, garantizando la inmutabilidad de los pagos.
+9. **Dado** un período cerrado, **cuando** se actualizan los indicadores (UF, UTM o tasas) para un período posterior, **entonces** las liquidaciones del período cerrado conservan exactamente los valores con que fueron calculadas.
 
 ---
 
@@ -275,6 +312,14 @@ Como analista de remuneraciones o jefatura, quiero registrar y aprobar las noved
 - ¿Qué ocurre cuando los valores mostrados en el desglose son redondeados y la suma de las líneas debe seguir cuadrando con el total?
 - ¿Qué ocurre cuando la liquidación tiene tantas líneas que el comprobante supera una página?
 - ¿Qué ocurre si el usuario cancela el diálogo de impresión o guarda el comprobante como PDF?
+- ¿Qué ocurre cuando un usuario no tiene rol asignado o su rol no es reconocido?
+- ¿Qué ocurre cuando un usuario intenta acceder directamente a un dato sensible mediante un enlace directo o una petición no autorizada?
+- ¿Qué ocurre cuando un usuario cambia de rol mientras mantiene una sesión activa?
+- ¿Qué ocurre cuando la bitácora de auditoría no puede escribirse por un fallo del sistema?
+- ¿Qué ocurre cuando alguien intenta editar o eliminar un registro de auditoría?
+- ¿Qué ocurre cuando un usuario autorizado consulta datos sensibles de un trabajador que no pertenece a su equipo?
+- ¿Qué ocurre cuando el rol de jefatura intenta imprimir o exportar una liquidación?
+- ¿Se registran en la auditoría también los accesos denegados o fallidos?
 
 ## Requisitos *(obligatorio)*
 
@@ -330,6 +375,15 @@ Como analista de remuneraciones o jefatura, quiero registrar y aprobar las noved
 - **FR-048**: La vista imprimible DEBE adaptarse a una hoja tamaño carta o A4 en orientación vertical y DEBE poder guardarse como PDF.
 - **FR-049**: La explicación y el comprobante DEBEN respetar los permisos de acceso vigentes del usuario.
 - **FR-050**: El sistema DEBE indicar claramente cuándo una línea no dispone de fórmula o parámetro legal asociado, sin omitir la línea del comprobante.
+- **FR-051**: El sistema DEBE basar el acceso a la información sensible en el rol del usuario autenticado.
+- **FR-052**: El sistema DEBE restringir la visualización y consulta de sueldos, liquidaciones, cuentas bancarias y cuotas sindicales a los roles expresamente autorizados.
+- **FR-053**: El rol Jefatura DEBE poder ver únicamente las novedades de su equipo y NO DEBE acceder a liquidaciones ni a sueldos base.
+- **FR-054**: El sistema DEBE ocultar o enmascarar los datos sensibles no autorizados en listados, detalles, búsquedas y vistas imprimibles.
+- **FR-055**: El sistema DEBE registrar automáticamente en la bitácora de auditoría toda consulta, creación, modificación o eliminación de información sensible, indicando al menos usuario, rol, fecha y hora, acción y registro afectado.
+- **FR-056**: La bitácora de auditoría DEBE ser de solo inserción y NO DEBE permitir la edición ni la eliminación de sus registros por ningún rol.
+- **FR-057**: Las restricciones de acceso DEBEN aplicarse tanto en la interfaz como en la capa de acceso a los datos, impidiendo la consulta no autorizada por enlaces directos u otras vías.
+- **FR-058**: El sistema DEBE conservar la bitácora de auditoría durante el período exigido por la normativa de protección de datos aplicable (Ley 21.719).
+- **FR-059**: El sistema DEBE informar de forma clara al usuario cuando una acción o consulta es denegada por falta de permisos, sin revelar el contenido protegido.
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -349,6 +403,11 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Liquidación**: Documento que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales y líquido a pagar, junto con el estado del cálculo y la fecha de emisión del comprobante.
 - **Línea de Liquidación**: Cada concepto que compone una liquidación (haber, descuento o impuesto), con su monto, la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal que la respalda; las líneas manuales registran un motivo en lugar de una fórmula.
 - **Parámetro Legal**: Valor normativo vigente en una fecha determinada (tasa, tope, tramo o monto fijo) que sustenta el cálculo de una línea y que se conserva congelado para los períodos ya calculados.
+- **Rol**: Perfil asignado a un usuario que determina las funciones y los datos a los que puede acceder (p. ej., Administrador, Jefatura, Analista).
+- **Permiso de Acceso**: Regla que asocia un rol con la capacidad de consultar o modificar un tipo de información sensible.
+- **Dato Sensible**: Información personal o financiera protegida (sueldos, cuentas bancarias, cuotas sindicales) cuyo acceso está restringido según el rol.
+- **Registro de Auditoría**: Entrada inmutable que documenta quién consultó o modificó información sensible, cuándo, con qué rol y sobre qué registro.
+- **Bitácora de Auditoría**: Colección de solo inserción de registros de auditoría, conservada para efectos de trazabilidad y cumplimiento normativo.
 
 ## Criterios de Éxito *(obligatorio)*
 
@@ -370,6 +429,11 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-014**: Las consultas internas sobre montos pagados se reducen al menos un 40% tras la adopción de la vista explicativa.
 - **SC-015**: El 100% de los comprobantes impresos coincide con los totales de la liquidación y se ajusta a un máximo de dos páginas.
 - **SC-016**: La vista imprimible no muestra controles de edición ni de navegación en ningún caso.
+- **SC-017**: El 100% de las pantallas, listados e impresiones muestra los datos sensibles solo a los roles autorizados; el rol Jefatura nunca ve sueldos base ni liquidaciones.
+- **SC-018**: El 100% de las consultas y cambios sobre información sensible queda registrado en la bitácora de auditoría.
+- **SC-019**: Un intento de editar o eliminar un registro de auditoría es rechazado en el 100% de los casos.
+- **SC-020**: La bitácora permite reconstruir la trazabilidad completa de accesos y modificaciones a datos sensibles de un usuario o período en menos de 5 minutos.
+- **SC-021**: Al menos el 95% de las pruebas de acceso con distintos roles confirma que los datos ocultos no pueden recuperarse desde la interfaz ni mediante enlaces directos.
 
 ## Suposiciones
 
@@ -393,4 +457,10 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - Los datos de identificación de la empresa emisora están disponibles en la configuración del módulo.
 - Los montos se presentan en pesos chilenos con separador de miles.
 - El acceso a la explicación y al comprobante respeta los permisos vigentes del usuario.
+- Existen roles predefinidos (al menos Administrador, Jefatura y Analista/Trabajador), y el administrador gestiona su asignación.
+- La identidad y el rol del usuario se determinan al iniciar sesión.
+- Los datos sensibles (sueldos, cuentas bancarias, cuotas sindicales) están clasificados explícitamente en el modelo de datos.
+- Las restricciones de acceso se aplican tanto en la interfaz como en la capa de datos, por lo que no pueden eludirse mediante enlaces directos.
+- La bitácora de auditoría se conserva durante el período exigido por la Ley 21.719.
+- La auditoría registra tanto los accesos autorizados como los denegados.
 
