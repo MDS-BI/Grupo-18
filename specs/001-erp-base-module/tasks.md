@@ -86,20 +86,42 @@
 
 ## Fase 6: Historia de Usuario 4 (pestañas originales) - Gestionar entidades y documentos en una pantalla dedicada (Prioridad: P1)
 
-**Objetivo**: Proporcionar la pantalla de gestión con la pestaña de navegación horizontal Entidades/Documentos/Inicio y formularios de gestión completos, sin mostrar la lista de entidades. *(La navegación por pestañas fue sustituida por el marco de barra lateral de la Fase 16; los flujos de gestión siguen vigentes.)*
+**Objetivo**: Permitir al analista de remuneraciones ejecutar el cálculo masivo de liquidaciones del período según la ley chilena y cerrar el período congelando sus valores.
 
-**Prueba Independiente**: Desde la pantalla de bienvenida, un usuario llega a la pantalla de gestión, cambia de pestaña y añade, edita y elimina una entidad y un documento.
+**Prueba Independiente**: Un usuario ejecuta el cálculo sobre un período con datos de prueba, obtiene liquidaciones idénticas al caso de referencia oficial (cuadradas al peso), cierra el período y comprueba que la UF y la UTM quedan congeladas y que ninguna liquidación o novedad puede modificarse.
 
+### Pruebas para la Historia de Usuario 4
+- [x] T040 [P] [US4] Crear el caso de referencia oficial con trabajadores, novedades y liquidaciones esperadas en tests/fixtures/payroll-reference.json
+- [x] T041 [P] [US4] Añadir pruebas unitarias para la vigencia de indicadores (UF, UTM, topes y tasas por período) en tests/unit/payroll-parameters.test.js
+- [x] T042 [P] [US4] Añadir pruebas unitarias para haberes imponibles, no imponibles, proporcionalidad por días trabajados y gratificación en tests/unit/payroll-earnings.test.js
+- [x] T043 [P] [US4] Añadir pruebas unitarias para topes imponibles, AFP, salud (Fonasa e Isapre en UF) y seguro de cesantía por tipo de contrato en tests/unit/payroll-social-security.test.js
+- [x] T044 [P] [US4] Añadir pruebas unitarias para el impuesto único en cada borde de tramo de la tabla en UTM en tests/unit/payroll-income-tax.test.js
+- [x] T045 [P] [US4] Añadir pruebas unitarias para los aportes del empleador (seguro de cesantía, aporte de la reforma previsional, mutual y SANNA) en tests/unit/payroll-employer.test.js
+- [x] T046 [P] [US4] Añadir prueba de integración que compare cada línea de cada liquidación contra el caso de referencia al peso en tests/integration/payroll-reference.test.js
+- [x] T047 [P] [US4] Añadir pruebas de integración para ejecutar el cálculo masivo, recálculo sin duplicados y tiempo menor a 1 segundo en tests/integration/run-payroll.test.js
+- [x] T048 [P] [US4] Añadir pruebas de integración para el cierre de período, validaciones previas, congelamiento de indicadores y bloqueo de modificaciones en tests/integration/close-period.test.js
+  
 ### Implementación de la Historia de Usuario 4
 
-- [x] T020 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir una pestaña de navegación horizontal con botones Entidades, Documentos e Inicio a la vista de gestión en index.html
-- [x] T021 [P] [US4] [SUPERSEDIDA por Fase 16] Organizar la vista de gestión en paneles de entidades y documentos y eliminar la lista de entidades en index.html
-- [x] T022 [US4] [SUPERSEDIDA por Fase 16] Añadir lógica de cambio de pestaña y navegación a Inicio desde la pantalla de gestión en src/app.js
-- [x] T023 [US4] [SUPERSEDIDA por Fase 16] Añadir edición y eliminación mediante selectores para entidades y documentos en src/app.js
-- [x] T024 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir pruebas de integración para la pestaña de navegación de gestión en tests/integration/manage-tabs.test.js
-- [x] T025 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir estilos para la pestaña de navegación horizontal en src/styles.css
+- [x] T049 [P] [US4] Implementar utilidades de montos en pesos enteros con política de redondeo al peso (sin aritmética de punto flotante) en src/payroll/money.js
+- [x] T050 [P] [US4] Crear el archivo de parámetros legales con fechas de vigencia (UF, UTM, ingreso mínimo, topes de 90 UF y 135,2 UF, comisiones AFP, tasas de cesantía, cronograma de la reforma y tabla del impuesto único) en src/data/legal-parameters.json
+- [x] T051 [US4] Implementar la consulta de parámetros vigentes para un período en src/payroll/parameters.js
+- [x] T052 [US4] Extender el almacenamiento con períodos (estados abierto, calculado y cerrado), liquidaciones y líneas de liquidación en src/storage.js
+- [x] T053 [P] [US4] Implementar el cálculo de haberes imponibles y no imponibles, horas extra, proporcionalidad y gratificación legal en src/payroll/calculators/earnings.js
+- [x] T054 [P] [US4] Implementar el cálculo de base imponible con topes, AFP, salud y seguro de cesantía del trabajador en src/payroll/calculators/social-security.js
+- [x] T055 [P] [US4] Implementar el cálculo de la base tributable y el impuesto único en src/payroll/calculators/income-tax.js
+- [x] T056 [P] [US4] Implementar el cálculo de los aportes del empleador en src/payroll/calculators/employer-contributions.js
+- [x] T057 [US4] Implementar el motor que orquesta los cálculos por trabajador, aplica otros descuentos, obtiene el líquido y guarda la foto de los parámetros usados en src/payroll/engine.js
+- [x] T058 [US4] Implementar la ejecución masiva con carga en bloque de contratos y novedades aprobadas, reemplazo de borradores y reporte de errores por trabajador sin detener el lote en src/payroll/run-payroll.js
+- [x] T059 [US4] Implementar el cierre de período con validaciones previas, congelamiento de UF, UTM y tasas, y registro de usuario y fecha de cierre en src/payroll/close-period.js
+- [x] T060 [US4] Bloquear en la capa de almacenamiento cualquier creación, edición o eliminación de liquidaciones y novedades de un período cerrado en src/storage.js
+- [x] T061 [P] [US4] Crear la interfaz para ejecutar el cálculo con indicador de progreso y resumen de errores en src/components/payroll-run.js
+- [x] T062 [P] [US4] Crear la vista de liquidación detallada con haberes, descuentos, impuesto único, líquido y aportes del empleador en src/components/payslip-view.js
+- [x] T063 [P] [US4] Crear la interfaz de cierre de período con confirmación, mensajes de validación y estado bloqueado en src/components/period-close.js
+- [x] T064 [US4] Conectar las acciones de calcular, ver liquidación y cerrar período en src/app.js
+- [x] T065 [US4] Mostrar en los formularios de novedades el aviso de período cerrado y deshabilitar la edición en src/components/novelty-form.js
 
-**Punto de control**: Las Historias de Usuario 1-4 deben estar completamente funcionales y ser comprobables de forma independiente.
+**Punto de control**: La Historia de Usuario 4 debe estar completamente funcional y ser comprobable de forma independiente: el cálculo cuadra al peso con el caso de referencia y un período cerrado no admite modificaciones.
 
 ---
 
