@@ -2,10 +2,10 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Actualizada**: 2026-11-01  
+**Actualizada**: 2026-11-03  
 **Estado**: Borrador  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historia de Usuario 5 — Vista Explicativa e Impresión de Liquidaciones (P2).
+**Última incorporación**: Seguridad, Roles y Gobierno de Datos (P2) — Historia de Usuario 14 en esta especificación.
 
 ## Propósito
 
@@ -235,6 +235,21 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 
 ---
 
+### Historia de Usuario 14 - Seguridad, Roles y Gobierno de Datos (Prioridad: P2)
+
+Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuentas bancarias, cuotas sindicales) según el rol del usuario y registrar una bitácora de auditoría, para cumplir estrictamente con la normativa de protección de datos (Ley 21.719).
+
+**Por qué esta prioridad**: Protege la privacidad de la información personal y asegura la trazabilidad de cualquier modificación.
+
+**Prueba Independiente**: Al simular el rol de "Jefatura", la interfaz oculta automáticamente los sueldos y los datos financieros confidenciales.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** visualiza las novedades de su equipo pero no tiene acceso a las liquidaciones ni a los sueldos base.
+2. **Dado** cualquier cambio o consulta de información sensible, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
+
+---
+
 ### Casos Límite
 
 - ¿Qué ocurre cuando un usuario intenta guardar una entidad sin nombre o código obligatorio?
@@ -260,6 +275,14 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - ¿Qué ocurre cuando los valores mostrados en el desglose son redondeados y la suma de las líneas debe seguir cuadrando con el total?
 - ¿Qué ocurre cuando la liquidación tiene tantas líneas que el comprobante supera una página?
 - ¿Qué ocurre si el usuario cancela el diálogo de impresión o guarda el comprobante como PDF?
+- ¿Qué ocurre cuando un usuario no tiene rol asignado o su rol no es reconocido?
+- ¿Qué ocurre cuando un usuario intenta acceder directamente a un dato sensible mediante un enlace directo o una petición no autorizada?
+- ¿Qué ocurre cuando un usuario cambia de rol mientras mantiene una sesión activa?
+- ¿Qué ocurre cuando la bitácora de auditoría no puede escribirse por un fallo del sistema?
+- ¿Qué ocurre cuando alguien intenta editar o eliminar un registro de auditoría?
+- ¿Qué ocurre cuando un usuario autorizado consulta datos sensibles de un trabajador que no pertenece a su equipo?
+- ¿Qué ocurre cuando el rol de jefatura intenta imprimir o exportar una liquidación?
+- ¿Se registran en la auditoría también los accesos denegados o fallidos?
 
 ## Requisitos *(obligatorio)*
 
@@ -315,6 +338,15 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 - **FR-048**: La vista imprimible DEBE adaptarse a una hoja tamaño carta o A4 en orientación vertical y DEBE poder guardarse como PDF.
 - **FR-049**: La explicación y el comprobante DEBEN respetar los permisos de acceso vigentes del usuario.
 - **FR-050**: El sistema DEBE indicar claramente cuándo una línea no dispone de fórmula o parámetro legal asociado, sin omitir la línea del comprobante.
+- **FR-051**: El sistema DEBE basar el acceso a la información sensible en el rol del usuario autenticado.
+- **FR-052**: El sistema DEBE restringir la visualización y consulta de sueldos, liquidaciones, cuentas bancarias y cuotas sindicales a los roles expresamente autorizados.
+- **FR-053**: El rol Jefatura DEBE poder ver únicamente las novedades de su equipo y NO DEBE acceder a liquidaciones ni a sueldos base.
+- **FR-054**: El sistema DEBE ocultar o enmascarar los datos sensibles no autorizados en listados, detalles, búsquedas y vistas imprimibles.
+- **FR-055**: El sistema DEBE registrar automáticamente en la bitácora de auditoría toda consulta, creación, modificación o eliminación de información sensible, indicando al menos usuario, rol, fecha y hora, acción y registro afectado.
+- **FR-056**: La bitácora de auditoría DEBE ser de solo inserción y NO DEBE permitir la edición ni la eliminación de sus registros por ningún rol.
+- **FR-057**: Las restricciones de acceso DEBEN aplicarse tanto en la interfaz como en la capa de acceso a los datos, impidiendo la consulta no autorizada por enlaces directos u otras vías.
+- **FR-058**: El sistema DEBE conservar la bitácora de auditoría durante el período exigido por la normativa de protección de datos aplicable (Ley 21.719).
+- **FR-059**: El sistema DEBE informar de forma clara al usuario cuando una acción o consulta es denegada por falta de permisos, sin revelar el contenido protegido.
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -334,6 +366,11 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Liquidación**: Documento que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales y líquido a pagar, junto con el estado del cálculo y la fecha de emisión del comprobante.
 - **Línea de Liquidación**: Cada concepto que compone una liquidación (haber, descuento o impuesto), con su monto, la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal que la respalda; las líneas manuales registran un motivo en lugar de una fórmula.
 - **Parámetro Legal**: Valor normativo vigente en una fecha determinada (tasa, tope, tramo o monto fijo) que sustenta el cálculo de una línea y que se conserva congelado para los períodos ya calculados.
+- **Rol**: Perfil asignado a un usuario que determina las funciones y los datos a los que puede acceder (p. ej., Administrador, Jefatura, Analista).
+- **Permiso de Acceso**: Regla que asocia un rol con la capacidad de consultar o modificar un tipo de información sensible.
+- **Dato Sensible**: Información personal o financiera protegida (sueldos, cuentas bancarias, cuotas sindicales) cuyo acceso está restringido según el rol.
+- **Registro de Auditoría**: Entrada inmutable que documenta quién consultó o modificó información sensible, cuándo, con qué rol y sobre qué registro.
+- **Bitácora de Auditoría**: Colección de solo inserción de registros de auditoría, conservada para efectos de trazabilidad y cumplimiento normativo.
 
 ## Criterios de Éxito *(obligatorio)*
 
@@ -355,6 +392,11 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-014**: Las consultas internas sobre montos pagados se reducen al menos un 40% tras la adopción de la vista explicativa.
 - **SC-015**: El 100% de los comprobantes impresos coincide con los totales de la liquidación y se ajusta a un máximo de dos páginas.
 - **SC-016**: La vista imprimible no muestra controles de edición ni de navegación en ningún caso.
+- **SC-017**: El 100% de las pantallas, listados e impresiones muestra los datos sensibles solo a los roles autorizados; el rol Jefatura nunca ve sueldos base ni liquidaciones.
+- **SC-018**: El 100% de las consultas y cambios sobre información sensible queda registrado en la bitácora de auditoría.
+- **SC-019**: Un intento de editar o eliminar un registro de auditoría es rechazado en el 100% de los casos.
+- **SC-020**: La bitácora permite reconstruir la trazabilidad completa de accesos y modificaciones a datos sensibles de un usuario o período en menos de 5 minutos.
+- **SC-021**: Al menos el 95% de las pruebas de acceso con distintos roles confirma que los datos ocultos no pueden recuperarse desde la interfaz ni mediante enlaces directos.
 
 ## Suposiciones
 
@@ -378,4 +420,10 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - Los datos de identificación de la empresa emisora están disponibles en la configuración del módulo.
 - Los montos se presentan en pesos chilenos con separador de miles.
 - El acceso a la explicación y al comprobante respeta los permisos vigentes del usuario.
+- Existen roles predefinidos (al menos Administrador, Jefatura y Analista/Trabajador), y el administrador gestiona su asignación.
+- La identidad y el rol del usuario se determinan al iniciar sesión.
+- Los datos sensibles (sueldos, cuentas bancarias, cuotas sindicales) están clasificados explícitamente en el modelo de datos.
+- Las restricciones de acceso se aplican tanto en la interfaz como en la capa de datos, por lo que no pueden eludirse mediante enlaces directos.
+- La bitácora de auditoría se conserva durante el período exigido por la Ley 21.719.
+- La auditoría registra tanto los accesos autorizados como los denegados.
 
