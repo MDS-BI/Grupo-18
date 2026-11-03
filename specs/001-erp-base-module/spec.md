@@ -63,23 +63,23 @@ Como usuario de negocio, quiero aterrizar en un panel estilo ERP con botones de 
 
 ### Historia de Usuario 4 - Gestionar entidades y documentos en una pantalla dedicada (Prioridad: P1)
 
-Como usuario de negocio, quiero una pantalla dedicada donde pueda añadir, editar y eliminar entidades y sus documentos, para poder gestionar los datos del módulo en un lugar enfocado.
+Como analista de remuneraciones, quiero ejecutar el motor de cálculo masivo para generar todas las liquidaciones del mes aplicando la ley chilena (imponibles, AFP, salud, seguro de cesantía e impuesto único) y cerrar el período para congelar los valores, para poder pagar sueldos correctos sin depender de planillas Excel propensas a errores.
 
-**Por qué esta prioridad**: Esto preserva el valor central de las capacidades de gestión del módulo, presentado como una única pantalla de gestión accesible desde la barra lateral y las acciones rápidas del panel.
+**Por qué esta prioridad**: El motor de cálculo es el núcleo del valor del módulo. Automatiza el proceso más complejo y propenso a errores de la gestión de remuneraciones, y sin él las historias de carga de contratos y novedades no generan ningún resultado utilizable.
 
-**Prueba Independiente**: Un usuario puede navegar a la pantalla de gestión mediante la barra lateral o una acción rápida, alternar entre la gestión de entidades y documentos, y volver al panel, añadiendo, editando y eliminando con éxito una entidad y un documento.
+**Prueba Independiente**: Un analista ejecuta el cálculo sobre un período con datos de prueba, obtiene liquidaciones idénticas al caso de referencia oficial (cuadradas al peso), cierra el período y verifica que la UF y la UTM quedan congeladas y que ninguna liquidación o novedad puede modificarse.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** que el usuario está en la pantalla de gestión, **cuando** mira la navegación, **entonces** la barra lateral del espacio de trabajo ofrece botones de módulo para Entidades, Documentos y Panel con el módulo activo resaltado.
-2. **Dada** la barra lateral visible, **cuando** el usuario activa el botón Entidades, **entonces** se muestra el contenido de gestión de entidades.
-3. **Dada** la barra lateral visible, **cuando** el usuario activa el botón Documentos, **entonces** se muestra el contenido de gestión de documentos.
-4. **Dado** que el usuario está en la pantalla de gestión, **cuando** mira la pantalla, **entonces** la lista de entidades no se muestra.
-5. **Dado** que el usuario está en la pantalla de gestión, **cuando** crea una nueva entidad, **entonces** la entidad se guarda.
-6. **Dada** una entidad existente, **cuando** el usuario edita sus detalles, **entonces** la información actualizada se guarda.
-7. **Dada** una entidad que ya no es relevante, **cuando** el usuario la elimina, **entonces** se elimina junto con sus documentos.
-8. **Dada** una entidad existente, **cuando** el usuario añade, edita o elimina un documento, **entonces** los cambios del documento se guardan y quedan asociados a esa entidad.
-9. **Dado** que el usuario está en la pantalla de gestión, **cuando** activa el botón Panel en la barra lateral, **entonces** vuelve al panel de inicio.
+1. **Dado** un período abierto con contratos vigentes y novedades aprobadas, **cuando** el usuario ejecuta el cálculo, **entonces** el sistema genera una liquidación por cada trabajador detallando haberes imponibles y no imponibles, descuentos legales (AFP, salud, seguro de cesantía), impuesto único, líquido a pagar y aportes del empleador en menos de 1 segundo.
+2. **Dado** un trabajador cuya remuneración supera el tope imponible vigente, **cuando** se ejecuta el cálculo, **entonces** las cotizaciones de AFP y salud se calculan sobre el tope de 90 UF y el seguro de cesantía sobre el tope de 135,2 UF, usando la UF del período.
+3. **Dado** un trabajador con base tributable dentro de un tramo del impuesto único, **cuando** se ejecuta el cálculo, **entonces** el impuesto se determina restando las cotizaciones obligatorias de la renta tributable y aplicando la tabla mensual en UTM vigente para el período.
+4. **Dado** el caso de referencia oficial cargado como datos de prueba, **cuando** se ejecuta el cálculo, **entonces** cada línea de cada liquidación coincide al peso con el valor esperado.
+5. **Dado** un período ya calculado, **cuando** el usuario corrige una novedad y vuelve a ejecutar el cálculo, **entonces** el sistema reemplaza las liquidaciones en borrador sin duplicarlas y refleja la corrección.
+6. **Dado** un período calculado sin errores ni novedades pendientes, **cuando** el usuario cierra el período, **entonces** el sistema congela la UF, la UTM y las tasas utilizadas, registra quién y cuándo lo cerró, y cambia el estado del período a cerrado.
+7. **Dado** un período con trabajadores sin calcular o con novedades pendientes de aprobación, **cuando** el usuario intenta cerrarlo, **entonces** el sistema rechaza el cierre e indica qué registros lo impiden.
+8. **Dado** un período cerrado, **cuando** cualquier usuario o proceso intenta modificar una liquidación o novedad de ese período, **entonces** el sistema bloquea la operación y muestra un mensaje indicando que el período está cerrado, garantizando la inmutabilidad de los pagos.
+9. **Dado** un período cerrado, **cuando** se actualizan los indicadores (UF, UTM o tasas) para un período posterior, **entonces** las liquidaciones del período cerrado conservan exactamente los valores con que fueron calculadas.
 
 ---
 
