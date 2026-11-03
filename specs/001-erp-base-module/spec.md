@@ -2,9 +2,11 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
+**Actualizada**: 2026-11-02  
 **Actualizada**: 2026-11-03  
 **Estado**: Borrador  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
+**Última incorporación**: Historia de Usuario 14 — Registro y Aprobación de Novedades del Mes (P1).
 **Última incorporación**: Seguridad, Roles y Gobierno de Datos (P2) — Historia de Usuario 14 en esta especificación.
 
 ## Propósito
@@ -232,6 +234,21 @@ Como usuario de negocio, quiero un espacio de trabajo estilo ERP consistente, co
 4. **Dado** que la ventana gráfica es estrecha, **cuando** se usa la aplicación en una pantalla pequeña, **entonces** la barra lateral se contrae a una columna de iconos manteniéndose utilizable y etiquetada de forma accesible.
 5. **Dada** una configuración que define un color de acento, **cuando** cualquier pantalla carga, **entonces** el marco lo usa consistentemente para resaltados y controles principales; sin valor configurado o con un valor inválido, se utilizan los valores predeterminados integrados sin errores.
 6. **Dado** que el usuario navega entre módulos mediante la barra lateral, **cuando** inspecciona sus datos después, **entonces** todas las entidades y documentos almacenados permanecen intactos.
+
+---
+
+### Historia de Usuario 14 - Registro y Aprobación de Novedades del Mes (Prioridad: P1)
+
+Como analista de remuneraciones o jefatura, quiero registrar y aprobar las novedades del período (horas extra, licencias médicas y ausencias) para que el motor de cálculo procese únicamente montos validados.
+
+**Por qué esta prioridad**: Las variables mensuales modifican el sueldo proporcional y son críticas para evitar pagos incorrectos.
+
+**Prueba Independiente**: Una jefatura registra novedades para su equipo y el sistema exige su aprobación antes de procesar la planilla.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** el registro de una licencia médica, **cuando** se ingresa, **entonces** el sistema registra el tipo y los días sin permitir almacenar diagnósticos por privacidad (Ley 21.719).
+2. **Dado** que existen novedades ingresadas, **cuando** el período está abierto, **entonces** deben ser aprobadas antes de proceder al cálculo masivo.
 
 ---
 
