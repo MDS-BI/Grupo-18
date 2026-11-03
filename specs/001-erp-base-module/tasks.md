@@ -342,15 +342,16 @@
 
 - [ ] T082 [P] [US5] Añadir pruebas unitarias para derivación y formato de la explicación (base, tasa o factor, fórmula, parámetro legal con fecha de vigencia y motivo de líneas manuales) en tests/unit/rrhh-liquidacion.test.js
 - [ ] T083 [P] [US5] Añadir pruebas de integración para la vista src/rrhh/views/liquidacion.js (renderizado línea por línea, panel explicativo al seleccionar, totales) en tests/integration/rrhh-liquidacion-view.test.js
-- [ ] T084 [P] [US5] Añadir pruebas de integración para el modo de impresión limpia, las reglas @media print y la restauración del estado tras imprimir en tests/integration/rrhh-liquidacion-print.test.js
-- [ ] T085 [P] [US5] Añadir pruebas de integración para casos límite (línea manual sin fórmula, parámetro no vigente, liquidación en borrador, datos faltantes del emisor, cancelación de impresión) en tests/integration/rrhh-liquidacion-edge-cases.test.js
+- [ ] T084 [P] [US5] Añadir pruebas de integración para el modo de impresión limpia, las reglas @media print, los eventos beforeprint/afterprint y la restauración del estado tras cancelar o finalizar la impresión en tests/integration/rrhh-liquidacion-print.test.js
+- [ ] T085 [P] [US5] Añadir pruebas de integración para casos límite (línea manual sin fórmula, parámetro no vigente, liquidación en borrador o cerrada, uso obligatorio del snapshot congelado frente a parámetros vigentes actuales, datos faltantes del emisor, cancelación de impresión con restauración correcta) en tests/integration/rrhh-liquidacion-edge-cases.test.js
 
 ### Implementación de la Historia de Usuario 5
 
 #### Estructura y datos
 
 - [ ] T086 [P] [US5] Crear la estructura de carpetas src/rrhh/, src/rrhh/views/, src/rrhh/components/ y src/rrhh/utils/ si no existen
-- [ ] T087 [US5] Definir y validar el modelo de lectura de LIQUIDACION y LINEA_LIQUIDACION en src/rrhh/utils/liquidacion-data.js (encabezado: trabajador, período, fecha de emisión; líneas: concepto, tipo, monto, base, tasa, fórmula, parámetro legal)
+- [ ] T087 [US5] Definir y validar el modelo de lectura de LIQUIDACION y LINEA_LIQUIDACION en src/rrhh/utils/liquidacion-data.js (encabezado: trabajador, período, fecha de emisión, emisor/empresa; líneas: concepto, tipo, monto, base, tasa, fórmula y snapshot inmutable del parámetro legal: codigo, descripcion, fechaVigencia, valorAplicado, fuente, congeladoEnPeriodo; marcar líneas manuales con motivo)
+- [ ] T087a [US5] Generar y persistir el snapshot inmutable de parámetros legales al momento de calcular la liquidación en src/rrhh/utils/liquidacion-calculo.js o src/rrhh/utils/liquidacion-service.js. La vista NUNCA debe leer parámetros vigentes actuales; las líneas deben conservar base, tasa/factor, fórmula o motivo y el snapshot congelado por período.
 - [ ] T088 [US5] Implementar el servicio de carga de la cabecera y las líneas por identificador de liquidación, con datos de demostración cuando no existan, en src/rrhh/utils/liquidacion-service.js
 
 #### Vista explicativa
@@ -358,15 +359,16 @@
 - [ ] T089 [P] [US5] Crear la vista src/rrhh/views/liquidacion.js con encabezado (trabajador, período, fecha de emisión), listado de haberes y descuentos, totales y panel de "Vista Explicativa"
 - [ ] T090 [US5] Renderizar cada línea con concepto, tipo (haber, descuento o impuesto), monto y estado seleccionable por clic y teclado (aria-selected) en src/rrhh/views/liquidacion.js
 - [ ] T091 [US5] Mostrar al seleccionar una línea la base de cálculo, la tasa o factor aplicado, la fórmula con valores formateados y el monto resultante en src/rrhh/views/liquidacion.js
-- [ ] T092 [US5] Identificar en el desglose el parámetro legal aplicado y su fecha de vigencia, usando los valores congelados del período en src/rrhh/utils/liquidacion-data.js y src/rrhh/views/liquidacion.js
+- [ ] T092 [US5] Identificar en el desglose el parámetro legal aplicado, su fecha de vigencia y fuente usando ÚNICAMENTE el snapshot congelado de la línea (guardado al calcular). Mostrar advertencia si falta el snapshot (caso legacy), no resolver con parámetros vigentes actuales. Usar los valores congelados del período en src/rrhh/utils/liquidacion-data.js y src/rrhh/views/liquidacion.js
 - [ ] T093 [US5] Mostrar el motivo registrado en las líneas manuales en lugar de una fórmula, y un mensaje claro cuando no exista fórmula o parámetro legal, sin omitir la línea en src/rrhh/views/liquidacion.js
 
 #### Impresión y PDF
 
-- [ ] T094 [P] [US5] Añadir la acción "Imprimir / Guardar en PDF" que active el modo de impresión limpia en src/rrhh/views/liquidacion.js
-- [ ] T095 [US5] Implementar el modo de impresión: aplicar la clase print-clean, ocultar barra superior, barra lateral, navegación y botones antes de window.print(), y restaurar el estado al terminar en src/rrhh/views/liquidacion.js
+- [ ] T094 [P] [US5] Añadir la acción "Imprimir / Guardar en PDF" que active el modo de impresión limpia usando window.print() (el navegador permite "Guardar como PDF"). Garantizar que solo se muestre en vista de liquidación calculada en src/rrhh/views/liquidacion.js
+- [ ] T095 [US5] Implementar el modo de impresión: aplicar la clase print-clean, ocultar barra superior, barra lateral, navegación y botones. Gestionar con eventos beforeprint/afterprint (y fallback window.matchMedia("print")) para asegurar restauración incluso si el usuario cancela el diálogo. Limpiar estilos/flags al recibir afterprint en src/rrhh/views/liquidacion.js
 - [ ] T096 [US5] Añadir estilos @media print en src/styles.css para .rrhh-liquidacion y .print-clean: ocultar .topbar, .sidebar, .app-nav y controles, una sola columna, colores legibles, tamaño carta/A4 vertical y page-break-inside: avoid en encabezado, filas y totales
-- [ ] T097 [US5] Incluir en el comprobante imprimible la identificación del emisor, del trabajador y del período, el detalle de haberes, descuentos e impuestos, los totales, el líquido a pagar y la fecha de emisión, garantizando que los montos impresos coincidan con la liquidación en src/rrhh/views/liquidacion.js
+- [ ] T097 [US5] Incluir en el comprobante imprimible la identificación del emisor (razón social/nombre, identificador fiscal/RUT) obtenida desde configuración, del trabajador y del período, el detalle de haberes, descuentos e impuestos, los totales, el líquido a pagar y la fecha de emisión, garantizando que los montos impresos coincidan con la liquidación en src/rrhh/views/liquidacion.js
+- [ ] T097a [US5] Centralizar datos del emisor en src/module-config.js con valores por defecto y crear helper src/rrhh/utils/empresa.js (o src/rrhh/config/empresa.js) para obtenerlos de forma reutilizable.
 
 #### Integración, permisos y accesibilidad
 
