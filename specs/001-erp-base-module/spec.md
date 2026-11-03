@@ -2,29 +2,19 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Actualizada**: 2026-11-03  
+**Actualizada**: 2026-11-02  
 **Estado**: Borrador  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historia de Usuario 15 — Cálculo de Planilla y Ciclo de Vida de Liquidaciones (P1), integrada desde `specs/002-rrhh-planilla/plan.md`.
+**Última incorporación**: Historia de Usuario 14 — Registro y Aprobación de Novedades del Mes (P1).
 
 ## Propósito
 
 Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio.
 
-## Clarifications
-
-### Session 2026-11-03
-
-- Q: ¿La Historia de Usuario 14 (registro y aprobación de novedades del mes) debe formar parte de este módulo base, y hasta dónde llega su alcance? → A: En alcance: registrar y aprobar novedades y ejecutar el motor de cálculo de planilla definido en el plan 002; también se incluye el ciclo de vida de liquidaciones y el cierre de período con parámetros congelados.
-- Q: ¿Qué modelo de roles y permisos debe regir el registro y la aprobación de novedades, y el acceso a las liquidaciones? → A: Dos roles fijos: Analista registra/edita; Jefatura aprueba/rechaza; acceso a liquidaciones según permiso.
-- Q: ¿Qué estados y transiciones debe tener una novedad del mes, y qué ocurre cuando queda pendiente o rechazada? → A: Pendiente → Aprobada/Rechazada; la rechazada se corrige y vuelve a Pendiente; solo las aprobadas son elegibles.
-- Q: ¿Debe existir un período de remuneración con estado abierto/cerrado que controle cuándo se pueden registrar o aprobar novedades? → A: Período Abierto/Cerrado, cerrado por Jefatura, que bloquea novedades al cerrar.
-- Q: ¿Cómo debe vincularse una novedad del período con el trabajador al que pertenece? → A: La novedad referencia una Entidad existente que representa al trabajador (entity_id).
-
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
 ### Historia de Usuario 1 - Gestión de Fichas de Trabajadores y Catálogos Base (Prioridad: P1)
-Como usuario de negocio, quiero crear entradas de entidad con detalles claros para poder construir y mantener los datos maestros del módulo.
+Como administrador/a de RR.HH., quiero registrar, buscar y actualizar la ficha de los trabajadores y los catálogos base (cargos, departamentos y centros de costo) para mantener la dotación de personal organizada y al día.
 
 **Por qué esta prioridad**: Este es el valor central del producto porque, sin crear entidades, el resto de la experiencia no puede aportar valor.
 
@@ -251,31 +241,12 @@ Como analista de remuneraciones o jefatura, quiero registrar y aprobar las noved
 
 **Por qué esta prioridad**: Las variables mensuales modifican el sueldo proporcional y son críticas para evitar pagos incorrectos.
 
-**Prueba Independiente**: Un analista registra novedades para un trabajador, una jefatura las aprueba y el sistema exige esa aprobación antes de procesar la planilla.
+**Prueba Independiente**: Una jefatura registra novedades para su equipo y el sistema exige su aprobación antes de procesar la planilla.
 
 **Escenarios de Aceptación**:
 
 1. **Dado** el registro de una licencia médica, **cuando** se ingresa, **entonces** el sistema registra el tipo y los días sin permitir almacenar diagnósticos por privacidad (Ley 21.719).
 2. **Dado** que existen novedades ingresadas, **cuando** el período está abierto, **entonces** deben ser aprobadas antes de proceder al cálculo masivo.
-
----
-
-### Historia de Usuario 15 - Cálculo de Planilla y Ciclo de Vida de Liquidaciones (Prioridad: P1)
-
-Como analista de remuneraciones, quiero calcular las liquidaciones del período a partir de contratos, novedades aprobadas y parámetros legales vigentes, para pagar correctamente y explicar cada monto.
-
-**Por qué esta prioridad**: El cálculo es el flujo central del módulo de RR.HH.; sin él, las novedades y la vista explicativa no producen una liquidación pagable.
-
-**Prueba Independiente**: Dado un trabajador con contrato vigente y una novedad aprobada, al calcular el período se genera una liquidación con líneas explicables que cuadra con el caso de referencia del plan 002.
-
-**Escenarios de Aceptación**:
-
-1. **Dado** un período abierto con trabajadores con contrato vigente, **cuando** el analista ejecuta el cálculo, **entonces** se genera una liquidación por trabajador y período con sueldo proporcional, horas extra, gratificación, cotizaciones, impuesto, descuentos, líquido, aportes y costo empleador.
-2. **Dado** el caso de referencia del plan 002, **cuando** se calcula la liquidación, **entonces** el líquido es $1.272.908 y el costo empleador es $1.659.456, con cada línea redondeada al peso y totales que cuadran.
-3. **Dado** un período con novedades pendientes o rechazadas, **cuando** se calcula, **entonces** solo se incluyen las aprobadas y se advierte de las no elegibles.
-4. **Dado** una liquidación calculada, **cuando** el analista la aprueba, la marca como pagada o la anula, **entonces** solo se permiten las transiciones válidas y se conserva la trazabilidad de usuario y fecha.
-5. **Dado** un período cerrado, **cuando** se intenta recalcular o editar una liquidación o novedad, **entonces** el sistema lo impide y conserva los valores congelados.
-6. **Dado** un cambio de parámetro legal con nueva vigencia, **cuando** se calcula un período posterior, **entonces** se usa el nuevo valor y los períodos anteriores no se recalculan.
 
 ---
 
@@ -304,20 +275,6 @@ Como analista de remuneraciones, quiero calcular las liquidaciones del período 
 - ¿Qué ocurre cuando los valores mostrados en el desglose son redondeados y la suma de las líneas debe seguir cuadrando con el total?
 - ¿Qué ocurre cuando la liquidación tiene tantas líneas que el comprobante supera una página?
 - ¿Qué ocurre si el usuario cancela el diálogo de impresión o guarda el comprobante como PDF?
-- ¿Qué ocurre cuando un Analista intenta aprobar o rechazar una novedad?
-- ¿Qué ocurre cuando se intenta registrar, editar, aprobar o rechazar una novedad de un período cerrado?
-- ¿Qué ocurre cuando se intenta cerrar un período que aún tiene novedades pendientes?
-- ¿Qué ocurre cuando se registra una licencia médica e intenta incluir un diagnóstico o dato clínico?
-- ¿Qué ocurre con las novedades de una Entidad trabajador cuando esta se elimina?
-- ¿Qué ocurre si una novedad rechazada no se corrige antes del cierre del período?
-- ¿Qué ocurre cuando un trabajador no tiene contrato vigente en el período y se intenta calcular su liquidación?
-- ¿Qué ocurre cuando falta un parámetro legal o un tramo de impuesto para la fecha del período?
-- ¿Qué ocurre cuando ya existe una liquidación para el mismo trabajador y período y se vuelve a calcular?
-- ¿Qué ocurre cuando una liquidación pagada o un período cerrado se intenta recalcular con parámetros nuevos?
-- ¿Qué ocurre cuando el sueldo base, las horas extra o los descuentos producen montos negativos o superan los topes legales?
-- ¿Qué ocurre cuando se intenta cerrar un período con liquidaciones en borrador o sin aprobar?
-- ¿Qué ocurre cuando el RUT del trabajador no tiene un dígito verificador válido?
-- ¿Qué ocurre cuando se intenta eliminar un trabajador con liquidaciones aprobadas o pagadas?
 
 ## Requisitos *(obligatorio)*
 
@@ -373,37 +330,6 @@ Como analista de remuneraciones, quiero calcular las liquidaciones del período 
 - **FR-048**: La vista imprimible DEBE adaptarse a una hoja tamaño carta o A4 en orientación vertical y DEBE poder guardarse como PDF.
 - **FR-049**: La explicación y el comprobante DEBEN respetar los permisos de acceso vigentes del usuario.
 - **FR-050**: El sistema DEBE indicar claramente cuándo una línea no dispone de fórmula o parámetro legal asociado, sin omitir la línea del comprobante.
-- **FR-051**: El sistema DEBE permitir registrar y aprobar las novedades del período (horas extra, licencias médicas y ausencias) y ejecutar el cálculo de la planilla con las novedades aprobadas.
-- **FR-052**: El sistema DEBE asignar el registro y la edición de novedades al rol Analista, y la aprobación y el rechazo de novedades al rol Jefatura.
-- **FR-053**: El sistema DEBE impedir que un usuario con rol Analista apruebe o rechace novedades, y DEBE explicar claramente la falta de permiso.
-- **FR-054**: El sistema DEBE permitir el acceso a la explicación y al comprobante de liquidación solo a usuarios con el permiso correspondiente, denegando el acceso con un mensaje claro en caso contrario.
-- **FR-055**: El sistema DEBE modelar cada novedad del período con los estados Pendiente, Aprobada y Rechazada.
-- **FR-056**: El sistema DEBE permitir a la Jefatura aprobar o rechazar novedades en estado Pendiente, registrando el usuario y la fecha de la decisión.
-- **FR-057**: El sistema DEBE permitir al Analista corregir una novedad Rechazada y reenviarla al estado Pendiente.
-- **FR-058**: El sistema DEBE considerar únicamente las novedades Aprobadas como validadas para cualquier procesamiento posterior.
-- **FR-059**: El sistema DEBE modelar el período de remuneración con los estados Abierto y Cerrado.
-- **FR-060**: La Jefatura DEBE poder cerrar un período Abierto; al cerrarlo, el sistema DEBE impedir registrar, editar, aprobar o rechazar novedades de ese período y explicar el motivo.
-- **FR-061**: El sistema DEBE conservar las novedades aprobadas y su trazabilidad después del cierre del período.
-- **FR-062**: El sistema DEBE vincular cada novedad exactamente a una Entidad existente que representa al trabajador, mediante su entity_id.
-- **FR-063**: Al eliminar una Entidad trabajador sin liquidaciones aprobadas ni pagadas, el sistema DEBE eliminar sus novedades asociadas de forma consistente con la eliminación en cascada de documentos; si tiene liquidaciones aprobadas o pagadas, DEBE aplicar baja lógica y conservar novedades y liquidaciones.
-- **FR-064**: El sistema DEBE permitir abrir un período de remuneración mensual y calcular las liquidaciones de todos los trabajadores con contrato vigente en ese período.
-- **FR-065**: El sistema DEBE calcular el sueldo proporcional como sueldo base × días trabajados / 30, descontando los días de licencias y ausencias aprobadas.
-- **FR-066**: El sistema DEBE calcular las horas extra como sueldo base / 30 × 7 / jornada semanal × recargo, usando la jornada del contrato y el recargo legal vigente.
-- **FR-067**: El sistema DEBE calcular la gratificación legal como el mínimo entre el 25 % de los haberes imponibles y 4,75 × ingreso mínimo mensual / 12.
-- **FR-068**: El sistema DEBE calcular las cotizaciones de AFP, salud y seguro de cesantía usando las tasas, topes y planes vigentes para la fecha del período.
-- **FR-069**: El sistema DEBE calcular el impuesto único de segunda categoría aplicando el tramo de UTM que corresponda a la base tributable.
-- **FR-070**: El sistema DEBE aplicar los descuentos voluntarios registrados, con un tope del 15 % de la remuneración, y explicar cualquier rechazo por exceso.
-- **FR-071**: El sistema DEBE calcular el líquido a pagar como haberes imponibles + haberes no imponibles − descuentos − impuesto, y calcular los aportes del empleador y el costo empleador.
-- **FR-072**: El sistema DEBE redondear cada línea al peso y obtener los totales sumando las líneas ya redondeadas, de modo que el comprobante siempre cuadre.
-- **FR-073**: El sistema DEBE persistir en cada línea de liquidación la base, la tasa o factor, la fórmula y el snapshot del parámetro legal aplicado con su fecha de vigencia y fuente.
-- **FR-074**: El sistema DEBE modelar y aplicar el ciclo de vida de la liquidación borrador → calculada → aprobada → pagada / anulada, rechazando transiciones inválidas.
-- **FR-075**: Al cerrar un período, el sistema DEBE congelar UF, UTM, ingreso mínimo y parámetros usados, e impedir recalcular o editar sus liquidaciones y novedades.
-- **FR-076**: El sistema DEBE garantizar una liquidación por trabajador y período, permitir recalcular solo en estado borrador o calculada y conservar el historial de cambios.
-- **FR-077**: El sistema DEBE seleccionar los parámetros legales por fecha de vigencia, de modo que un cambio de parámetro solo afecte a los períodos posteriores.
-- **FR-078**: El motor de cálculo DEBE incluir únicamente novedades aprobadas y DEBE advertir cuando existan novedades pendientes o rechazadas para el período.
-- **FR-079**: El sistema DEBE validar el RUT del trabajador con su dígito verificador antes de guardar la ficha o calcular su liquidación.
-- **FR-080**: El sistema DEBE exponer el costo empleador y el resumen por centro de costo del período para su integración con Contabilidad, Finanzas y Control de Gestión.
-- **FR-081**: El sistema DEBE registrar en la bitácora de auditoría el cálculo, la aprobación, el pago y la anulación de liquidaciones, indicando usuario y fecha.
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -412,20 +338,15 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **XR-001**: Extender los registros de entidad y documento con campos adicionales específicos del dominio sin cambiar la estructura de almacenamiento base.
 - **XR-002**: Reetiquetar pantallas, pestañas, formularios y listas con terminología específica del módulo sin alterar el comportamiento de navegación.
 - **XR-003**: Añadir reglas de validación específicas del módulo junto a las reglas de validación base.
-- **XR-004**: Apoyarse en el módulo base para generación de identidad, marcas de tiempo, integridad referencial entre entidades, documentos y novedades, y eliminación en cascada.
+- **XR-004**: Apoyarse en el módulo base para generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, y eliminación en cascada.
 - **XR-005**: Remarcar el espacio de trabajo —nombre del módulo, logotipo derivado y color de acento— únicamente mediante configuración.
 
 ### Entidades Clave *(incluir si la funcionalidad implica datos)*
 
 - **Entidad**: Un registro de datos maestros gestionado por el módulo, que incluye su nombre, código de negocio, detalles descriptivos, categoría de clasificación, una fecha objetivo opcional y un entity_id autogenerado. Los módulos personalizados definen qué representa una Entidad en el mundo real (p. ej., cliente, producto, activo).
 - **Documento**: Detalles transaccionales adjuntos a una entidad, vinculados a ella por el entity_id de la entidad. Los módulos personalizados definen qué representa un Documento (p. ej., pedido, factura, contrato).
-- **Trabajador**: La Entidad del módulo de RR.HH., con datos de identificación, contacto, previsión, datos bancarios y estado laboral; se vincula a contratos, novedades y liquidaciones mediante su entity_id.
-- **Contrato**: Registro histórico asociado a un Trabajador con sueldo base, jornada, tipo de contrato, fecha de inicio, fecha de término y período de vigencia; un cambio de sueldo crea un nuevo contrato o anexo sin sobrescribir el anterior.
-- **Concepto de Remuneración**: Catálogo que clasifica cada haber, descuento o aporte con su tratamiento impositivo, previsional y contable (por ejemplo, imponible, no imponible, descuento voluntario o aporte del empleador).
-- **Novedad del Período**: Registro mensual asociado a una Entidad que representa al trabajador mediante su entity_id y a un período, con su tipo (hora extra, licencia médica o ausencia), la cantidad de horas o días, el estado Pendiente/Aprobada/Rechazada y la trazabilidad de quién y cuándo aprobó o rechazó. No almacena diagnósticos ni datos clínicos.
-- **Período de Remuneración**: Intervalo mensual identificado por su año y mes, con estado Abierto o Cerrado, que agrupa las novedades y controla si pueden registrarse o aprobarse. La Jefatura lo cierra y su cierre conserva las novedades aprobadas y su trazabilidad.
 - **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados y el ciclo de vida de estados de documentos. Consulte data-model.md para su forma completa.
-- **Liquidación**: Documento que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales, líquido a pagar, aportes y costo empleador, junto con su ciclo de vida borrador → calculada → aprobada → pagada / anulada y la fecha de emisión del comprobante.
+- **Liquidación**: Documento que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales y líquido a pagar, junto con el estado del cálculo y la fecha de emisión del comprobante.
 - **Línea de Liquidación**: Cada concepto que compone una liquidación (haber, descuento o impuesto), con su monto, la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal que la respalda; las líneas manuales registran un motivo en lugar de una fórmula.
 - **Parámetro Legal**: Valor normativo vigente en una fecha determinada (tasa, tope, tramo o monto fijo) que sustenta el cálculo de una línea y que se conserva congelado para los períodos ya calculados.
 
@@ -449,19 +370,13 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-014**: Las consultas internas sobre montos pagados se reducen al menos un 40% tras la adopción de la vista explicativa.
 - **SC-015**: El 100% de los comprobantes impresos coincide con los totales de la liquidación y se ajusta a un máximo de dos páginas.
 - **SC-016**: La vista imprimible no muestra controles de edición ni de navegación en ningún caso.
-- **SC-017**: El cálculo de un período de hasta 200 trabajadores se completa en menos de 1 segundo en el navegador objetivo.
-- **SC-018**: El caso de referencia del plan 002 cuadra al peso: líquido $1.272.908 y costo empleador $1.659.456.
-- **SC-019**: El 100 % de las liquidaciones calculadas conserva sus parámetros congelados aunque cambien los parámetros legales vigentes.
-- **SC-020**: El 100 % de las transiciones inválidas del ciclo de vida de la liquidación se rechaza con un mensaje claro.
-- **SC-021**: El 100 % de las novedades pendientes o rechazadas queda excluido del cálculo y se informa al usuario.
-- **SC-022**: La extensión de RR.HH. se implementa con cero modificaciones al código central del módulo base.
 
 ## Suposiciones
 
 - El módulo base gestiona datos para un único espacio de trabajo en lugar de una base de datos multiinquilino compartida.
 - La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales.
 - Cada entidad incluye información básica suficiente para identificación y seguimiento; los módulos personalizados aportan los campos específicos del dominio.
-- La versión inicial incluye la gestión central de datos maestros y documentos, la vista explicativa e impresión de liquidaciones de la Historia de Usuario 5, el registro y aprobación de novedades de la Historia de Usuario 14 y el motor de cálculo de planilla y ciclo de vida de liquidaciones de la Historia de Usuario 15; quedan fuera flujos de aprobación distintos a las novedades, períodos de contabilización e informes avanzados.
+- La versión inicial se centra en la gestión central de datos maestros y documentos, además de la vista explicativa e impresión de liquidaciones de la Historia de Usuario 5, en lugar de capacidades ERP avanzadas como flujos de aprobación, períodos de contabilización o informes.
 - La búsqueda se realiza sobre los registros de entidad almacenados.
 - La pantalla de gestión consolida los formularios de añadir/editar entidad y añadir/editar documento en una sola pantalla de gestión.
 - La navegación entre áreas ocurre mediante una barra lateral persistente; la pantalla de gestión aloja ambos paneles de gestión y no muestra la lista de entidades.
@@ -472,10 +387,8 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - Los datos siguen persistiéndose en el localStorage del navegador y no se ven afectados por la navegación entre pantallas.
 - La pantalla de búsqueda se centra en encontrar y ver entidades; la edición permanece en la pantalla de gestión.
 - El contenido del usuario introducido por el usuario (nombres, descripciones, notas de documentos) DEBE sanitizarse antes de renderizarse en el DOM para prevenir ataques de inyección de scripts (XSS). El módulo base DEBE escapar HTML y atributos de eventos al mostrar datos de localStorage.
-- El motor de cálculo implementa las reglas del plan 002 y se valida con el caso de referencia; los parámetros legales se cargan como datos versionados por vigencia y no como constantes en el código.
+- Las liquidaciones y sus líneas existen como resultado de un cálculo previo; esta historia no cubre las reglas de cálculo ni la generación de la planilla.
 - Cada línea conserva, desde el momento del cálculo, la base, la tasa o fórmula y el parámetro legal aplicado, de modo que la explicación no depende de parámetros posteriores.
-- El cálculo cubre una empresa y hasta 200 trabajadores, con 24 períodos de historia en el MVP; no incluye Previred, declaraciones al SII ni finiquitos.
-- Solo se usan datos ficticios en el MVP; para producción se requerirá servidor, cifrado y autenticación real.
 - La impresión se realiza mediante la función de impresión del navegador, que incluye la opción de guardar como PDF; no se requiere un generador de PDF dedicado.
 - Los datos de identificación de la empresa emisora están disponibles en la configuración del módulo.
 - Los montos se presentan en pesos chilenos con separador de miles.
