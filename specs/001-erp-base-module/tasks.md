@@ -531,3 +531,45 @@ Tarea: "Añadir estilos de novedades en src/styles.css"
 1. El equipo completa Configuración + Fundacional en conjunto
 2. Con la base lista, repartir historias independientes por desarrollador
 3. Las historias se completan e integran de forma independiente; HU5 se integra al final por depender de liquidaciones calculadas, y HU14 requiere ese motor para integrar las novedades aprobadas con el cálculo masivo
+
+---
+
+## Fase 21: Historia de Usuario 6 - Seguridad, Roles y Gobierno de Datos (Prioridad: P2)
+
+**Objetivo**: Restringir la visualización y consulta de datos sensibles (sueldos, cuentas bancarias y cuotas sindicales) según el rol del usuario, de modo que el rol Jefatura vea las novedades de su equipo sin acceder a liquidaciones ni sueldos base, y registrar automáticamente cada consulta o cambio de información sensible en una bitácora de auditoría de solo inserción.
+
+**Prueba Independiente**: Al simular el rol "Jefatura", la interfaz muestra las novedades de su equipo y oculta los sueldos, las cuentas bancarias, las cuotas sindicales y las liquidaciones; cada consulta o cambio de información sensible agrega un registro automático e inmutable a la bitácora de auditoría.
+
+### Pruebas para la Historia de Usuario 6
+
+- [ ] T127 [P] [US6] Añadir pruebas unitarias de la matriz de roles y permisos sobre datos sensibles (Administrador, Jefatura y Analista) en tests/unit/rrhh-seguridad.test.js
+- [ ] T128 [P] [US6] Añadir pruebas unitarias de la bitácora de auditoría: registro de consultas y cambios con usuario, rol, fecha y hora, acción y registro afectado; persistencia y rechazo de edición o eliminación (solo inserción) en tests/unit/rrhh-auditoria.test.js
+- [ ] T129 [P] [US6] Añadir pruebas de integración para el rol Jefatura: visualiza las novedades de su equipo y no tiene acceso a liquidaciones ni sueldos base en tests/integration/rrhh-seguridad-jefatura.test.js
+- [ ] T130 [P] [US6] Añadir pruebas de integración que verifiquen que cada consulta y cada cambio de información sensible (sueldos, cuentas bancarias y cuotas sindicales) genera un registro automático en la bitácora de auditoría en tests/integration/rrhh-auditoria.test.js
+
+### Implementación de la Historia de Usuario 6
+
+#### Roles y control de acceso
+
+- [ ] T131 [P] [US6] Definir los roles y la matriz de permisos sobre datos sensibles (sueldos, cuentas bancarias, cuotas sindicales y liquidaciones) en src/rrhh/seguridad/roles.js
+- [ ] T132 [P] [US6] Implementar la bitácora de auditoría de solo inserción en src/rrhh/seguridad/auditoria.js, con registro de usuario, rol, fecha y hora, acción y registro afectado, y rechazo de edición o eliminación
+- [ ] T133 [US6] Implementar el guard de acceso a datos sensibles por rol en src/rrhh/seguridad/acceso-datos.js
+- [ ] T134 [US6] Propagar el rol del usuario autenticado a las vistas y servicios de RRHH en src/app.js
+
+#### Registro automático de auditoría
+
+- [ ] T135 [US6] Registrar automáticamente las consultas y los cambios de información sensible desde los servicios de liquidaciones y novedades en src/rrhh/utils/liquidacion-service.js y src/rrhh/utils/novedades-service.js
+
+#### Interfaz según el rol
+
+- [ ] T136 [US6] Ocultar en la vista de liquidaciones los sueldos base y los datos financieros confidenciales cuando el rol del usuario no está autorizado en src/rrhh/views/liquidacion.js
+- [ ] T137 [US6] Mostrar al rol Jefatura únicamente las novedades de su equipo y ocultar las liquidaciones y sueldos base en src/rrhh/views/novedades.js
+- [ ] T138 [P] [US6] Añadir estilos para el contenido oculto y los mensajes de acceso denegado a datos sensibles en src/styles.css
+
+#### Verificación
+
+- [ ] T139 [US6] Ejecutar las pruebas unitarias y de integración de seguridad, roles y auditoría y corregir los fallos en tests/unit/rrhh-seguridad.test.js, tests/unit/rrhh-auditoria.test.js, tests/integration/rrhh-seguridad-jefatura.test.js y tests/integration/rrhh-auditoria.test.js
+- [ ] T140 [US6] Verificar manualmente los escenarios de aceptación de HU6 (Jefatura sin acceso a liquidaciones ni sueldos base y auditoría automática de solo inserción) y registrar el resultado
+- [ ] T141 [US6] Comprobar que la bitácora de auditoría no admite edición ni eliminación y que toda consulta o cambio de información sensible queda registrado en src/rrhh/seguridad/auditoria.js
+
+**Punto de control**: El rol Jefatura visualiza las novedades de su equipo sin acceso a liquidaciones ni sueldos base, y toda consulta o cambio de información sensible genera un registro automático e inmutable en la bitácora de auditoría.
