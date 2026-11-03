@@ -2,7 +2,7 @@
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: plan.md (obligatorio), spec.md (obligatorio para las historias de usuario), research.md, data-model.md, contracts/
-**Actualizado**: 2026-11-01 — alineado con la Historia de Usuario 5 revisada (vista explicativa e impresión de liquidaciones, P2)
+**Actualizado**: 2026-11-03 — añadidas las tareas de la Historia de Usuario 14 (Registro y Aprobación de Novedades del Mes, P1); 2026-11-01 — alineado con la Historia de Usuario 5 revisada (vista explicativa e impresión de liquidaciones, P2)
 
 ## Formato: `[ID] [P?] [Historia] Descripción`
 
@@ -386,6 +386,53 @@
 
 ---
 
+## Fase 20: Historia de Usuario 14 - Registro y Aprobación de Novedades del Mes (Prioridad: P1)
+
+**Objetivo**: Permitir que analistas de remuneraciones y jefaturas registren las novedades del período (horas extra, licencias médicas y ausencias), las sometan a aprobación y garanticen que el cálculo masivo de la planilla consuma únicamente novedades aprobadas de un período abierto, sin almacenar diagnósticos ni datos clínicos.
+
+**Prueba Independiente**: Una jefatura registra horas extra, una licencia médica y una ausencia para un trabajador de su equipo; la licencia solo conserva tipo y días (sin diagnóstico), las novedades quedan pendientes y el cálculo masivo se bloquea con un mensaje claro hasta su aprobación; tras aprobarlas, solo esas novedades alimentan el cálculo; en un período cerrado no se permite registrar, editar ni aprobar.
+
+### Pruebas para la Historia de Usuario 14
+
+- [ ] T104 [P] [US14] Añadir pruebas unitarias para la validación del modelo de novedad, los campos obligatorios por tipo (horas extra, licencia médica y ausencia), la cantidad/días positivos, las fechas coherentes y la prohibición de campos de diagnóstico en src/rrhh/utils/novedades-data.js en tests/unit/rrhh-novedades.test.js
+- [ ] T105 [P] [US14] Añadir pruebas unitarias para la máquina de estados de aprobación (pendiente, aprobada, rechazada), los permisos por rol, el bloqueo por período cerrado, la aprobación masiva y el rechazo con motivo en tests/unit/rrhh-novedades-aprobacion.test.js
+- [ ] T106 [P] [US14] Añadir pruebas de integración para el registro de novedades desde el formulario, la retroalimentación de validación y la garantía de que una licencia médica solo persiste tipo y días sin diagnósticos ni texto clínico en tests/integration/rrhh-novedades-registro.test.js
+- [ ] T107 [P] [US14] Añadir pruebas de integración para la aprobación individual y masiva, la actualización visible del estado, el bloqueo del cálculo masivo mientras existan novedades pendientes y el consumo exclusivo de novedades aprobadas en tests/integration/rrhh-novedades-aprobacion.test.js
+- [ ] T108 [P] [US14] Añadir pruebas de integración para casos límite: período cerrado, rol sin permiso de aprobación, rechazo con motivo, novedad duplicada, fechas fuera del período, ausencia sin justificación clínica y restauración del estado tras errores en tests/integration/rrhh-novedades-edge-cases.test.js
+- [ ] T109 [P] [US14] Añadir pruebas de integración para la navegación al módulo Novedades, las etiquetas configuradas y el resumen de pendientes por período en el marco ERP en tests/integration/rrhh-novedades-view.test.js
+
+### Implementación de la Historia de Usuario 14
+
+#### Estructura, modelo y persistencia
+
+- [ ] T110 [P] [US14] Crear la estructura de carpetas src/rrhh/utils/, src/rrhh/components/, src/rrhh/views/ y src/rrhh/seguridad/ si no existen
+- [ ] T111 [US14] Definir el modelo y la validación de NOVEDAD en src/rrhh/utils/novedades-data.js con id, trabajadorId, período (YYYY-MM), tipo (horas_extra, licencia_medica o ausencia), cantidad de horas o días, fechaInicio, fechaFin, observación no clínica, estado, registradoPor, aprobadoPor, fechaAprobacion, motivoRechazo, createdAt y updatedAt
+- [ ] T112 [US14] Implementar la lista blanca de campos persistidos y el guardia de privacidad de la Ley 21.719 en src/rrhh/utils/novedades-privacidad.js para rechazar o descartar diagnósticos, códigos CIE, detalles clínicos y texto libre sensible, conservando solo tipo y días en licencias médicas
+- [ ] T113 [US14] Implementar la persistencia y el CRUD de novedades en localStorage en src/rrhh/utils/novedades-service.js, incluyendo identificadores únicos, marcas de tiempo, filtros por período y trabajador, y actualización de una novedad existente
+- [ ] T114 [US14] Implementar la verificación de período abierto o cerrado en src/rrhh/utils/periodos.js y usarla para impedir registrar, editar, rechazar o aprobar novedades cuando el período no esté abierto en src/rrhh/utils/novedades-service.js
+- [ ] T115 [US14] Implementar la máquina de estados y las reglas de aprobación en src/rrhh/utils/novedades-aprobacion.js: transiciones pendiente→aprobada y pendiente→rechazada, aprobación masiva, motivo de rechazo obligatorio y verificación de permisos con src/rrhh/seguridad/roles.js
+- [ ] T116 [US14] Implementar el selector de novedades aprobadas por período y trabajador, el resumen de totales (horas extra, días de licencia y días de ausencia) y el bloqueo del cálculo masivo cuando existan novedades pendientes o rechazadas en src/rrhh/utils/novedades-service.js
+- [ ] T117 [US14] Integrar las novedades aprobadas en el motor de cálculo de planilla para que solo los montos validados afecten el sueldo proporcional, las horas extra y los descuentos por ausencias en src/rrhh/utils/liquidacion-calculo.js
+
+#### Formulario, listado y aprobación
+
+- [ ] T118 [P] [US14] Crear el formulario de registro de novedades en src/rrhh/components/novedad-form.js con campos específicos por tipo, validación en línea, aviso de privacidad y ausencia total de campos de diagnóstico o detalle clínico
+- [ ] T119 [P] [US14] Crear el listado y panel de aprobación de novedades en src/rrhh/components/novedad-list.js con período, trabajador, tipo, cantidad, estado, pendientes por período, acciones de aprobar/rechazar para roles autorizados y controles deshabilitados en períodos cerrados
+- [ ] T120 [US14] Crear la vista de novedades en src/rrhh/views/novedades.js que orqueste el filtro por período, el formulario, el listado, la aprobación individual y masiva, el estado vacío y el mensaje de bloqueo antes del cálculo masivo
+- [ ] T121 [US14] Integrar la vista de novedades en la navegación de RRHH/Planilla y en las etiquetas de tipos y estados en src/app.js y src/module-config.js
+- [ ] T122 [P] [US14] Añadir estilos para el formulario, el listado, las insignias de estado, el aviso de privacidad y la aprobación masiva, con comportamiento responsivo, en src/styles.css
+- [ ] T123 [US14] Garantizar accesibilidad en la vista de novedades: etiquetas descriptivas, foco visible, navegación por teclado en acciones de aprobación, aria-live para resultados y mensajes de error claros en src/rrhh/views/novedades.js
+
+#### Verificación
+
+- [ ] T124 [US14] Ejecutar las pruebas unitarias y de integración de novedades, aprobación y privacidad en tests/unit/rrhh-novedades.test.js, tests/unit/rrhh-novedades-aprobacion.test.js, tests/integration/rrhh-novedades-registro.test.js, tests/integration/rrhh-novedades-aprobacion.test.js, tests/integration/rrhh-novedades-edge-cases.test.js y tests/integration/rrhh-novedades-view.test.js, y corregir los fallos
+- [ ] T125 [US14] Verificar manualmente los escenarios de aceptación de HU14 (licencia médica sin diagnóstico, aprobación obligatoria antes del cálculo masivo) siguiendo specs/001-erp-base-module/quickstart.md y registrar el resultado
+- [ ] T126 [US14] Comprobar que el cálculo masivo solo consume novedades aprobadas, que un período cerrado es de solo lectura y que no se persiste ningún dato clínico ni diagnóstico en src/rrhh/utils/novedades-service.js y src/rrhh/utils/liquidacion-calculo.js
+
+**Punto de control**: Las novedades del mes se registran con validación por tipo y privacidad garantizada, requieren aprobación antes del cálculo masivo, solo las aprobadas alimentan la planilla y los períodos cerrados permanecen inmutables.
+
+---
+
 ## Dependencias y Orden de Ejecución
 
 ### Dependencias entre Fases
@@ -409,6 +456,7 @@
 - Historia de Usuario 3 revisada (Fase 17): Depende de la Fase 16 (el enrutamiento por barra lateral debe existir antes de que las acciones del panel lo usen)
 - Pulido Aspecto ERP (Fase 18): Depende de que las Fases 16 y 17 estén completas
 - Historia de Usuario 5 (Fase 19): Depende del marco ERP (Fase 16) y de que existan liquidaciones y líneas calculadas; al ser P2 se aborda después de las historias P1
+- Historia de Usuario 14 (Fase 20): Depende del marco ERP (Fase 16) y de la estructura base de RRHH/Planilla con su motor de cálculo (Fase 19, tareas T086-T088); el registro y la aprobación (T110-T123) pueden avanzar en paralelo con la vista explicativa e impresión de HU5, pero la integración con el cálculo (T117) requiere el motor de liquidaciones disponible
 
 ### Oportunidades Paralelas
 
@@ -422,6 +470,7 @@
 - En la Fase 17, T073/T074/T077 pueden ejecutarse en paralelo con T075/T076
 - En la Fase 18, T078 y T079 pueden ejecutarse en paralelo antes de la verificación final T080-T081
 - En la Fase 19, las pruebas T082-T085 son paralelas entre sí; T086/T087 y T089/T094 pueden iniciarse en paralelo; T091-T093 comparten archivo y avanzan en secuencia
+- En la Fase 20, las pruebas T104-T109 son paralelas entre sí; T110, T118, T119 y T122 pueden iniciarse en paralelo; T111-T117 comparten la capa de datos/servicio y avanzan en secuencia; T120 depende de T118-T119 y T121 depende de T120; T124-T126 son la verificación final
 
 ### Ejemplo Paralelo: Historia de Usuario 5
 
@@ -437,6 +486,24 @@ Tarea: "Crear carpetas src/rrhh/ y src/rrhh/views/"
 Tarea: "Definir el modelo de lectura de LIQUIDACION y LINEA_LIQUIDACION en src/rrhh/utils/liquidacion-data.js"
 Tarea: "Crear el layout de la vista en src/rrhh/views/liquidacion.js"
 Tarea: "Añadir la acción Imprimir / Guardar en PDF en src/rrhh/views/liquidacion.js"
+```
+
+### Ejemplo Paralelo: Historia de Usuario 14
+
+```text
+# Lanzar en paralelo las pruebas de la Historia de Usuario 14:
+Tarea: "Pruebas unitarias del modelo, validación y privacidad en tests/unit/rrhh-novedades.test.js"
+Tarea: "Pruebas unitarias de aprobación, roles y período en tests/unit/rrhh-novedades-aprobacion.test.js"
+Tarea: "Pruebas de integración del registro de novedades en tests/integration/rrhh-novedades-registro.test.js"
+Tarea: "Pruebas de integración de aprobación y bloqueo del cálculo en tests/integration/rrhh-novedades-aprobacion.test.js"
+Tarea: "Pruebas de integración de casos límite en tests/integration/rrhh-novedades-edge-cases.test.js"
+Tarea: "Pruebas de integración de navegación y etiquetas en tests/integration/rrhh-novedades-view.test.js"
+
+# Iniciar en paralelo la estructura y los componentes visuales:
+Tarea: "Crear las carpetas src/rrhh/utils/, src/rrhh/components/, src/rrhh/views/ y src/rrhh/seguridad/"
+Tarea: "Crear el formulario de novedades en src/rrhh/components/novedad-form.js"
+Tarea: "Crear el listado y panel de aprobación en src/rrhh/components/novedad-list.js"
+Tarea: "Añadir estilos de novedades en src/styles.css"
 ```
 
 ---
@@ -455,7 +522,7 @@ Tarea: "Añadir la acción Imprimir / Guardar en PDF en src/rrhh/views/liquidaci
 
 1. Completar Configuración + Fundacional → base lista
 2. Añadir Historia de Usuario 1 → probar y demostrar (MVP)
-3. Añadir el resto de historias P1 (HU2, HU3, HU4, HU6, HU7, HU13) en orden de dependencias
+3. Añadir el resto de historias P1 (HU2, HU3, HU4, HU6, HU7, HU13, HU14) en orden de dependencias
 4. Añadir las historias P2 (HU8, HU9, HU10, HU11, HU12) y finalmente HU5 (Fase 19)
 5. Cada historia añade valor sin romper las anteriores
 
@@ -463,4 +530,4 @@ Tarea: "Añadir la acción Imprimir / Guardar en PDF en src/rrhh/views/liquidaci
 
 1. El equipo completa Configuración + Fundacional en conjunto
 2. Con la base lista, repartir historias independientes por desarrollador
-3. Las historias se completan e integran de forma independiente; HU5 se integra al final por depender de liquidaciones calculadas
+3. Las historias se completan e integran de forma independiente; HU5 se integra al final por depender de liquidaciones calculadas, y HU14 requiere ese motor para integrar las novedades aprobadas con el cálculo masivo
