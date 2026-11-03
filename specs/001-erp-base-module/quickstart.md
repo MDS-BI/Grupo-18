@@ -34,3 +34,23 @@ Los módulos ERP personalizados adaptan la base mediante un único archivo de co
 5. Añada reglas de validación específicas del módulo junto a las reglas base donde sea necesario.
 
 La generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, eliminación en cascada, navegación y búsqueda siguen siendo gestionadas por el módulo base. Sin archivo de configuración, la aplicación se ejecuta con el comportamiento predeterminado Entidad/Documento. Consulte `specs/001-erp-base-module/` para la especificación completa.
+
+## Flujo de RR.HH. y Planilla
+
+1. Cree o abra un trabajador (Entidad) y registre su contrato con sueldo base, jornada, tipo y vigencia. Si cambia el sueldo, registre un nuevo contrato o anexo sin sobrescribir el anterior.
+2. Abra el período mensual en `Planilla` y registre las novedades del mes (horas extra, licencias médicas o ausencias). Las licencias solo guardan tipo y días, sin diagnósticos.
+3. Con rol Jefatura, apruebe o rechace las novedades pendientes. Con rol Analista no se permite aprobar; una novedad rechazada puede corregirse y reenviarse.
+4. Ejecute el cálculo del período. El sistema valida contratos vigentes, novedades aprobadas y parámetros legales vigentes, y genera una liquidación por trabajador con líneas explicables.
+5. Verifique el caso de referencia: sueldo base $1.200.000, 42 h, 5 horas extra, FONASA, AFP 11,27 %, IMM $553.553 y UTM $71.649 deben producir $1.272.908 líquidos y $1.659.456 de costo empleador.
+6. Abra la vista de liquidación, seleccione una línea para ver base, tasa o fórmula y parámetro legal con vigencia, y use Imprimir / Guardar en PDF.
+7. Cierre el período con rol Jefatura. El cierre congela UF, UTM, IMM y parámetros, y bloquea la edición o recálculo de liquidaciones y novedades.
+8. Consulte la auditoría para ver cálculo, aprobación, pago, anulación y consultas de datos sensibles.
+
+### Validación de RR.HH.
+
+- Una liquidación no se genera para un trabajador sin contrato vigente en el período.
+- Solo las novedades aprobadas se incluyen en el cálculo; las pendientes o rechazadas se excluyen con aviso.
+- Un período cerrado no permite registrar, editar, aprobar, rechazar ni recalcular.
+- Un cambio de parámetro legal con nueva vigencia afecta solo a los períodos posteriores.
+- Un trabajador con liquidaciones aprobadas o pagadas no se elimina; solo se da de baja lógica.
+- Los roles Jefatura no ven sueldos, datos bancarios ni conceptos sensibles; cada consulta sensible queda auditada.

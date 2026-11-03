@@ -77,3 +77,28 @@ Operaciones:
 
 - Los campos adicionales añadidos por módulos personalizados deben persistirse junto a los campos base sin manejo especial en la capa de almacenamiento.
 - Las operaciones base anteriores permanecen estables para que los módulos personalizados puedan construir sobre ellas sin modificación.
+
+## Contrato de Almacenamiento RR.HH. y Planilla
+
+La extensión de Recursos Humanos usa las mismas garantías de identidad, marcas de tiempo e integridad referencial de la base, con tablas propias bajo el prefijo `erp_rrhh:*`. El detalle del MER está en `specs/002-rrhh-planilla/data-model.md`.
+
+### Claves y operaciones
+
+- `erp_rrhh:contratos`: `loadContratos()`, `saveContratos()`, `addContrato()`, `updateContrato()`, `deleteContrato()`, `getContratoVigente(entityId, fecha)`.
+- `erp_rrhh:periodos`: `loadPeriodos()`, `savePeriodos()`, `addPeriodo()`, `updatePeriodo()`, `cerrarPeriodo(periodoId, usuario)`, `getPeriodo(anio, mes)`.
+- `erp_rrhh:novedades`: `loadNovedades()`, `saveNovedades()`, `addNovedad()`, `updateNovedad()`, `deleteNovedad()`, `listNovedadesPorPeriodo(periodoId)`, `listNovedadesAprobadas(periodoId)`.
+- `erp_rrhh:conceptos`: `loadConceptos()`, `saveConceptos()`, `addConcepto()`, `updateConcepto()`.
+- `erp_rrhh:parametros` y `erp_rrhh:tramos-impuesto`: `loadParametros()`, `getParametroVigente(codigo, fecha)`, `getTramoImpuesto(baseUtm, fecha)`.
+- `erp_rrhh:liquidaciones` y `erp_rrhh:lineas-liquidacion`: `loadLiquidaciones()`, `saveLiquidaciones()`, `addLiquidacion()`, `updateLiquidacion()`, `getLiquidacion(entityId, periodoId)`, `saveLineas()`, `listLineas(liquidacionId)`.
+- `erp_rrhh:auditoria`: `appendAuditoria(registro)` de solo inserción; no se actualiza ni elimina.
+
+### Invariantes
+
+- Toda novedad, contrato y liquidación debe referenciar un `entity_id` existente.
+- Una liquidación pertenece a exactamente un trabajador y un período; no puede haber duplicados para el mismo par.
+- Solo novedades aprobadas se incluyen en el cálculo; las pendientes o rechazadas se excluyen y se informan.
+- Un período cerrado es de solo lectura: no se recalculan liquidaciones ni se modifican novedades.
+- Cada línea conserva el snapshot del parámetro legal usado (código, valor aplicado, vigencia y fuente).
+- Al calcular se persiste primero la liquidación y luego sus líneas; si falla una escritura, no debe quedar una liquidación sin líneas.
+- La eliminación de un trabajador sin liquidaciones cerradas elimina en cascada contratos, novedades y liquidaciones; con liquidaciones aprobadas o pagadas solo se permite baja lógica.
+- La auditoría registra cálculo, aprobación, pago, anulación y consultas de datos sensibles, sin almacenar los valores sensibles.
