@@ -1,6 +1,7 @@
 # ERP Software Base Module (Vite + Vanilla JS)
 
 > **Grupo 18 — Módulo de Recursos Humanos y Planilla.** El diseño de nuestro módulo está en [`specs/002-rrhh-planilla/`](specs/002-rrhh-planilla/):
+>
 > - [Plan de trabajo (`plan.md`)](specs/002-rrhh-planilla/plan.md)
 > - [Modelo Entidad-Relación y diccionario de datos (`data-model.md`)](specs/002-rrhh-planilla/data-model.md) · [imagen del MER](specs/002-rrhh-planilla/mer.png) · [MER resumido](specs/002-rrhh-planilla/mer-resumen.png)
 
@@ -41,6 +42,17 @@ Or a one-off run without watch mode:
 npx vitest run
 ```
 
+## Code Quality
+
+The project uses ESLint (flat config) and Prettier:
+
+```bash
+npm run lint
+npm run format:check   # verify formatting
+npm run format         # apply formatting
+npm run build          # production build with Vite
+```
+
 ## Building Custom Modules
 
 Custom ERP modules built on this base define:
@@ -62,8 +74,6 @@ All tailoring lives in one place: the `userConfig` object at the top of `src/mod
 - `theme.accentColor` — a hex color (e.g., `"#0f62fe"`) applied across the shell as highlights and primary controls. Invalid values fall back to the default.
 
 If the configuration is invalid (unknown types, bad keys, transitions referencing unknown statuses, non-hex accent colors), the app shows the problems in a banner and falls back to defaults instead of breaking...
-
-
 
 ## Notes
 

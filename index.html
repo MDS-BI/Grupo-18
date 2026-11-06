@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Módulo base ERP adaptable por configuración." />
+    <title>Módulo Base ERP</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div id="logo-mark" class="logo-mark" aria-hidden="true"></div>
+          <div class="brand-copy">
+            <span id="brand-name" class="brand-name">Módulo Base ERP</span>
+            <span class="brand-tagline">Espacio de trabajo ERP</span>
+          </div>
+        </div>
+        <div class="topbar-meta">
+          <span class="env-badge">Base ERP</span>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <nav class="sidebar" aria-label="Módulos del sistema">
+          <button
+            type="button"
+            id="nav-dashboard"
+            class="nav-module"
+            data-module="dashboard"
+            aria-current="page"
+          >
+            <span class="nav-icon" aria-hidden="true">▦</span>
+            <span class="nav-label" id="nav-dashboard-label">Panel</span>
+          </button>
+          <button type="button" id="nav-entities" class="nav-module" data-module="entities">
+            <span class="nav-icon" aria-hidden="true">▣</span>
+            <span class="nav-label" id="nav-entities-label">Entidades</span>
+          </button>
+          <button type="button" id="nav-documents" class="nav-module" data-module="documents">
+            <span class="nav-icon" aria-hidden="true">▤</span>
+            <span class="nav-label" id="nav-documents-label">Documentos</span>
+          </button>
+          <button type="button" id="nav-search" class="nav-module" data-module="search">
+            <span class="nav-icon" aria-hidden="true">⌕</span>
+            <span class="nav-label" id="nav-search-label">Búsqueda</span>
+          </button>
+          <div class="sidebar-footer">
+            <span>Módulo adaptable</span>
+          </div>
+        </nav>
+
+        <main id="main-content" class="main-content">
+          <div id="config-errors" class="config-errors" role="alert" hidden></div>
+
+          <section id="view-dashboard" class="view" aria-labelledby="dashboard-heading">
+            <div class="hero">
+              <div>
+                <p class="eyebrow">Panel principal</p>
+                <h1 id="dashboard-heading">Módulo Base ERP</h1>
+                <p id="dashboard-subtitle" class="hero-subtitle">Espacio de trabajo ERP</p>
+              </div>
+              <div class="hero-badge">Datos en tu navegador</div>
+            </div>
+
+            <div class="quick-actions" aria-label="Acciones rápidas">
+              <button type="button" id="action-new-entity" class="action-card">
+                <span class="action-icon" aria-hidden="true">＋</span>
+                <span class="action-title" id="action-new-entity-title">Nueva Entidad</span>
+                <span class="action-copy">Registra un nuevo maestro en el módulo.</span>
+              </button>
+              <button type="button" id="action-new-document" class="action-card">
+                <span class="action-icon" aria-hidden="true">▤</span>
+                <span class="action-title" id="action-new-document-title">Nuevo Documento</span>
+                <span class="action-copy">Asocia un documento a una entidad existente.</span>
+              </button>
+              <button type="button" id="action-open-entities" class="action-card">
+                <span class="action-icon" aria-hidden="true">▣</span>
+                <span class="action-title" id="action-open-entities-title">Entidades</span>
+                <span class="action-copy">Consulta, edita y elimina los registros maestros.</span>
+              </button>
+              <button type="button" id="action-find" class="action-card">
+                <span class="action-icon" aria-hidden="true">⌕</span>
+                <span class="action-title" id="action-find-title">Buscar registros</span>
+                <span class="action-copy"
+                  >Encuentra cualquier dato por nombre, código o campo.</span
+                >
+              </button>
+            </div>
+
+            <div class="stats-grid" aria-label="Resumen de registros">
+              <article class="stat-card">
+                <span class="stat-label" id="stat-entities-label">Entidades</span>
+                <strong class="stat-value" id="stat-entities">0</strong>
+                <span class="stat-hint">Registros maestros</span>
+              </article>
+              <article class="stat-card">
+                <span class="stat-label" id="stat-documents-label">Documentos</span>
+                <strong class="stat-value" id="stat-documents">0</strong>
+                <span class="stat-hint">Documentos asociados</span>
+              </article>
+            </div>
+          </section>
+
+          <section id="view-entities" class="view" aria-labelledby="entities-view-heading" hidden>
+            <div class="view-header">
+              <div>
+                <p class="eyebrow">Gestión</p>
+                <h2 id="entities-view-heading">Entidades</h2>
+              </div>
+            </div>
+
+            <div class="management-grid">
+              <form id="entity-form" class="panel form-panel" novalidate>
+                <div class="panel-header">
+                  <h3 id="entity-form-heading">Agregar / Editar Entidad</h3>
+                  <p class="panel-copy">Completa los datos maestros del registro.</p>
+                </div>
+                <input type="hidden" id="entity-id" name="entity-id" />
+
+                <div class="field-grid">
+                  <div class="field">
+                    <label for="name">Nombre *</label>
+                    <input type="text" id="name" name="name" autocomplete="off" />
+                    <p class="field-error" id="error-name"></p>
+                  </div>
+                  <div class="field">
+                    <label for="code">Código *</label>
+                    <input type="text" id="code" name="code" autocomplete="off" />
+                    <p class="field-error" id="error-code"></p>
+                  </div>
+                  <div class="field">
+                    <label for="taxId">Identificación fiscal</label>
+                    <input type="text" id="taxId" name="taxId" autocomplete="off" />
+                    <p class="field-error" id="error-taxId"></p>
+                  </div>
+                  <div class="field">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" autocomplete="off" />
+                    <p class="field-error" id="error-email"></p>
+                  </div>
+                  <div class="field">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" name="phone" autocomplete="off" />
+                    <p class="field-error" id="error-phone"></p>
+                  </div>
+                  <div class="field">
+                    <label for="address">Dirección</label>
+                    <input type="text" id="address" name="address" autocomplete="off" />
+                    <p class="field-error" id="error-address"></p>
+                  </div>
+                  <div class="field">
+                    <label for="category">Categoría</label>
+                    <input type="text" id="category" name="category" autocomplete="off" />
+                    <p class="field-error" id="error-category"></p>
+                  </div>
+                  <div class="field">
+                    <label for="targetDate">Fecha objetivo</label>
+                    <input type="date" id="targetDate" name="targetDate" />
+                    <p class="field-error" id="error-targetDate"></p>
+                  </div>
+                  <div class="field">
+                    <label for="creditLimit">Límite de crédito</label>
+                    <input type="number" id="creditLimit" name="creditLimit" min="0" step="0.01" />
+                    <p class="field-error" id="error-creditLimit"></p>
+                  </div>
+                  <div class="field">
+                    <label for="paymentTerms">Condiciones de pago</label>
+                    <input type="text" id="paymentTerms" name="paymentTerms" autocomplete="off" />
+                    <p class="field-error" id="error-paymentTerms"></p>
+                  </div>
+                  <div class="field field-wide">
+                    <label for="description">Descripción</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                    <p class="field-error" id="error-description"></p>
+                  </div>
+                </div>
+
+                <div id="entity-custom-fields" class="custom-fields" hidden></div>
+
+                <div class="form-actions">
+                  <button type="submit" id="submit-button" class="button button-primary">
+                    Guardar Entidad
+                  </button>
+                </div>
+              </form>
+
+              <aside class="panel selector-panel">
+                <div class="panel-header">
+                  <h3 id="edit-entity-heading">Editar o eliminar la entidad</h3>
+                  <p class="panel-copy">Selecciona un registro para actualizarlo o eliminarlo.</p>
+                </div>
+                <div class="field">
+                  <label for="edit-entity">Entidad</label>
+                  <select id="edit-entity">
+                    <option value="">Selecciona una entidad</option>
+                  </select>
+                </div>
+                <button type="button" id="delete-entity" class="button button-danger">
+                  Eliminar la entidad seleccionada
+                </button>
+                <p class="danger-note">
+                  Al eliminar una entidad también se eliminan sus documentos asociados.
+                </p>
+              </aside>
+            </div>
+          </section>
+
+          <section id="view-documents" class="view" aria-labelledby="documents-view-heading" hidden>
+            <div class="view-header">
+              <div>
+                <p class="eyebrow">Gestión</p>
+                <h2 id="documents-view-heading">Documentos</h2>
+              </div>
+            </div>
+
+            <div class="management-grid">
+              <form id="document-form" class="panel form-panel" novalidate>
+                <div class="panel-header">
+                  <h3 id="document-form-heading">Agregar / Editar Documento</h3>
+                  <p class="panel-copy">Registra documentos asociados a una entidad.</p>
+                </div>
+                <input type="hidden" id="document-id" name="document-id" />
+
+                <div class="field-grid">
+                  <div class="field field-wide">
+                    <label for="document-entity">Entidad *</label>
+                    <select id="document-entity" name="document-entity">
+                      <option value="">Selecciona una entidad</option>
+                    </select>
+                    <p class="field-error" id="error-document-entity"></p>
+                  </div>
+                  <div class="field">
+                    <label for="series">Serie</label>
+                    <input type="text" id="series" name="series" autocomplete="off" />
+                    <p class="field-error" id="error-series"></p>
+                  </div>
+                  <div class="field">
+                    <label for="folio">Folio *</label>
+                    <input type="number" id="folio" name="folio" min="1" step="1" />
+                    <p class="field-error" id="error-folio"></p>
+                  </div>
+                  <div class="field">
+                    <label for="startDate">Fecha de inicio *</label>
+                    <input type="date" id="startDate" name="startDate" />
+                    <p class="field-error" id="error-startDate"></p>
+                  </div>
+                  <div class="field">
+                    <label for="endDate">Fecha de fin *</label>
+                    <input type="date" id="endDate" name="endDate" />
+                    <p class="field-error" id="error-endDate"></p>
+                  </div>
+                  <div class="field">
+                    <label for="quantity">Cantidad</label>
+                    <input type="number" id="quantity" name="quantity" min="1" step="1" />
+                    <p class="field-error" id="error-quantity"></p>
+                  </div>
+                  <div class="field">
+                    <label for="currency">Moneda</label>
+                    <input type="text" id="currency" name="currency" autocomplete="off" />
+                    <p class="field-error" id="error-currency"></p>
+                  </div>
+                  <div class="field">
+                    <label for="subtotal">Subtotal</label>
+                    <input type="number" id="subtotal" name="subtotal" min="0" step="0.01" />
+                    <p class="field-error" id="error-subtotal"></p>
+                  </div>
+                  <div class="field">
+                    <label for="discount">Descuento</label>
+                    <input type="number" id="discount" name="discount" min="0" step="0.01" />
+                    <p class="field-error" id="error-discount"></p>
+                  </div>
+                  <div class="field">
+                    <label for="taxAmount">Impuesto</label>
+                    <input type="number" id="taxAmount" name="taxAmount" min="0" step="0.01" />
+                    <p class="field-error" id="error-taxAmount"></p>
+                  </div>
+                  <div class="field">
+                    <label for="totalAmount">Importe total</label>
+                    <input type="number" id="totalAmount" name="totalAmount" min="0" step="0.01" />
+                    <p class="field-error" id="error-totalAmount"></p>
+                  </div>
+                  <div class="field">
+                    <label for="docPaymentTerms">Condiciones de pago</label>
+                    <input
+                      type="text"
+                      id="docPaymentTerms"
+                      name="docPaymentTerms"
+                      autocomplete="off"
+                    />
+                    <p class="field-error" id="error-docPaymentTerms"></p>
+                  </div>
+                  <div class="field" id="status-field">
+                    <label for="status">Estado</label>
+                    <input type="text" id="status" name="status" autocomplete="off" />
+                    <p class="field-error" id="error-status"></p>
+                  </div>
+                  <div class="field field-wide">
+                    <label for="notes">Notas</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                    <p class="field-error" id="error-notes"></p>
+                  </div>
+                </div>
+
+                <div id="document-custom-fields" class="custom-fields" hidden></div>
+
+                <div class="form-actions">
+                  <button type="submit" id="document-submit-button" class="button button-primary">
+                    Guardar Documento
+                  </button>
+                </div>
+              </form>
+
+              <aside class="panel selector-panel">
+                <div class="panel-header">
+                  <h3 id="edit-document-heading">Editar o eliminar el documento</h3>
+                  <p class="panel-copy">Selecciona un documento para actualizarlo o eliminarlo.</p>
+                </div>
+                <div class="field">
+                  <label for="edit-document">Documento</label>
+                  <select id="edit-document">
+                    <option value="">Selecciona un documento</option>
+                  </select>
+                </div>
+                <button type="button" id="delete-document" class="button button-danger">
+                  Eliminar el documento seleccionado
+                </button>
+                <p class="danger-note">La eliminación de documentos es inmediata.</p>
+              </aside>
+            </div>
+          </section>
+
+          <section id="view-search" class="view" aria-labelledby="search-view-heading" hidden>
+            <div class="view-header">
+              <div>
+                <p class="eyebrow">Consulta</p>
+                <h2 id="search-view-heading">Buscar Entidades</h2>
+              </div>
+            </div>
+
+            <div class="panel search-panel">
+              <div class="field search-field">
+                <label for="search-input">Término de búsqueda</label>
+                <input
+                  type="search"
+                  id="search-input"
+                  name="search-input"
+                  placeholder="Buscar entidades..."
+                  autocomplete="off"
+                />
+              </div>
+              <p class="panel-copy">
+                Busca por nombre, código, identificación fiscal, correo, categoría, fechas o campos
+                personalizados.
+              </p>
+            </div>
+
+            <div id="search-results-list" class="search-results" aria-live="polite"></div>
+            <div id="search-empty" class="empty-state" role="status" hidden>
+              Todavía no hay coincidencias. Crea tu primer registro desde el panel.
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
