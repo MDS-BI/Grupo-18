@@ -54,3 +54,24 @@ La generación de identidad, marcas de tiempo, integridad referencial entre enti
 - Un cambio de parámetro legal con nueva vigencia afecta solo a los períodos posteriores.
 - Un trabajador con liquidaciones aprobadas o pagadas no se elimina; solo se da de baja lógica.
 - Los roles Jefatura no ven sueldos, datos bancarios ni conceptos sensibles; cada consulta sensible queda auditada.
+
+### Registro de verificación
+
+Fecha: 2026-11-06.
+
+- `npm run test:run`: 39 archivos y 298 pruebas aprobadas, incluyendo la suite
+  de integración de HU5 sin cambios en su contrato DOM/CSS.
+- HU5: desglose por línea, panel explicativo, snapshot legal congelado, líneas
+  manuales, modo de impresión limpia, cancelación de impresión y estados sin
+  impresión verificados por las pruebas de integración de liquidación.
+- HU14: registro con privacidad, licencia médica sin datos clínicos, aprobación
+  y rechazo con motivo, reenvío, bloqueo por período cerrado, alcance de
+  Jefatura, cierre de período y cascada de baja verificados.
+- HU15: caso de referencia con líquido `$1.272.908` y costo empleador
+  `$1.659.456`, redondeo por línea, parámetros versionados, cierre con snapshot
+  congelado, ciclo de vida y cálculo de 200 trabajadores en menos de un segundo
+  verificados.
+- HU6: matriz de roles, datos sensibles, bitácora de solo inserción, auditoría
+  automática de consultas y cambios, y denegaciones auditadas verificadas.
+- La bitácora rechaza edición y eliminación; no almacena montos, cuentas
+  bancarias ni cuotas sindicales, solo la acción, el actor y el registro afectado.

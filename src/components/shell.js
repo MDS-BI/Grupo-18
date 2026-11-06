@@ -1,5 +1,8 @@
 /** Workspace shell: branding, logo monogram, sidebar labels and identity. */
 
+import { availableRoles } from '../rrhh/seguridad/session.js';
+import { ROLE_MATRIX } from '../rrhh/seguridad/roles.js';
+
 const FEMININE_TERMS = new Set([
   'entidad',
   'empresa',
@@ -110,6 +113,27 @@ export function renderShell(config) {
   document.getElementById('nav-documents-label').textContent = labels.documents;
   document.getElementById('nav-search-label').textContent = 'Búsqueda';
 
+  const rrhhEnabled = Boolean(config.rrhh && config.rrhh.enabled);
+  const rrhhLabel = config.rrhh?.label || 'RRHH / Planilla';
+  const navRrhh = document.getElementById('nav-rrhh');
+  if (navRrhh) {
+    if (rrhhEnabled) {
+      navRrhh.hidden = false;
+      const navLabel = document.getElementById('nav-rrhh-label');
+      if (navLabel) navLabel.textContent = rrhhLabel;
+    } else {
+      // Hidden nodes are still counted by the store; remove the module so a
+      // base-only configuration has exactly the four core modules.
+      navRrhh.remove();
+    }
+  }
+  const rrhhHeading = document.getElementById('rrhh-view-heading');
+  if (rrhhHeading) rrhhHeading.textContent = rrhhLabel;
+  const rrhhEyebrow = document.getElementById('rrhh-view-eyebrow');
+  if (rrhhEyebrow) rrhhEyebrow.textContent = rrhhLabel;
+
+  renderRoleSelector(config);
+
   document.getElementById('entities-view-heading').textContent = labels.entities;
   document.getElementById('entity-form-heading').textContent = `Agregar / Editar ${labels.entity}`;
   document.getElementById('edit-entity-heading').textContent =
@@ -129,4 +153,24 @@ export function renderShell(config) {
   document
     .getElementById('search-input')
     .setAttribute('placeholder', `Buscar ${labels.entities.toLowerCase()}...`);
+}
+
+/** Fill the simulated role selector shown in the top bar. */
+export function renderRoleSelector(config) {
+  const select = document.getElementById('role-select');
+  if (!select) return;
+  if (config?.rrhh && config.rrhh.roleSelector === false) {
+    select.closest('.role-picker')?.setAttribute('hidden', '');
+    return;
+  }
+  select.closest('.role-picker')?.removeAttribute('hidden');
+  const current = select.value || 'analista';
+  select.textContent = '';
+  for (const role of availableRoles()) {
+    const option = document.createElement('option');
+    option.value = role.value;
+    option.textContent = role.label;
+    select.appendChild(option);
+  }
+  if (ROLE_MATRIX[current]) select.value = current;
 }

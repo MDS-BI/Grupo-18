@@ -31,13 +31,21 @@ import {
 import { renderEntitySelect, renderSearchResults } from './components/entity-list.js';
 import { renderDocumentSelect } from './components/document-list.js';
 import { bindSearch } from './components/search-bar.js';
+import { getViewer, setRole } from './rrhh/seguridad/session.js';
+import { renderRrhhWorkspace } from './rrhh/views/workspace.js';
 
-const VIEWS = ['dashboard', 'entities', 'documents', 'search'];
+const BASE_VIEWS = ['dashboard', 'entities', 'documents', 'search'];
 
 let modelConfig = null;
+let rrhhView = null;
+let liquidationView = null;
 
 function qs(id) {
   return document.getElementById(id);
+}
+
+function views() {
+  return modelConfig?.rrhh?.enabled ? [...BASE_VIEWS, 'rrhh'] : BASE_VIEWS;
 }
 
 function refreshEntityOptions() {
@@ -78,7 +86,7 @@ function renderSearch() {
 }
 
 function showView(name) {
-  for (const view of VIEWS) {
+  for (const view of views()) {
     const section = qs(`view-${view}`);
     if (section) section.hidden = view !== name;
   }
@@ -98,7 +106,26 @@ function showView(name) {
     refreshDocumentOptions();
   } else if (name === 'search') {
     renderSearch();
+  } else if (name === 'rrhh') {
+    renderRrhh();
   }
+}
+
+function renderRrhh(tab) {
+  if (!modelConfig?.rrhh?.enabled) return;
+  liquidationView?.dispose?.();
+  liquidationView = null;
+  rrhhView?.dispose?.();
+  rrhhView = renderRrhhWorkspace({
+    doc: document,
+    config: modelConfig,
+    viewer: getViewer(),
+    initialTab: tab,
+    onRoleRequired: () => setRole('jefatura'),
+    onLiquidationView: (view) => {
+      liquidationView = view;
+    }
+  });
 }
 
 function handleEntitySubmit(event) {
@@ -188,9 +215,19 @@ function handleDocumentDelete() {
 }
 
 function bindEvents() {
-  for (const name of VIEWS) {
+  for (const name of views()) {
     const button = qs(`nav-${name}`);
     if (button) button.addEventListener('click', () => showView(name));
+  }
+
+  const roleSelect = qs('role-select');
+  if (roleSelect) {
+    roleSelect.addEventListener('change', () => {
+      setRole(roleSelect.value);
+      if (modelConfig?.rrhh?.enabled && qs('view-rrhh') && !qs('view-rrhh').hidden) {
+        renderRrhh();
+      }
+    });
   }
 
   const newEntity = qs('action-new-entity');

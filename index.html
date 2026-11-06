@@ -18,6 +18,10 @@
           </div>
         </div>
         <div class="topbar-meta">
+          <label class="role-picker" for="role-select" hidden>
+            <span class="role-picker-label">Rol</span>
+            <select id="role-select" aria-label="Rol simulado del usuario"></select>
+          </label>
           <span class="env-badge">Base ERP</span>
         </div>
       </header>
@@ -45,6 +49,17 @@
           <button type="button" id="nav-search" class="nav-module" data-module="search">
             <span class="nav-icon" aria-hidden="true">⌕</span>
             <span class="nav-label" id="nav-search-label">Búsqueda</span>
+          </button>
+          <button
+            type="button"
+            id="nav-rrhh"
+            class="nav-module"
+            data-module="rrhh"
+            data-rrhh-only
+            hidden
+          >
+            <span class="nav-icon" aria-hidden="true">▥</span>
+            <span class="nav-label" id="nav-rrhh-label">RRHH / Planilla</span>
           </button>
           <div class="sidebar-footer">
             <span>Módulo adaptable</span>
@@ -360,6 +375,113 @@
             <div id="search-empty" class="empty-state" role="status" hidden>
               Todavía no hay coincidencias. Crea tu primer registro desde el panel.
             </div>
+          </section>
+
+          <section id="view-rrhh" class="view" aria-labelledby="rrhh-view-heading" hidden>
+            <div class="view-header">
+              <div>
+                <p class="eyebrow" id="rrhh-view-eyebrow">RRHH / Planilla</p>
+                <h2 id="rrhh-view-heading">RRHH / Planilla</h2>
+                <p class="panel-copy">
+                  Novedades del mes, períodos, cálculo de planilla y liquidaciones explicables.
+                </p>
+              </div>
+            </div>
+
+            <div class="rrhh-tabs" role="tablist" aria-label="Secciones de RRHH y Planilla">
+              <button
+                type="button"
+                id="rrhh-tab-novedades"
+                class="rrhh-tab"
+                data-rrhh-tab="novedades"
+                role="tab"
+                aria-controls="rrhh-panel-novedades"
+                aria-selected="false"
+              >
+                Novedades
+              </button>
+              <button
+                type="button"
+                id="rrhh-tab-periodos"
+                class="rrhh-tab"
+                data-rrhh-tab="periodos"
+                role="tab"
+                aria-controls="rrhh-panel-periodos"
+                aria-selected="false"
+              >
+                Períodos
+              </button>
+              <button
+                type="button"
+                id="rrhh-tab-planilla"
+                class="rrhh-tab"
+                data-rrhh-tab="planilla"
+                role="tab"
+                aria-controls="rrhh-panel-planilla"
+                aria-selected="false"
+              >
+                Planilla
+              </button>
+              <button
+                type="button"
+                id="rrhh-tab-liquidaciones"
+                class="rrhh-tab"
+                data-rrhh-tab="liquidaciones"
+                role="tab"
+                aria-controls="rrhh-panel-liquidaciones"
+                aria-selected="true"
+              >
+                Liquidaciones
+              </button>
+              <button
+                type="button"
+                id="rrhh-tab-auditoria"
+                class="rrhh-tab"
+                data-rrhh-tab="auditoria"
+                role="tab"
+                aria-controls="rrhh-panel-auditoria"
+                aria-selected="false"
+              >
+                Auditoría
+              </button>
+            </div>
+
+            <div
+              id="rrhh-panel-novedades"
+              class="rrhh-panel"
+              role="tabpanel"
+              aria-labelledby="rrhh-tab-novedades"
+              hidden
+            ></div>
+            <div
+              id="rrhh-panel-periodos"
+              class="rrhh-panel"
+              role="tabpanel"
+              aria-labelledby="rrhh-tab-periodos"
+              hidden
+            ></div>
+            <div
+              id="rrhh-panel-planilla"
+              class="rrhh-panel"
+              role="tabpanel"
+              aria-labelledby="rrhh-tab-planilla"
+              hidden
+            ></div>
+            <div
+              id="rrhh-panel-liquidaciones"
+              class="rrhh-panel"
+              role="tabpanel"
+              aria-labelledby="rrhh-tab-liquidaciones"
+            >
+              <div id="rrhh-liquidacion-root"></div>
+            </div>
+            <div
+              id="rrhh-panel-auditoria"
+              class="rrhh-panel"
+              role="tabpanel"
+              aria-labelledby="rrhh-tab-auditoria"
+              hidden
+            ></div>
           </section>
         </main>
       </div>

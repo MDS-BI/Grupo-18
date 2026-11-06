@@ -75,7 +75,18 @@ export const DEFAULT_CONFIG = {
   },
   customFields: [],
   statusLifecycle: null,
-  theme: { accentColor: '#2563eb' }
+  theme: { accentColor: '#2563eb' },
+  rrhh: {
+    enabled: false,
+    label: 'RRHH / Planilla',
+    roleSelector: true
+  },
+  empresa: {
+    razonSocial: '',
+    rut: '',
+    direccion: '',
+    giro: ''
+  }
 };
 
 const HEX_COLOR = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
@@ -263,6 +274,52 @@ export function normalizeConfig(input) {
         errors.push('theme.accentColor debe ser un color hex válido (p. ej. #2563eb).');
       } else {
         config.theme.accentColor = input.theme.accentColor.trim();
+      }
+    }
+  }
+
+  if (input.rrhh !== undefined) {
+    if (typeof input.rrhh === 'boolean') {
+      config.rrhh.enabled = input.rrhh;
+    } else if (input.rrhh === null) {
+      config.rrhh.enabled = false;
+    } else if (typeof input.rrhh !== 'object' || Array.isArray(input.rrhh)) {
+      errors.push('rrhh debe ser un objeto o un booleano.');
+    } else {
+      if (input.rrhh.enabled !== undefined) {
+        if (typeof input.rrhh.enabled !== 'boolean') {
+          errors.push('rrhh.enabled debe ser un booleano.');
+        } else {
+          config.rrhh.enabled = input.rrhh.enabled;
+        }
+      }
+      if (input.rrhh.label !== undefined) {
+        if (typeof input.rrhh.label !== 'string' || !input.rrhh.label.trim()) {
+          errors.push('rrhh.label debe ser un texto no vacío.');
+        } else {
+          config.rrhh.label = input.rrhh.label.trim();
+        }
+      }
+      if (input.rrhh.roleSelector !== undefined) {
+        config.rrhh.roleSelector = Boolean(input.rrhh.roleSelector);
+      }
+    }
+  }
+
+  if (input.empresa !== undefined) {
+    if (input.empresa === null) {
+      // Keep empty issuer defaults.
+    } else if (typeof input.empresa !== 'object' || Array.isArray(input.empresa)) {
+      errors.push('empresa debe ser un objeto.');
+    } else {
+      for (const key of ['razonSocial', 'rut', 'direccion', 'giro']) {
+        const value = input.empresa[key];
+        if (value === undefined) continue;
+        if (typeof value !== 'string') {
+          errors.push(`empresa.${key} debe ser un texto.`);
+        } else {
+          config.empresa[key] = value.trim();
+        }
       }
     }
   }

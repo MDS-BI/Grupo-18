@@ -1,7 +1,10 @@
 import { BASE_FIELDS, getConfig } from './module-config.js';
+import { validarRut } from './rrhh/calculo/rut.js';
 
 export const ENTITY_KEY = 'erp_base_module:entities';
 export const DOCUMENT_KEY = 'erp_base_module:documents';
+export const NOVEDADES_KEY = 'erp_rrhh:novedades';
+export const LIQUIDACIONES_KEY = 'erp_rrhh:liquidaciones';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -125,6 +128,9 @@ export function validateEntity(entity = {}) {
   const errors = {};
   if (isBlank(entity.name)) errors.name = 'El nombre es obligatorio.';
   if (isBlank(entity.code)) errors.code = 'El código es obligatorio.';
+  if (!isBlank(entity.rut) && !validarRut(entity.rut)) {
+    errors.rut = 'El RUT no tiene un dígito verificador válido.';
+  }
 
   if (!isBlank(entity.email) && !EMAIL_PATTERN.test(String(entity.email).trim())) {
     errors.email = 'El correo electrónico no tiene un formato válido.';
@@ -207,12 +213,66 @@ export function updateEntity(id, updates = {}) {
   return merged;
 }
 
+function rrhhRows(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function hasClosedLiquidations(entityId) {
+  return rrhhRows(LIQUIDACIONES_KEY).some(
+    (row) =>
+      (row.trabajador?.entityId === entityId || row.trabajador?.id === entityId) &&
+      (row.estado === 'aprobada' || row.estado === 'pagada')
+  );
+}
+
+function deleteNovedadesForEntity(entityId) {
+  try {
+    const rows = rrhhRows(NOVEDADES_KEY);
+    const kept = rows.filter((row) => row.trabajadorEntityId !== entityId);
+    if (kept.length !== rows.length) {
+      localStorage.setItem(NOVEDADES_KEY, JSON.stringify(kept));
+    }
+    return rows.length - kept.length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Delete a worker entity.
+ *
+ * Without approved/paid liquidations, the entity and its novedades are removed.
+ * When a closed liquidation exists the entity is logically deactivated instead,
+ * so the legal payroll record remains reproducible.
+ */
 export function deleteEntity(id) {
   const entities = loadEntities();
-  const entity = entities.find((item) => item.id === id);
-  if (!entity) return false;
+  const index = entities.findIndex((item) => item.id === id);
+  if (index === -1) return false;
+  const entity = entities[index];
+
+  if (hasClosedLiquidations(entity.entity_id)) {
+    const timestamp = now();
+    entities[index] = {
+      ...entity,
+      bajaLogica: true,
+      activo: false,
+      deletedAt: timestamp,
+      updatedAt: timestamp
+    };
+    saveEntities(entities);
+    return true;
+  }
+
   saveEntities(entities.filter((item) => item.id !== id));
   deleteDocumentsForEntity(entity.entity_id);
+  deleteNovedadesForEntity(entity.entity_id);
   return true;
 }
 
