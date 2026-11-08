@@ -1,5 +1,7 @@
 import { labelFor } from '../module-config.js';
 import { loadEntities, loadDocuments } from '../storage.js';
+import { resumenAlertas } from '../rrhh/utils/alertas-service.js';
+import { el } from '../rrhh/components/dom.js';
 import { newPrefix } from './shell.js';
 
 function qs(id) {
@@ -22,6 +24,32 @@ export function renderDashboard(config) {
   qs('stat-documents-label').textContent = labelFor('documents');
 }
 
+/** Render contract expiry alerts (30 days or less) on the dashboard. */
+export function renderContratoAlerts() {
+  const container = qs('dashboard-alertas');
+  const list = qs('dashboard-alertas-list');
+  if (!container || !list) return;
+  list.textContent = '';
+
+  const summary = resumenAlertas();
+  if (summary.total === 0) {
+    container.hidden = true;
+    return;
+  }
+
+  container.hidden = false;
+  for (const alerta of summary.alertas) {
+    const item = el(document, 'div', 'rrhh-alerta');
+    item.dataset.contratoId = alerta.contratoId;
+    const detail = alerta.vencido
+      ? `venció hace ${Math.abs(alerta.diasRestantes)} día(s)`
+      : `vence en ${alerta.diasRestantes} día(s)`;
+    item.appendChild(el(document, 'strong', null, alerta.trabajador));
+    item.appendChild(el(document, 'span', 'panel-copy', `${alerta.fechaTermino} · ${detail}`));
+    list.appendChild(item);
+  }
+}
+
 /** Refresh live record counts shown by the dashboard. */
 export function refreshStats() {
   const entities = loadEntities().length;
@@ -30,4 +58,5 @@ export function refreshStats() {
   const documentStat = qs('stat-documents');
   if (entityStat) entityStat.textContent = String(entities);
   if (documentStat) documentStat.textContent = String(documents);
+  renderContratoAlerts();
 }

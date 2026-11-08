@@ -807,6 +807,104 @@ h3 {
   background: var(--surface);
 }
 
+.rrhh-split {
+  display: grid;
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.rrhh-split-aside {
+  display: grid;
+  gap: 18px;
+}
+
+.rrhh-list-panel {
+  overflow-x: auto;
+}
+
+.rrhh-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.rrhh-checkbox input {
+  width: auto;
+}
+
+.rrhh-readonly {
+  padding: 16px;
+  color: var(--muted);
+}
+
+.rrhh-dashboard-alertas {
+  margin-top: 18px;
+}
+
+.rrhh-alertas-list {
+  display: grid;
+  gap: 8px;
+}
+
+.rrhh-alerta {
+  display: grid;
+  gap: 2px;
+  padding: 10px 14px;
+  border-left: 3px solid #b54708;
+  border-radius: 8px;
+  background: var(--surface-alt);
+}
+
+table.rrhh-table {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+table.rrhh-table th,
+table.rrhh-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+table.rrhh-table th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: var(--surface-alt);
+}
+
+table.rrhh-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.button-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.button-ghost:hover {
+  background: var(--surface-alt);
+}
+
+@media (max-width: 900px) {
+  .rrhh-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .rrhh-period-state {
   font-size: 0.8rem;
   font-weight: 700;

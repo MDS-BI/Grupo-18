@@ -32,7 +32,7 @@ import { renderEntitySelect, renderSearchResults } from './components/entity-lis
 import { renderDocumentSelect } from './components/document-list.js';
 import { bindSearch } from './components/search-bar.js';
 import { getViewer, setRole } from './rrhh/seguridad/session.js';
-import { renderRrhhWorkspace } from './rrhh/views/workspace.js';
+import { renderRrhhWorkspace } from './rrhh/views/rrhh-router.js';
 
 const BASE_VIEWS = ['dashboard', 'entities', 'documents', 'search'];
 

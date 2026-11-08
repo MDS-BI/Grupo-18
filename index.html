@@ -116,6 +116,14 @@
                 <span class="stat-hint">Documentos asociados</span>
               </article>
             </div>
+
+            <section id="dashboard-alertas" class="panel rrhh-dashboard-alertas" aria-live="polite" hidden>
+              <div class="panel-header">
+                <h3>Contratos por vencer</h3>
+                <p class="panel-copy">Contratos que terminan en 30 días o menos.</p>
+              </div>
+              <div id="dashboard-alertas-list" class="rrhh-alertas-list"></div>
+            </section>
           </section>
 
           <section id="view-entities" class="view" aria-labelledby="entities-view-heading" hidden>
@@ -391,6 +399,39 @@
             <div class="rrhh-tabs" role="tablist" aria-label="Secciones de RRHH y Planilla">
               <button
                 type="button"
+                id="rrhh-tab-trabajadores"
+                class="rrhh-tab"
+                data-rrhh-tab="trabajadores"
+                role="tab"
+                aria-controls="rrhh-panel-trabajadores"
+                aria-selected="false"
+              >
+                Trabajadores
+              </button>
+              <button
+                type="button"
+                id="rrhh-tab-contratos"
+                class="rrhh-tab"
+                data-rrhh-tab="contratos"
+                role="tab"
+                aria-controls="rrhh-panel-contratos"
+                aria-selected="false"
+              >
+                Contratos
+              </button>
+              <button
+                type="button"
+                id="rrhh-tab-catalogos"
+                class="rrhh-tab"
+                data-rrhh-tab="catalogos"
+                role="tab"
+                aria-controls="rrhh-panel-catalogos"
+                aria-selected="false"
+              >
+                Catálogos
+              </button>
+              <button
+                type="button"
                 id="rrhh-tab-novedades"
                 class="rrhh-tab"
                 data-rrhh-tab="novedades"
@@ -446,6 +487,27 @@
               </button>
             </div>
 
+            <div
+              id="rrhh-panel-trabajadores"
+              class="rrhh-panel"
+              role="tabpanel"
+              aria-labelledby="rrhh-tab-trabajadores"
+              hidden
+            ></div>
+            <div
+              id="rrhh-panel-contratos"
+              class="rrhh-panel"
+              role="tabpanel"
+              aria-labelledby="rrhh-tab-contratos"
+              hidden
+            ></div>
+            <div
+              id="rrhh-panel-catalogos"
+              class="rrhh-panel"
+              role="tabpanel"
+              aria-labelledby="rrhh-tab-catalogos"
+              hidden
+            ></div>
             <div
               id="rrhh-panel-novedades"
               class="rrhh-panel"

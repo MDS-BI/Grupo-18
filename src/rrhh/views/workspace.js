@@ -6,15 +6,30 @@
  * so listeners and print handlers do not leak between navigations.
  */
 
+import { renderTrabajadoresView } from './trabajadores-view.js';
+import { renderContratosView } from './contratos-view.js';
+import { renderCatalogosView } from './catalogos-view.js';
 import { renderNovedadesView } from './novedades.js';
 import { renderPeriodosView } from './periodos.js';
 import { renderPlanillaView } from './planilla.js';
 import { renderLiquidacionesView } from './liquidaciones.js';
 import { renderAuditoriaView } from './auditoria.js';
 
-export const RRHH_TABS = ['novedades', 'periodos', 'planilla', 'liquidaciones', 'auditoria'];
+export const RRHH_TABS = [
+  'trabajadores',
+  'contratos',
+  'catalogos',
+  'novedades',
+  'periodos',
+  'planilla',
+  'liquidaciones',
+  'auditoria'
+];
 
 const RENDERERS = {
+  trabajadores: renderTrabajadoresView,
+  contratos: renderContratosView,
+  catalogos: renderCatalogosView,
   novedades: renderNovedadesView,
   periodos: renderPeriodosView,
   planilla: renderPlanillaView,

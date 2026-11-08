@@ -34,7 +34,11 @@ const BASE_MATRIX = {
     canPayLiquidaciones: true,
     canAnularLiquidaciones: true,
     canManageRoles: true,
-    canViewAuditoria: true
+    canViewAuditoria: true,
+    canViewTrabajadores: true,
+    canManageTrabajadores: true,
+    canManageCatalogos: true,
+    canManageContratos: true
   },
   analista: {
     label: ROLES.analista,
@@ -54,7 +58,11 @@ const BASE_MATRIX = {
     canPayLiquidaciones: false,
     canAnularLiquidaciones: false,
     canManageRoles: false,
-    canViewAuditoria: false
+    canViewAuditoria: false,
+    canViewTrabajadores: true,
+    canManageTrabajadores: true,
+    canManageCatalogos: true,
+    canManageContratos: true
   },
   jefatura: {
     label: ROLES.jefatura,
@@ -75,7 +83,11 @@ const BASE_MATRIX = {
     canPayLiquidaciones: false,
     canAnularLiquidaciones: false,
     canManageRoles: false,
-    canViewAuditoria: false
+    canViewAuditoria: false,
+    canViewTrabajadores: true,
+    canManageTrabajadores: false,
+    canManageCatalogos: false,
+    canManageContratos: false
   },
   gerencia: {
     label: ROLES.gerencia,
@@ -96,7 +108,11 @@ const BASE_MATRIX = {
     canPayLiquidaciones: true,
     canAnularLiquidaciones: false,
     canManageRoles: false,
-    canViewAuditoria: false
+    canViewAuditoria: false,
+    canViewTrabajadores: true,
+    canManageTrabajadores: false,
+    canManageCatalogos: false,
+    canManageContratos: false
   },
   auditor: {
     label: ROLES.auditor,
@@ -116,7 +132,11 @@ const BASE_MATRIX = {
     canPayLiquidaciones: false,
     canAnularLiquidaciones: false,
     canManageRoles: false,
-    canViewAuditoria: true
+    canViewAuditoria: true,
+    canViewTrabajadores: true,
+    canManageTrabajadores: false,
+    canManageCatalogos: false,
+    canManageContratos: false
   },
   trabajador: {
     label: ROLES.trabajador,
@@ -136,7 +156,11 @@ const BASE_MATRIX = {
     canPayLiquidaciones: false,
     canAnularLiquidaciones: false,
     canManageRoles: false,
-    canViewAuditoria: false
+    canViewAuditoria: false,
+    canViewTrabajadores: false,
+    canManageTrabajadores: false,
+    canManageCatalogos: false,
+    canManageContratos: false
   }
 };
 
