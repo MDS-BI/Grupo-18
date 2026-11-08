@@ -37,14 +37,16 @@ La generación de identidad, marcas de tiempo, integridad referencial entre enti
 
 ## Flujo de RR.HH. y Planilla
 
-1. Cree o abra un trabajador (Entidad) y registre su contrato con sueldo base, jornada, tipo y vigencia. Si cambia el sueldo, registre un nuevo contrato o anexo sin sobrescribir el anterior.
-2. Abra el período mensual en `Planilla` y registre las novedades del mes (horas extra, licencias médicas o ausencias). Las licencias solo guardan tipo y días, sin diagnósticos.
-3. Con rol Jefatura, apruebe o rechace las novedades pendientes. Con rol Analista no se permite aprobar; una novedad rechazada puede corregirse y reenviarse.
-4. Ejecute el cálculo del período. El sistema valida contratos vigentes, novedades aprobadas y parámetros legales vigentes, y genera una liquidación por trabajador con líneas explicables.
-5. Verifique el caso de referencia: sueldo base $1.200.000, 42 h, 5 horas extra, FONASA, AFP 11,27 %, IMM $553.553 y UTM $71.649 deben producir $1.272.908 líquidos y $1.659.456 de costo empleador.
-6. Abra la vista de liquidación, seleccione una línea para ver base, tasa o fórmula y parámetro legal con vigencia, y use Imprimir / Guardar en PDF.
-7. Cierre el período con rol Jefatura. El cierre congela UF, UTM, IMM y parámetros, y bloquea la edición o recálculo de liquidaciones y novedades.
-8. Consulte la auditoría para ver cálculo, aprobación, pago, anulación y consultas de datos sensibles.
+1. En la barra superior, seleccione el rol simulado (Administrador, Jefatura o Analista). No se solicitan credenciales; la sesión vive solo en memoria.
+2. Con rol Administrador, cargue o actualice los parámetros legales (UF, UTM, IMM, tasas, topes y tramos) con vigencia desde/hasta y fuente. No hay integración con servicios externos.
+3. Cree o abra un trabajador (Entidad) y registre su contrato con sueldo base, jornada, tipo y vigencia. Si cambia el sueldo, registre un nuevo contrato o anexo sin sobrescribir el anterior.
+4. Abra el período mensual en `Planilla` y registre las novedades del mes (horas extra, licencias médicas o ausencias). Las licencias solo guardan tipo y días, sin diagnósticos.
+5. Con rol Jefatura, apruebe o rechace las novedades pendientes. Con rol Analista no se permite aprobar; una novedad rechazada puede corregirse y reenviarse.
+6. Ejecute el cálculo del período. El sistema valida contratos vigentes, novedades aprobadas y parámetros legales vigentes, y genera una liquidación por trabajador con líneas explicables.
+7. Verifique el caso de referencia: sueldo base $1.200.000, 42 h, 5 horas extra, FONASA, AFP 11,27 %, IMM $553.553 y UTM $71.649 deben producir $1.272.908 líquidos y $1.659.456 de costo empleador.
+8. Abra la vista de liquidación, seleccione una línea para ver base, tasa o fórmula y parámetro legal con vigencia, y use Imprimir / Guardar en PDF.
+9. Cierre el período con rol Jefatura. El cierre congela UF, UTM, IMM y parámetros, y bloquea la edición o recálculo de liquidaciones y novedades.
+10. Consulte la auditoría para ver cálculo, aprobación, pago, anulación y consultas de datos sensibles.
 
 ### Validación de RR.HH.
 
@@ -55,23 +57,33 @@ La generación de identidad, marcas de tiempo, integridad referencial entre enti
 - Un trabajador con liquidaciones aprobadas o pagadas no se elimina; solo se da de baja lógica.
 - Los roles Jefatura no ven sueldos, datos bancarios ni conceptos sensibles; cada consulta sensible queda auditada.
 
+### Validación de respaldo y restauración
+
+- Exporte el respaldo JSON y verifique que incluye `schemaVersion`, `exportedAt` y todas las tablas (`entities`, `documents`, `contratos`, `periodos`, `novedades`, `liquidaciones`, `auditoria`).
+- Importe un respaldo válido y confirme que entidades, documentos, RR.HH. y auditoría se restauran.
+- Intente importar un JSON inválido y verifique que se rechaza sin alterar los datos existentes.
+- Cancele la confirmación de restauración y verifique que no se escribe nada.
+
 ### Registro de verificación
 
-Fecha: 2026-11-06.
+Fecha: 2026-11-08.
 
-- `npm run test:run`: 39 archivos y 298 pruebas aprobadas, incluyendo la suite
-  de integración de HU5 sin cambios en su contrato DOM/CSS.
-- HU5: desglose por línea, panel explicativo, snapshot legal congelado, líneas
+- `npm run test:run`: 43 archivos y 323 pruebas aprobadas, incluyendo la suite
+  de integración de US5 sin cambios en su contrato DOM/CSS.
+- US5: desglose por línea, panel explicativo, snapshot legal congelado, líneas
   manuales, modo de impresión limpia, cancelación de impresión y estados sin
   impresión verificados por las pruebas de integración de liquidación.
-- HU14: registro con privacidad, licencia médica sin datos clínicos, aprobación
+- US3: registro con privacidad, licencia médica sin datos clínicos, aprobación
   y rechazo con motivo, reenvío, bloqueo por período cerrado, alcance de
   Jefatura, cierre de período y cascada de baja verificados.
-- HU15: caso de referencia con líquido `$1.272.908` y costo empleador
+- US4: caso de referencia con líquido `$1.272.908` y costo empleador
   `$1.659.456`, redondeo por línea, parámetros versionados, cierre con snapshot
   congelado, ciclo de vida y cálculo de 200 trabajadores en menos de un segundo
   verificados.
-- HU6: matriz de roles, datos sensibles, bitácora de solo inserción, auditoría
+- US6: matriz de roles, datos sensibles, bitácora de solo inserción, auditoría
   automática de consultas y cambios, y denegaciones auditadas verificadas.
 - La bitácora rechaza edición y eliminación; no almacena montos, cuentas
   bancarias ni cuotas sindicales, solo la acción, el actor y el registro afectado.
+- Clarificaciones 2026-11-08: sesión simulada, parámetros manuales, retención de
+  auditoría de 6 años y respaldo/restauración JSON reflejados en plan, research,
+  modelo de datos, contratos y este inicio rápido.

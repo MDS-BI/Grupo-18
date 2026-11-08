@@ -108,8 +108,11 @@ Objeto de configuración cargado al arrancar que adapta el módulo base en un m�
 
 El módulo de Recursos Humanos y Planilla reutiliza `Entity` como **Trabajador** y `Document` como **Liquidación de Sueldo**. Las tablas de extensión se guardan en `localStorage` con el prefijo `erp_rrhh:*` y se vinculan mediante `entity_id` (trabajador) y `periodoId` (período). El detalle completo del MER y el diccionario de datos está en `specs/002-rrhh-planilla/data-model.md`.
 
+Trabajador, Contrato, Novedad y Período de Remuneración forman parte del modelo de este feature (001). **Trabajador no crea una tabla nueva**: es la Entidad base con campos personalizados, por lo que su clave sigue siendo `erp_base_module:entities`; las demás entidades de extensión usan `erp_rrhh:*`.
+
 | Entidad de extensión | Clave sugerida | Campos principales | Relaciones |
 |---|---|---|---|
+| TRABAJADOR | `erp_base_module:entities` (Entidad base + `customFields`) | `entity_id`, `taxId` (RUT), `fechaIngreso`, `fechaNacimiento`, `estadoLaboral`, `category` (departamento), `afp`, `sistemaSalud`, `banco`, `numeroCuenta`, `contactoEmergencia` | Reutiliza Entidad; es referenciado por contratos, novedades y liquidaciones |
 | CONTRATO | `erp_rrhh:contratos` | `id`, `entity_id`, `sueldoBase`, `jornadaSemanal`, `tipoContrato`, `fechaInicio`, `fechaTermino`, `vigenciaDesde`, `vigenciaHasta` | Pertenece a un Trabajador; origina liquidaciones |
 | PERIODO_REMUNERACION | `erp_rrhh:periodos` | `id`, `anio`, `mes`, `estado` (Abierto/Cerrado), `cerradoPor`, `fechaCierre`, `uf`, `utm`, `imm` | Agrupa novedades y liquidaciones; congela parámetros al cerrar |
 | NOVEDAD | `erp_rrhh:novedades` | `id`, `trabajadorEntityId`, `periodoId`, `tipo`, `cantidad`, `unidad`, `fechaInicio`, `fechaFin`, `estado`, `registradoPor`, `aprobadoPor`, `fechaAprobacion`, `motivoRechazo` | Pertenece a un Trabajador y a un Período; solo las aprobadas alimentan el cálculo |
@@ -130,3 +133,6 @@ El módulo de Recursos Humanos y Planilla reutiliza `Entity` como **Trabajador**
 - Los trabajadores con liquidaciones aprobadas o pagadas no se eliminan físicamente; se aplica baja lógica (`estadoLaboral = "Desvinculado"`). La eliminación en cascada solo aplica a fichas sin liquidaciones cerradas.
 - Los datos de salud se limitan a tipo y días; se prohíbe almacenar diagnósticos, códigos CIE o texto clínico.
 - Los roles Analista y Jefatura se validan en la capa de servicio y en la interfaz; la auditoría es de solo inserción.
+- La sesión es simulada: el rol activo se mantiene en memoria y la auditoría registra ese rol, no una identidad verificada; no se almacenan credenciales.
+- La bitácora de auditoría se conserva durante la relación laboral y 6 años después del término; no se elimina desde la interfaz.
+- El respaldo exporta todas las claves `erp:*` y `erp_rrhh:*` en un único JSON versionado; la restauración valida el esquema y reemplaza los datos solo tras confirmación explícita.

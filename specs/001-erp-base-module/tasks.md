@@ -2,8 +2,8 @@
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: plan.md (obligatorio), spec.md (obligatorio para las historias de usuario), research.md, data-model.md, contracts/
-**Alcance**: Únicamente las Historias de Usuario 1 a 6 de `spec.md`. Se eliminaron todas las tareas de historias genéricas previas.
-**Actualizado**: 2026-11-07
+**Alcance**: Módulo Base ERP (FR-001–FR-039, XR-001–XR-005) más las Historias de Usuario 1 a 6 de `spec.md`, incluidas las clarificaciones del 2026-11-08 (sesión simulada, parámetros manuales, retención de auditoría y respaldo JSON). Las tareas del módulo base se conservan en la Fase 2B y se mapean explícitamente a sus requisitos.
+**Actualizado**: 2026-11-08
 
 ## Formato: `[ID] [P?] [Historia] Descripción con ruta de archivo`
 
@@ -46,6 +46,29 @@
 - [-] T011 [P] Configurar el entorno de pruebas Vitest + jsdom y los fixtures compartidos en `tests/setup/jsdom.js` y `tests/setup/fixtures.js` — jsdom se configura inline en cada prueba; no existen `tests/setup/`
 
 **Punto de control**: La base está lista; las historias de usuario pueden iniciarse.
+
+---
+
+## Fase 2B: Módulo Base ERP (FR-001–FR-039)
+
+**Propósito**: Completar las capacidades base que el `spec.md` exige y que las tareas de RR.HH. no cubren.
+
+- [ ] T085 [P] CRUD de entidades con validación de nombre/código en `src/components/entity-form.js` y `src/components/entity-list.js` (FR-001, FR-002, FR-003, FR-017)
+- [ ] T086 [P] CRUD de documentos vinculados a entidad en `src/components/document-form.js` y `src/components/document-list.js` (FR-008, FR-018)
+- [ ] T087 Pantalla de gestión consolidada sin listar entidades en `src/app.js` (FR-016)
+- [ ] T088 [P] Búsqueda por nombre, código, categoría, descripción y fecha objetivo en `src/components/search-bar.js` (FR-004, FR-020, FR-021)
+- [ ] T089 Navegación Panel/Entidades/Documentos/Buscar con módulo activo resaltado en `src/components/shell.js` (FR-012, FR-013, FR-014, FR-015, FR-037)
+- [ ] T090 Mensajes de validación base, estados vacíos y feedback de error en `src/app.js` y `src/styles.css` (FR-005, FR-006)
+- [ ] T091 [P] Renderizado y validación de campos personalizados en `src/components/entity-form.js` y `src/components/document-form.js` (FR-026, FR-027)
+- [ ] T092 Campos personalizados en listas, detalle y resultados de búsqueda en `src/components/entity-list.js`, `src/components/document-list.js` y `src/components/search-bar.js` (FR-028)
+- [ ] T093 Etiquetas visibles derivadas de la configuración en `src/module-config.js` y `src/components/shell.js` (FR-029, XR-002)
+- [ ] T094 Transiciones de ciclo de vida y estado libre sin lifecycle en `src/module-config.js` y `src/components/document-form.js` (FR-030, FR-031)
+- [ ] T095 [P] Color de acento con fallback y barra lateral responsive en `src/styles.css` (FR-038, FR-039)
+- [ ] T096 Reporte de configuración inválida/conflictiva y reglas de validación extensibles en `src/module-config.js` y `src/app.js` (FR-025, XR-003)
+- [ ] T097 [P] Prueba de rendimiento de listas y búsqueda con 500 registros en `tests/integration/base-rendimiento.test.js` (FR-032, SC-004)
+- [ ] T098 Verificar adaptación solo-configuración sin tocar código central en `src/module-config.js` y `tests/integration/base-adaptacion.test.js` (SC-008, XR-001, XR-004, XR-005)
+
+**Punto de control**: El módulo base queda funcional y trazado a FR-001–FR-039.
 
 ---
 
@@ -154,6 +177,10 @@
 - [-] T058 [P] [US4] Construir la vista de listado y detalle de liquidaciones en `src/rrhh/views/liquidaciones-view.js` — implementado en `src/rrhh/views/liquidaciones.js` + `liquidacion.js`
 - [X] T059 [US4] Implementar el cálculo de aportes y costo empleador en `src/rrhh/utils/costo-empleador.js` (depende de T050)
 - [X] T060 [US4] Integrar las vistas de períodos, planilla y liquidaciones en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
+- [ ] T107 [P] [US4] Crear pruebas unitarias de carga manual, solapamiento de vigencias y selección por fecha de parámetros legales en `tests/unit/rrhh-parametros-carga.test.js` (clarificación 2026-11-08)
+- [ ] T108 [P] [US4] Construir el formulario de carga manual y versionado de parámetros legales (UF, UTM, IMM, tasas, topes y tramos) en `src/rrhh/components/parametros-form.js` (clarificación 2026-11-08)
+- [ ] T109 [P] [US4] Crear la vista de administración de parámetros legales y su historial de vigencias en `src/rrhh/views/parametros-view.js`
+- [ ] T110 [US4] Integrar la vista de parámetros en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js` (depende de T108, T109)
 
 **Punto de control**: Las Historias de Usuario 1 a 4 deben funcionar de forma independiente.
 
@@ -205,11 +232,27 @@
 
 ---
 
+## Fase 8B: Retención de Auditoría y Respaldo (FR-058, FR-060, SC-022)
+
+**Propósito**: Cubrir los requisitos transversales incorporados en la clarificación del 2026-11-08.
+
+- [ ] T111 [P] Crear pruebas unitarias de retención de auditoría y bloqueo de purga manual en `tests/unit/rrhh-auditoria-retencion.test.js` (FR-058)
+- [ ] T112 [P] Implementar la política de retención (relación laboral + 6 años) y el bloqueo de purga manual en `src/rrhh/seguridad/auditoria.js` (FR-058)
+- [ ] T113 [P] Crear pruebas unitarias de validación de respaldo y restauración atómica en `tests/unit/backup.test.js` (FR-060)
+- [ ] T114 [P] Implementar la exportación completa a JSON (`schemaVersion`, `exportedAt`, tablas `erp:*` y `erp_rrhh:*`) en `src/backup.js` (FR-060)
+- [ ] T115 Implementar la validación e importación con confirmación y restauración atómica en `src/backup.js` (FR-060) (depende de T114)
+- [ ] T116 [P] Añadir las acciones de exportar e importar respaldo en la interfaz en `src/components/shell.js` y `src/styles.css` (FR-060)
+- [ ] T117 Crear prueba de integración de exportación, importación y restauración completa en menos de 5 minutos en `tests/integration/backup-flow.test.js` (FR-060, SC-022)
+
+**Punto de control**: La retención de auditoría y el respaldo/restauración quedan verificados de forma independiente.
+
+---
+
 ## Fase 9: Pulido y Preocupaciones Transversales
 
 **Propósito**: Mejoras que afectan a varias historias.
 
-- [ ] T078 [P] Actualizar la documentación del módulo de RR.HH./Planilla en `docs/rrhh.md`
+- [ ] T078 [P] Actualizar la documentación del módulo de RR.HH./Planilla en `docs/rrhh.md` (bloqueante de release) — Quality Standards exige documentar cambios de comportamiento, configuración y contratos
 - [X] T079 Ejecutar la suite completa de Vitest (`tests/unit/rrhh-*.test.js` y `tests/integration/rrhh-*.test.js`) y corregir regresiones en los archivos de prueba afectados — 43 archivos / 323 pruebas en verde
 - [X] T080 [P] Verificar el rendimiento de cálculo de 200 trabajadores en menos de 1 segundo en `src/rrhh/calculo/motor.js` — cubierto por `tests/integration/rrhh-rendimiento.test.js`
 - [ ] T081 [P] Validar el flujo de RR.HH. descrito en `specs/001-erp-base-module/quickstart.md`
@@ -226,14 +269,15 @@
 - **Configuración (Fase 1)**: Sin dependencias; puede iniciar de inmediato.
 - **Fundacional (Fase 2)**: Depende de la Fase 1 y BLOQUEA todas las historias.
 - **Historias de Usuario (Fases 3–8)**: Dependen de la Fase 2. Pueden ejecutarse en paralelo si hay personal suficiente o secuencialmente en orden de prioridad.
-- **Pulido (Fase 9)**: Depende de que las historias deseadas estén completas.
+- **Retención y Respaldo (Fase 8B)**: Depende de la Fase 2 (almacenamiento) y de US6 (auditoría); puede ejecutarse en paralelo con US5.
+- **Pulido (Fase 9)**: Depende de que las historias deseadas y la Fase 8B estén completas.
 
 ### Dependencias entre Historias
 
 - **US1 (P1)**: Sin dependencias tras la Fase 2.
 - **US2 (P1)**: Depende de US1 para asociar contratos a trabajadores; comprobable de forma independiente con trabajadores de prueba.
 - **US3 (P1)**: Depende de US1 (trabajadores) y de US4 solo para el bloqueo del cálculo; el registro y la aprobación son independientes.
-- **US4 (P1)**: Integra US1, US2, US3 y los parámetros legales; es la historia de mayor acoplamiento.
+- **US4 (P1)**: Integra US1, US2, US3 y los parámetros legales cargados manualmente; es la historia de mayor acoplamiento.
 - **US5 (P2)**: Depende de las liquidaciones de US4.
 - **US6 (P2)**: Aplica de forma transversal a US1–US5; puede implementarse en paralelo una vez estabilizados los servicios.
 
@@ -289,6 +333,21 @@ Task: "Construir vista de liquidaciones en src/rrhh/views/liquidaciones-view.js"
 
 ---
 
+## Ejemplo Paralelo: Fase 8B (Retención y Respaldo)
+
+```bash
+# Pruebas independientes en archivos distintos:
+Task: "Pruebas unitarias de retención de auditoría en tests/unit/rrhh-auditoria-retencion.test.js"
+Task: "Pruebas unitarias de respaldo en tests/unit/backup.test.js"
+
+# Implementación en archivos distintos:
+Task: "Implementar retención de auditoría en src/rrhh/seguridad/auditoria.js"
+Task: "Implementar exportación JSON en src/backup.js"
+Task: "Añadir acciones de respaldo en src/components/shell.js"
+```
+
+---
+
 ## Estrategia de Implementación
 
 ### MVP Primero (Solo Historia de Usuario 1)
@@ -308,7 +367,8 @@ Task: "Construir vista de liquidaciones en src/rrhh/views/liquidaciones-view.js"
 5. US4 → probar → desplegar.
 6. US5 → probar → desplegar.
 7. US6 → probar → desplegar.
-8. Cada historia añade valor sin romper las anteriores.
+8. Fase 8B (retención y respaldo) → probar → desplegar.
+9. Cada historia añade valor sin romper las anteriores.
 
 ### Estrategia de Equipo en Paralelo
 
@@ -319,7 +379,7 @@ Con varios desarrolladores:
    - Desarrollador A: US1 y US2.
    - Desarrollador B: US3.
    - Desarrollador C: US4 (coordinando con A y B).
-   - Desarrollador D: US5 y US6.
+   - Desarrollador D: US5 y US6, y la Fase 8B en paralelo con US5.
 3. Las historias se completan e integran de forma independiente.
 
 ---
@@ -336,7 +396,7 @@ Con varios desarrolladores:
 
 ---
 
-## Notas de implementación (2026-11-07)
+## Notas de implementación (2026-11-08)
 
 Estados usados en este archivo:
 
@@ -359,8 +419,12 @@ Decisiones de datos:
 - El trabajador reutiliza `Entity`: el RUT se persiste en `taxId` (formateado) y el perfil RRHH en `erp_rrhh:trabajadores` con clave `entityId`.
 - Los contratos guardan `entityId` y `entity_id`, con `estado: 'vigente' | 'terminado'`, para alimentar el motor de cálculo sin romper su contrato de entrada.
 - Catálogos y contratos usan baja lógica para no perder historia; los cambios de sueldo cierran el contrato anterior el día previo al nuevo inicio.
+- Los parámetros legales se cargan manualmente con vigencia desde/hasta y fuente; la carga se valida para evitar solapamientos (clarificación 2026-11-08).
+- La bitácora de auditoría se conserva durante la relación laboral y 6 años tras el término; no se ofrece purga manual desde la interfaz (FR-058).
+- El respaldo JSON incluye `schemaVersion`, `exportedAt` y todas las tablas `erp:*`/`erp_rrhh:*`; la restauración valida y reemplaza solo con confirmación explícita (FR-060, SC-022).
 
 Verificación:
 
-- `npx vitest run`: 43 archivos, 323 pruebas en verde.
+- `npx vitest run`: 43 archivos, 323 pruebas en verde (2026-11-08).
 - `npm run lint`: sin errores.
+- Tareas pendientes incorporadas por las clarificaciones: T107–T117 (parámetros manuales, retención de auditoría y respaldo/restauración).

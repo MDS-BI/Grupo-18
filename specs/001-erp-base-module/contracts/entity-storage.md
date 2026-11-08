@@ -102,3 +102,27 @@ La extensión de Recursos Humanos usa las mismas garantías de identidad, marcas
 - Al calcular se persiste primero la liquidación y luego sus líneas; si falla una escritura, no debe quedar una liquidación sin líneas.
 - La eliminación de un trabajador sin liquidaciones cerradas elimina en cascada contratos, novedades y liquidaciones; con liquidaciones aprobadas o pagadas solo se permite baja lógica.
 - La auditoría registra cálculo, aprobación, pago, anulación y consultas de datos sensibles, sin almacenar los valores sensibles.
+
+## Contrato de Respaldo y Restauración
+
+La exportación y restauración cubre todo el espacio de trabajo (claves `erp_base_module:*` y `erp_rrhh:*`) en un único documento JSON versionado.
+
+### Forma del respaldo
+
+- `schemaVersion`: cadena de versión del esquema (p. ej., `"1.0"`)
+- `exportedAt`: marca de tiempo ISO de la exportación
+- `app`: identificador del módulo (`erp-base-module`)
+- `data`: objeto con una clave por tabla (`entities`, `documents`, `contratos`, `periodos`, `novedades`, `conceptos`, `parametros`, `tramosImpuesto`, `liquidaciones`, `lineasLiquidacion`, `auditoria`)
+
+### Operaciones
+
+- `exportBackup()`: serializa todas las tablas y devuelve el JSON; no modifica el almacenamiento.
+- `validateBackup(json)`: valida `schemaVersion`, forma de las tablas, unicidad de `entity_id`/`id` y referencias; devuelve errores sin escribir.
+- `importBackup(json, { confirmar })`: valida y, solo con confirmación explícita, reemplaza las tablas; si falla, conserva los datos previos (copia temporal o escritura atómica por tabla).
+
+### Invariantes
+
+- La restauración es destructiva y exige confirmación; sin confirmación no se escribe nada.
+- Un respaldo inválido no debe dejar el espacio de trabajo parcialmente importado.
+- La auditoría restaurada conserva sus marcas de tiempo y no se reescribe.
+- El respaldo incluye la auditoría y respeta la retención de 6 años tras el término; no se ofrece purga manual desde la interfaz.
