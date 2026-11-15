@@ -24,16 +24,33 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
 ### Historia de Usuario 1 - Gestión de Fichas de Trabajadores y Catálogos Base (Prioridad: P1)
-Como administrador/a de RR.HH., quiero registrar, buscar y actualizar la ficha de los trabajadores y los catálogos base (cargos, departamentos y centros de costo) para mantener la dotación de personal organizada y al día.
 
-**Por qué esta prioridad**: Este es el valor central del producto porque, sin crear entidades, el resto de la experiencia no puede aportar valor.
+**Como** administrador/a de RR.HH.,  
+**quiero** registrar, buscar y actualizar la ficha de cada trabajador (nombre, código, RUT, datos de contacto, cargo, departamento y centro de costo) y mantener los catálogos base,  
+**para** que las contrataciones y liquidaciones posteriores se calculen sobre datos completos, válidos y sin duplicados.
 
-**Prueba Independiente**: Un usuario puede abrir el módulo, añadir una nueva entidad y verla aparecer en la lista.
+**Por qué esta prioridad**: Es el valor central del producto y el prerrequisito de datos de las Historias de Usuario 2 a 4: sin fichas válidas no hay a quién asignar un contrato, una novedad o una liquidación.
+
+**Alcance**: incluye la ficha del trabajador y los catálogos de cargos, departamentos y centros de costo. No incluye contratos (US2), novedades (US3) ni liquidaciones (US4).
+
+**Reglas de negocio**:
+
+- El nombre y el código son obligatorios; el RUT es obligatorio y se valida con módulo 11.
+- El RUT identifica a una persona: dos fichas no pueden compartir el mismo RUT.
+- Cada ficha conserva un identificador interno que no cambia al actualizarla, de modo que contratos, novedades y liquidaciones sigan apuntando a la misma persona.
+- Un catálogo tiene tipo (cargo, departamento o centro de costo), código y nombre; el código es único dentro de su tipo.
+- Desactivar un catálogo no borra historia: deja de ofrecerse en fichas nuevas pero se sigue mostrando en las fichas que ya lo usaban.
+
+**Prueba Independiente**: Con catálogos precargados como datos semilla, un usuario crea un trabajador, lo encuentra buscando por nombre, código y RUT, lo actualiza y comprueba que el cambio persiste; además crea, edita y desactiva un catálogo. No requiere recorrer las pantallas de contratos, novedades ni liquidaciones.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** que un usuario está viendo la lista de entidades, **cuando** crea una nueva entidad con un nombre y un código, **entonces** la nueva entidad se guarda y aparece en la lista.
-2. **Dado** que un usuario está creando una entidad, **cuando** deja la información obligatoria en blanco, **entonces** el sistema impide guardar y explica qué se necesita.
+1. **Dado** que un usuario está creando una ficha de trabajador, **cuando** ingresa nombre, código y un RUT con dígito verificador válido, y opcionalmente selecciona cargo, departamento y centro de costo, **entonces** la ficha se guarda y aparece en el listado con las etiquetas de los catálogos seleccionados.
+2. **Dado** que un usuario está creando o editando una ficha, **cuando** deja el nombre, el código o el RUT en blanco, o ingresa un RUT con dígito verificador inválido, un correo mal formado o una fecha de ingreso que no es una fecha de calendario, **entonces** el sistema impide guardar y señala el campo específico que debe corregirse.
+3. **Dado** que ya existe una ficha con un RUT registrado, **cuando** un usuario intenta crear u actualizar otra ficha con ese mismo RUT, **entonces** el sistema rechaza la operación e indica que el RUT ya está asociado a otro trabajador.
+4. **Dado** que existen fichas registradas, **cuando** el usuario busca por nombre, código o RUT (con o sin puntos y guion), **entonces** obtiene las fichas que coinciden; **y cuando** la búsqueda no arroja coincidencias, **entonces** el listado muestra un estado vacío explicativo en lugar de una tabla en blanco.
+5. **Dado** un trabajador existente, **cuando** el usuario actualiza sus datos o su cargo, departamento o centro de costo, **entonces** los cambios se guardan sobre la misma ficha y se reflejan de inmediato en el listado y en la búsqueda.
+6. **Dado** que un usuario gestiona catálogos base, **cuando** crea un cargo, departamento o centro de costo con código y nombre, **entonces** queda disponible para asignarlo a fichas; **y cuando** intenta repetir un código dentro del mismo tipo, **entonces** el sistema lo rechaza; **y cuando** desactiva un catálogo, **entonces** deja de ofrecerse para fichas nuevas pero se conserva en las fichas que ya lo usaban.
 
 ---
 
