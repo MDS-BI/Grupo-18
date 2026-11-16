@@ -121,7 +121,7 @@ describe('module-config', () => {
   it('loadModuleConfig reflects the userConfig slot (null by default)', async () => {
     const { config, errors } = await loadModuleConfig();
     expect(errors).toEqual([]);
-    expect(config.moduleName).toBe(DEFAULT_CONFIG.moduleName);
+    expect(config.moduleName).toBe('Recursos Humanos y Planilla');
   });
 
   it('exposes active config and label helpers after setActiveConfig', () => {
