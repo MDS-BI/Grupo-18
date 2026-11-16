@@ -134,5 +134,5 @@ Trabajador, Contrato, Novedad y Período de Remuneración forman parte del model
 - Los datos de salud se limitan a tipo y días; se prohíbe almacenar diagnósticos, códigos CIE o texto clínico.
 - Los roles Analista y Jefatura se validan en la capa de servicio y en la interfaz; la auditoría es de solo inserción.
 - La sesión es simulada: el rol activo se mantiene en memoria y la auditoría registra ese rol, no una identidad verificada; no se almacenan credenciales.
-- La bitácora de auditoría se conserva durante la relación laboral y 6 años después del término; no se elimina desde la interfaz.
-- El respaldo exporta todas las claves `erp:*` y `erp_rrhh:*` en un único JSON versionado; la restauración valida el esquema y reemplaza los datos solo tras confirmación explícita.
+- La bitácora de auditoría se conserva durante la relación laboral y 6 años después del término; no se elimina desde la interfaz. Registra consultas/cambios de datos sensibles, cambios de rol, accesos denegados y operaciones de exportación/importación de respaldo.
+- El respaldo exporta las claves del espacio de trabajo en un único JSON versionado; la restauración valida el esquema y reemplaza los datos operativos solo tras confirmación explícita, sin sobrescribir ni eliminar los registros previos de auditoría (solo inserción).

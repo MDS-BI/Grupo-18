@@ -48,7 +48,7 @@
 
 **Alternativas rechazadas**: Retención indefinida (mayor exposición de datos); purga inmediata al término (pierde trazabilidad exigible).
 
-**Consecuencias**: La exportación JSON incluye la auditoría; no se ofrece borrado manual de registros de auditoría desde la interfaz.
+**Consecuencias**: La exportación JSON incluye la auditoría; no se ofrece borrado manual de registros de auditoría desde la interfaz. Las operaciones de exportación e importación de respaldo se registran en la bitácora y, al importar, nunca se sobrescriben ni eliminan los registros previos de auditoría (solo inserción preservada).
 
 ### Respaldo y restauración completa en JSON
 
@@ -58,7 +58,7 @@
 
 **Alternativas rechazadas**: Solo exportaciones CSV por entidad (no restaurables de forma completa); sincronización en la nube (fuera de alcance).
 
-**Consecuencias**: La restauración es destructiva y requiere confirmación; el esquema incluye versión para migraciones futuras.
+**Consecuencias**: La restauración es destructiva y requiere confirmación; el esquema incluye versión para migraciones futuras. La exportación e importación se registran en la bitácora y la importación no sobrescribe ni elimina los registros previos de auditoría.
 
 ### Entidades RR.HH. definidas en el feature 001
 

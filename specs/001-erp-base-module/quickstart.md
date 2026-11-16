@@ -37,7 +37,7 @@ La generación de identidad, marcas de tiempo, integridad referencial entre enti
 
 ## Flujo de RR.HH. y Planilla
 
-1. En la barra superior, seleccione el rol simulado (Administrador, Jefatura o Analista). No se solicitan credenciales; la sesión vive solo en memoria.
+1. En la barra superior, seleccione el rol simulado (administrador/a de RR.HH., analista de remuneraciones, jefatura o Trabajador). No se solicitan credenciales; la sesión vive solo en memoria. Al elegir jefatura o Trabajador, seleccione el Trabajador que representa (jefatura: activo; Trabajador: activo o desvinculado). Al cambiar de rol en sesión activa, los permisos se aplican de inmediato, se vuelve a pedir el representado cuando corresponda y el cambio queda registrado en la bitácora.
 2. Con rol Administrador, cargue o actualice los parámetros legales (UF, UTM, IMM, tasas, topes y tramos) con vigencia desde/hasta y fuente. No hay integración con servicios externos.
 3. Cree o abra un trabajador (Entidad) y registre su contrato con sueldo base, jornada, tipo y vigencia. Si cambia el sueldo, registre un nuevo contrato o anexo sin sobrescribir el anterior.
 4. Abra el período mensual en `Planilla` y registre las novedades del mes (horas extra, licencias médicas o ausencias). Las licencias solo guardan tipo y días, sin diagnósticos.
@@ -46,7 +46,7 @@ La generación de identidad, marcas de tiempo, integridad referencial entre enti
 7. Verifique el caso de referencia: sueldo base $1.200.000, 42 h, 5 horas extra, FONASA, AFP 11,27 %, IMM $553.553 y UTM $71.649 deben producir $1.272.908 líquidos y $1.659.456 de costo empleador.
 8. Abra la vista de liquidación, seleccione una línea para ver base, tasa o fórmula y parámetro legal con vigencia, y use Imprimir / Guardar en PDF.
 9. Cierre el período con rol Jefatura. El cierre congela UF, UTM, IMM y parámetros, y bloquea la edición o recálculo de liquidaciones y novedades.
-10. Consulte la auditoría para ver cálculo, aprobación, pago, anulación y consultas de datos sensibles.
+10. Consulte la auditoría (solo rol administrador/a de RR.HH.) para ver consultas/cambios de datos sensibles, accesos denegados, cambios de rol y operaciones de respaldo, además de cálculo, aprobación, pago y anulación.
 
 ### Validación de RR.HH.
 
@@ -55,13 +55,13 @@ La generación de identidad, marcas de tiempo, integridad referencial entre enti
 - Un período cerrado no permite registrar, editar, aprobar, rechazar ni recalcular.
 - Un cambio de parámetro legal con nueva vigencia afecta solo a los períodos posteriores.
 - Un trabajador con liquidaciones aprobadas o pagadas no se elimina; solo se da de baja lógica.
-- Los roles Jefatura no ven sueldos, datos bancarios ni conceptos sensibles; cada consulta sensible queda auditada.
+- Visibilidad por rol: la jefatura ve datos básicos y gestiona novedades de su equipo (incluidas licencias médicas sin diagnóstico clínico), pero tiene ocultos/bloqueados contratos, sueldos base y liquidaciones; el Trabajador (activo o desvinculado) solo ve sus propias liquidaciones de períodos cerrados. Cada consulta sensible, acceso denegado y cambio de rol queda auditado.
 
 ### Validación de respaldo y restauración
 
-- Exporte el respaldo JSON y verifique que incluye `schemaVersion`, `exportedAt` y todas las tablas (`entities`, `documents`, `contratos`, `periodos`, `novedades`, `liquidaciones`, `auditoria`).
-- Importe un respaldo válido y confirme que entidades, documentos, RR.HH. y auditoría se restauran.
-- Intente importar un JSON inválido y verifique que se rechaza sin alterar los datos existentes.
+- Exporte el respaldo JSON y verifique que incluye `schemaVersion`, `exportedAt` y las tablas del espacio de trabajo (base y RR.HH., incluida auditoría). La exportación queda registrada en la bitácora.
+- Importe un respaldo válido y confirme que los datos operativos se restauran, que la importación queda registrada en la bitácora y que **no se sobrescriben ni eliminan** los registros previos de auditoría (solo inserción preservada).
+- Intente importar un JSON inválido y verifique que se rechaza sin alterar los datos existentes ni la bitácora.
 - Cancele la confirmación de restauración y verifique que no se escribe nada.
 
 ### Registro de verificación

@@ -90,7 +90,7 @@ La extensión de Recursos Humanos usa las mismas garantías de identidad, marcas
 - `erp_rrhh:conceptos`: `loadConceptos()`, `saveConceptos()`, `addConcepto()`, `updateConcepto()`.
 - `erp_rrhh:parametros` y `erp_rrhh:tramos-impuesto`: `loadParametros()`, `getParametroVigente(codigo, fecha)`, `getTramoImpuesto(baseUtm, fecha)`.
 - `erp_rrhh:liquidaciones` y `erp_rrhh:lineas-liquidacion`: `loadLiquidaciones()`, `saveLiquidaciones()`, `addLiquidacion()`, `updateLiquidacion()`, `getLiquidacion(entityId, periodoId)`, `saveLineas()`, `listLineas(liquidacionId)`.
-- `erp_rrhh:auditoria`: `appendAuditoria(registro)` de solo inserción; no se actualiza ni elimina.
+- `erp_rrhh:auditoria`: `appendAuditoria(registro)` de solo inserción; no se actualiza ni elimina. Registra consultas/cambios de datos sensibles, cambios de rol, accesos denegados y exportación/importación de respaldo. La importación nunca sobrescribe ni elimina registros previos.
 
 ### Invariantes
 
@@ -116,13 +116,13 @@ La exportación y restauración cubre todo el espacio de trabajo (claves `erp_ba
 
 ### Operaciones
 
-- `exportBackup()`: serializa todas las tablas y devuelve el JSON; no modifica el almacenamiento.
+- `exportBackup()`: serializa las tablas operativas y devuelve el JSON; registra la exportación en la bitácora sin modificar los datos.
 - `validateBackup(json)`: valida `schemaVersion`, forma de las tablas, unicidad de `entity_id`/`id` y referencias; devuelve errores sin escribir.
-- `importBackup(json, { confirmar })`: valida y, solo con confirmación explícita, reemplaza las tablas; si falla, conserva los datos previos (copia temporal o escritura atómica por tabla).
+- `importBackup(json, { confirmar })`: valida y, solo con confirmación explícita, reemplaza los datos operativos; si falla, conserva los datos previos (copia temporal o escritura atómica por tabla). Registra la importación en la bitácora y **no sobrescribe ni elimina** los registros de auditoría previos.
 
 ### Invariantes
 
 - La restauración es destructiva y exige confirmación; sin confirmación no se escribe nada.
 - Un respaldo inválido no debe dejar el espacio de trabajo parcialmente importado.
-- La auditoría restaurada conserva sus marcas de tiempo y no se reescribe.
+- La importación no sobrescribe ni elimina los registros previos de auditoría; la bitácora se mantiene de solo inserción y conserva las marcas de tiempo de los registros existentes.
 - El respaldo incluye la auditoría y respeta la retención de 6 años tras el término; no se ofrece purga manual desde la interfaz.
