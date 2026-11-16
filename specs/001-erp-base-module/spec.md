@@ -196,7 +196,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - Cada línea de la liquidación se redondea al peso entero y los totales se obtienen sumando las líneas ya redondeadas, de modo que el comprobante cuadre.
 - Cerrar un período congela la UF, la UTM y las tasas utilizadas, registra quién y cuándo lo cerró, y cambia el estado a "cerrado"; no se permite cerrar con novedades "Pendientes" ni con Trabajadores sin calcular. Se consideran "Trabajadores sin calcular" los Trabajadores con contrato en el período que no tienen liquidación, o cuya liquidación quedó desactualizada por una novedad aprobada o un cambio de contrato posterior al último cálculo; un Trabajador sin contrato en el período no impide el cierre.
 - Un período cerrado no se reabre: sus liquidaciones no pueden modificarse, y la corrección de un período cerrado queda fuera del alcance de esta versión.
-- La consulta, la impresión y la exportación de liquidaciones se limitan a los roles autorizados por la US6.
+- La consulta, la impresión y el guardado en PDF de liquidaciones se limitan a los roles autorizados por la US6.
 
 **Prueba Independiente**: Un analista ejecuta el cálculo sobre un período con datos de prueba, obtiene liquidaciones idénticas al caso de referencia oficial (cuadradas al peso), el administrador/a cierra el período y verifica que la UF y la UTM quedan congeladas y que ninguna liquidación puede modificarse.
 
@@ -240,44 +240,63 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - Cada línea de la liquidación muestra su base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con su fecha de vigencia; el monto explicado coincide con el de la línea.
 - Si una línea no dispone de fórmula o parámetro legal asociado, se muestra igualmente e indica claramente esa carencia.
 - La liquidación de un período cerrado se explica con los valores congelados del período; la de un período abierto o calculado se explica con los parámetros del período y se marca visiblemente como "borrador", también en la vista imprimible.
-- La vista imprimible no incluye menús, botones de edición ni controles de navegación, y muestra los datos sensibles solo a los roles autorizados.
+- La vista imprimible no incluye menús, botones de edición ni controles de navegación, y muestra los datos sensibles solo a los roles autorizados. El comprobante imprimible incluye la identificación del Trabajador, el período, las líneas con sus montos, los totales, el líquido a pagar y la marca de "borrador" cuando corresponda.
 - Consultar, explicar o imprimir una liquidación no modifica su contenido.
 
 **Prueba Independiente**: Con liquidaciones calculadas como datos semilla, al seleccionar cualquier línea el sistema despliega el desglose y el parámetro legal utilizado; al imprimir se obtiene un comprobante limpio y legible, y un Trabajador solo accede a sus propias liquidaciones de períodos cerrados.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** una liquidación calculada, **cuando** el usuario selecciona una línea (p. ej., gratificación o impuesto), **entonces** se muestra la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con su fecha de vigencia, y el monto explicado coincide con el de la línea.
+1. **Dado** una liquidación (en borrador o cerrada), **cuando** el usuario selecciona una línea (p. ej., gratificación o impuesto), **entonces** se muestra la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con su fecha de vigencia, y el monto explicado coincide con el de la línea.
 2. **Dado** una línea sin fórmula o parámetro legal asociado, **cuando** el usuario la consulta, **entonces** la línea se muestra e indica claramente que no dispone de fórmula o parámetro.
 3. **Dado** una liquidación de un período cerrado, **cuando** el usuario consulta una línea, **entonces** la explicación muestra los valores congelados del período y no los parámetros vigentes actuales.
 4. **Dado** una liquidación en borrador, **cuando** el usuario la consulta o la imprime, **entonces** se marca visiblemente como "borrador".
-5. **Dado** que se requiere entregar el comprobante, **cuando** el usuario presiona imprimir, **entonces** se presenta un formato limpio adaptado para papel o PDF, sin menús, botones de edición ni controles de navegación.
-6. **Dado** un usuario sin autorización para ver datos sensibles, **cuando** consulta o imprime una liquidación, **entonces** esos datos aparecen ocultos o enmascarados.
-7. **Dado** un Trabajador, **cuando** intenta ver una liquidación que no es suya o la de un período que no está cerrado, **entonces** el sistema lo impide e indica que no tiene autorización.
-8. **Dado** una jefatura, **cuando** intenta acceder a una liquidación, **entonces** el sistema lo impide e indica que no tiene autorización.
-9. **Dado** que un usuario con sesión identificada consulta, explica o imprime una liquidación, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada y el registro afectado (regla transversal provista por la US6).
+5. **Dado** que se requiere entregar el comprobante, **cuando** el usuario presiona imprimir, **entonces** se presenta un formato limpio adaptado para papel o PDF, sin menús, botones de edición ni controles de navegación, que incluye la identificación del Trabajador, el período, las líneas con sus montos, los totales, el líquido a pagar y la marca de "borrador" cuando corresponda.
+6. **Dado** un Trabajador, **cuando** intenta ver una liquidación que no es suya o la de un período que no está cerrado, **entonces** el sistema lo impide e indica que no tiene autorización.
+7. **Dado** una jefatura, **cuando** intenta acceder a una liquidación, **entonces** el sistema lo impide e indica que no tiene autorización.
+8. **Dado** que un usuario con sesión identificada consulta, explica o imprime una liquidación, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada y el registro afectado (regla transversal provista por la US6).
 
 ---
 
-### Historia de Usuario 6 - Seguridad, Roles y Gobierno de Datos (Prioridad: P2)
+### Historia de Usuario 6 - Seguridad, Roles y Gobierno de Datos (Prioridad: P1)
 
-Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuentas bancarias, cuotas sindicales) según el rol del usuario y registrar una bitácora de auditoría, para cumplir estrictamente con la normativa de protección de datos (Ley 21.719).
+**Como** administrador/a de RR.HH.,
+**quiero** restringir el acceso a los datos sensibles (sueldos, liquidaciones y licencias médicas) según el rol de la sesión y registrar una bitácora de auditoría,
+**para** cumplir estrictamente con la normativa de protección de datos (Ley 21.719).
 
 **Por qué esta prioridad**: Protege la privacidad de la información personal y asegura la trazabilidad de cualquier modificación.
 
-**Prueba Independiente**: Al simular el rol de "Jefatura", la interfaz oculta automáticamente los sueldos y los datos financieros confidenciales.
+**Alcance**: incluye los roles de la sesión simulada, los permisos por rol, la protección de datos sensibles y la bitácora de auditoría. No incluye autenticación real, credenciales ni gestión de usuarios. Las demás historias aplican estas reglas sin redefinirlas.
 
 **Reglas de negocio**:
 
-- Al seleccionar el rol Jefatura en la sesión simulada, el selector pide además el Trabajador activo que representa, y su equipo son los Trabajadores que lo tienen como jefatura directa; si no se selecciona un Trabajador, el sistema no muestra ni permite operar novedades.
-- Al seleccionar el rol Trabajador en la sesión simulada, el selector pide además el Trabajador (activo o desvinculado) que representa; si no selecciona uno, el sistema no muestra liquidaciones.
+- La identidad y el rol se determinan al iniciar una sesión simulada mediante un selector; los roles son administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador. Sin rol seleccionado, o con un rol no reconocido, el sistema no muestra ni permite operar ningún dato.
+- Al seleccionar el rol Jefatura, el selector pide además el Trabajador activo que representa, y su equipo son los Trabajadores que lo tienen como jefatura directa; si no se selecciona un Trabajador, el sistema no muestra ni permite operar novedades.
+- Al seleccionar el rol Trabajador, el selector pide además el Trabajador (activo o desvinculado) que representa; si no selecciona uno, el sistema no muestra liquidaciones. Un Trabajador desvinculado puede consultar sus propias liquidaciones de períodos cerrados, sin operar otras funciones.
+- Son datos sensibles en esta versión el sueldo base y las condiciones salariales de los contratos, las liquidaciones y las licencias médicas.
+- Permisos y visibilidad por rol: el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5, cierra períodos, consulta la bitácora de auditoría, exporta e importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo. La jefatura ve los datos básicos de su equipo y gestiona las novedades de su equipo (incluidas licencias médicas sin diagnóstico clínico), pudiendo aprobar o rechazar las que no haya registrado ella misma; en listados, detalles, búsquedas y vistas imprimibles tiene ocultos o bloqueados los contratos, los sueldos base y las liquidaciones de su equipo. El Trabajador solo ve sus propias liquidaciones de períodos cerrados; el resto de la información sensible permanece oculta o inaccesible para él.
+- Cambiar de rol durante la sesión aplica de inmediato los permisos del nuevo rol, vuelve a pedir el Trabajador que se representa cuando el rol es jefatura o Trabajador, y queda registrado en la bitácora.
+- Las restricciones se aplican en la interfaz y en la capa de datos, por lo que un enlace directo no permite eludirlas; cuando se deniega una acción, el sistema lo informa sin revelar el contenido protegido.
+- La bitácora de auditoría registra toda consulta, creación, modificación o desactivación de información sensible, los cambios de rol, los accesos denegados y las operaciones de exportación e importación de respaldo, con al menos usuario, rol, fecha y hora, acción y registro afectado, y los campos modificados cuando corresponda; es de solo inserción y se conserva mientras dure la relación laboral y 6 años después. Al importar un respaldo, nunca se sobrescriben ni se eliminan los registros previos de la bitácora.
+- Si la bitácora no puede escribirse, la operación no se completa.
+
+**Prueba Independiente**: Al simular cada rol, la interfaz muestra y permite solo lo que corresponde; con el rol Jefatura se ocultan los sueldos, y cada consulta o cambio sensible, junto con cada acceso denegado, aparece en la bitácora.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** ve y registra las novedades de su equipo, y aprueba o rechaza las novedades de su equipo que no haya registrado ella misma, sin acceso a las liquidaciones ni a los sueldos base.
-2. **Dado** que el usuario selecciona el rol Jefatura en la sesión simulada, **cuando** no selecciona el Trabajador activo que representa, **entonces** el sistema no muestra ni permite operar novedades.
-3. **Dado** que el usuario selecciona el rol Trabajador en la sesión simulada, **cuando** no selecciona el Trabajador (activo o desvinculado) que representa, **entonces** el sistema no muestra liquidaciones.
-4. **Dado** cualquier cambio o consulta de información sensible, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
+1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** ve y registra las novedades de su equipo, y aprueba o rechaza las de su equipo que no haya registrado ella misma, sin acceso a las liquidaciones ni a los sueldos base.
+2. **Dado** que el usuario selecciona el rol Jefatura, **cuando** no selecciona el Trabajador activo que representa, **entonces** el sistema no muestra ni permite operar novedades.
+3. **Dado** que el usuario selecciona el rol Trabajador, **cuando** no selecciona el Trabajador (activo o desvinculado) que representa, **entonces** el sistema no muestra liquidaciones. Al seleccionar un Trabajador activo o desvinculado que representa, puede consultar sus propias liquidaciones históricas de períodos cerrados.
+4. **Dado** un Trabajador desvinculado representado en la sesión, **cuando** utiliza el sistema, **entonces** solo puede consultar sus propias liquidaciones de períodos cerrados y no puede operar otras funciones.
+5. **Dado** un usuario sin rol seleccionado o con un rol no reconocido, **cuando** intenta usar el sistema, **entonces** no se muestra ni se permite operar ningún dato.
+6. **Dado** un analista de remuneraciones, **cuando** intenta consultar la bitácora, exportar o importar un respaldo o aprobar una novedad, **entonces** el sistema lo impide e indica que no tiene autorización.
+7. **Dado** un usuario sin autorización sobre una liquidación, **cuando** intenta acceder a ella mediante un enlace directo, **entonces** el sistema lo impide sin revelar su contenido.
+8. **Dado** una sesión activa, **cuando** el usuario cambia de rol, **entonces** se aplican de inmediato los permisos del nuevo rol, se vuelve a pedir el Trabajador que representa si corresponde y el cambio queda en la bitácora.
+9. **Dado** el administrador/a de RR.HH., **cuando** consulta la bitácora, **entonces** puede ver los registros con usuario, rol, fecha y hora, acción y registro afectado, y puede reconstruir los accesos y modificaciones de un usuario o período.
+10. **Dado** cualquier rol, **cuando** intenta editar o eliminar un registro de auditoría, **entonces** el sistema lo rechaza y el intento queda registrado.
+11. **Dado** una operación sobre información sensible, **cuando** la bitácora no puede escribirse, **entonces** la operación no se completa.
+12. **Dado** un acceso denegado por falta de permisos, **cuando** el sistema lo rechaza, **entonces** el intento queda registrado en la bitácora.
+13. **Dado** cualquier cambio o consulta de información sensible, **cuando** la operación se completa, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
 
 ---
 
@@ -309,6 +328,10 @@ Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuen
 - ¿Qué ocurre cuando un usuario no tiene rol asignado o su rol no es reconocido?
 - ¿Qué ocurre cuando un usuario intenta acceder directamente a un dato sensible mediante un enlace directo o una petición no autorizada?
 - ¿Qué ocurre cuando un usuario cambia de rol mientras mantiene una sesión activa?
+- ¿Qué ocurre cuando se selecciona el rol Jefatura o el rol Trabajador sin elegir el Trabajador que representa?
+- ¿Qué ocurre cuando se intenta registrar una novedad cuyo rango cruza meses y uno de los períodos no está activo?
+- ¿Qué ocurre al intentar crear un período de remuneración sin parámetros legales obligatorios?
+- ¿Qué ocurre al importar un respaldo JSON respecto a la bitácora de auditoría existente?
 - ¿Qué ocurre cuando la bitácora de auditoría no puede escribirse por un fallo del sistema?
 - ¿Qué ocurre cuando alguien intenta editar o eliminar un registro de auditoría?
 - ¿Qué ocurre cuando un usuario autorizado consulta datos sensibles de un trabajador que no pertenece a su equipo?
@@ -321,7 +344,7 @@ Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuen
 
 - **FR-001**: El sistema DEBE permitir a los usuarios crear un registro de entidad con al menos un nombre y un código.
 - **FR-002**: El sistema DEBE permitir a los usuarios editar los detalles de un registro de entidad existente.
-- **FR-003**: El sistema DEBE permitir a los usuarios eliminar un registro de entidad existente.
+- **FR-003**: El sistema DEBE permitir a los usuarios eliminar un registro de entidad existente. Esta eliminación aplica a la Entidad genérica; los Trabajadores no se eliminan, se desactivan según la Historia de Usuario 1.
 - **FR-004**: El sistema DEBE permitir a los usuarios buscar registros de entidad por nombre, código, categoría u otras palabras clave descriptivas.
 - **FR-005**: El sistema DEBE mostrar una lista clara de entidades e indicar cuándo ningún resultado coincide con una búsqueda.
 - **FR-006**: El sistema DEBE presentar retroalimentación clara cuando falta información obligatoria o no se puede completar una acción.
@@ -358,29 +381,54 @@ Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuen
 - **FR-037**: La barra lateral DEBE resaltar visualmente el módulo activo en cada pantalla.
 - **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura a los valores integrados cuando esté ausente o sea inválido.
 - **FR-039**: En ventanas gráficas estrechas, la barra lateral DEBE contraerse a una columna de iconos manteniéndose operable.
-- **FR-040**: El sistema DEBE presentar cada liquidación como una lista de líneas con su concepto y monto, indicando que cada línea puede expandirse para ver su explicación.
-- **FR-041**: Al seleccionar una línea, el sistema DEBE mostrar la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el monto resultante.
-- **FR-042**: La explicación DEBE identificar el parámetro legal aplicado y su fecha de vigencia.
-- **FR-043**: Las líneas registradas manualmente DEBEN mostrar el motivo ingresado por el usuario en lugar de una fórmula.
-- **FR-044**: La explicación DEBE conservar los valores del período calculado aunque los parámetros legales cambien con posterioridad.
-- **FR-045**: El sistema DEBE ofrecer una acción de imprimir que genere una vista limpia del comprobante, sin menús, botones de edición ni controles de navegación.
-- **FR-046**: La vista imprimible DEBE incluir la identificación del trabajador y del período, el detalle de haberes, descuentos e impuestos, el líquido a pagar, los totales y la fecha de emisión.
-- **FR-047**: Los montos de la vista imprimible DEBEN coincidir exactamente con los montos mostrados en la liquidación.
-- **FR-048**: La vista imprimible DEBE adaptarse a una hoja tamaño carta o A4 en orientación vertical y DEBE poder guardarse como PDF.
-- **FR-049**: La explicación y el comprobante DEBEN respetar los permisos de acceso vigentes del usuario.
-- **FR-050**: El sistema DEBE indicar claramente cuándo una línea no dispone de fórmula o parámetro legal asociado, sin omitir la línea del comprobante.
-- **FR-051**: El sistema DEBE basar el acceso a la información sensible en el rol del usuario autenticado.
-- **FR-052**: El sistema DEBE restringir la visualización y consulta de sueldos, liquidaciones, cuentas bancarias y cuotas sindicales a los roles expresamente autorizados.
-- **FR-053**: El rol Jefatura DEBE poder ver y registrar las novedades de su equipo, y aprobar o rechazar las novedades de su equipo que no haya registrado ella misma, y NO DEBE acceder a liquidaciones ni a sueldos base.
-- **FR-054**: El sistema DEBE ocultar o enmascarar los datos sensibles no autorizados en listados, detalles, búsquedas y vistas imprimibles.
-- **FR-055**: El sistema DEBE registrar automáticamente en la bitácora de auditoría toda consulta, creación, modificación o eliminación de información sensible, indicando al menos usuario, rol, fecha y hora, acción y registro afectado.
+- **FR-040**: El sistema DEBE presentar cada liquidación (en borrador o cerrada) como una lista de líneas con su concepto y monto, permitiendo seleccionar cada línea para ver su explicación (Historia de Usuario 5).
+- **FR-041**: Al seleccionar una línea, el sistema DEBE mostrar la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con su fecha de vigencia, y el monto explicado DEBE coincidir con el de la línea (Historia de Usuario 5).
+- **FR-042**: Si una línea no dispone de fórmula o parámetro legal asociado, el sistema DEBE mostrarla igualmente e indicar claramente esa carencia (Historia de Usuario 5).
+- **FR-043**: La explicación de una liquidación de un período cerrado DEBE mostrar los valores congelados del período, y la de un período abierto o calculado DEBE mostrar los parámetros del período y marcarse visiblemente como "borrador", también en la vista imprimible (Historia de Usuario 5).
+- **FR-044**: El sistema DEBE ofrecer una acción de imprimir que genere una vista limpia del comprobante, sin menús, botones de edición ni controles de navegación, y consultar, explicar o imprimir una liquidación NO DEBE modificar su contenido (Historia de Usuario 5).
+- **FR-045**: El comprobante imprimible DEBE incluir la identificación del Trabajador, el período, las líneas con sus montos, los totales, el líquido a pagar y la marca de "borrador" cuando corresponda (Historia de Usuario 5).
+- **FR-046**: Los montos de la vista imprimible DEBEN coincidir exactamente con los montos mostrados en la liquidación (Historia de Usuario 5).
+- **FR-047**: La vista imprimible DEBE adaptarse a una hoja tamaño carta o A4 en orientación vertical y DEBE poder guardarse como PDF (Historia de Usuario 5).
+- **FR-048**: La consulta, la explicación, la impresión y el guardado en PDF de liquidaciones DEBEN respetar los permisos de acceso vigentes: el analista de remuneraciones y el administrador/a de RR.HH. pueden ver las liquidaciones de cualquier Trabajador; el Trabajador solo las suyas y solo las de períodos cerrados; la jefatura no accede a liquidaciones (Historias de Usuario 5 y 6).
+- **FR-049**: El sistema DEBE impedir que un Trabajador vea una liquidación que no sea suya o que pertenezca a un período no cerrado, y DEBE impedir que una jefatura acceda a liquidaciones, informando la denegación sin revelar el contenido protegido (Historias de Usuario 5 y 6).
+- **FR-050**: La consulta, explicación, impresión o guardado en PDF de una liquidación por un usuario con sesión identificada DEBE registrarse en la bitácora de auditoría con al menos usuario, rol, fecha y hora, acción y registro afectado (Historias de Usuario 5 y 6).
+- **FR-051**: El sistema DEBE basar el acceso a la información sensible en el rol de la sesión identificada (simulada, mediante selector de rol); sin rol seleccionado no hay acceso.
+- **FR-052**: El sistema DEBE restringir la visualización y consulta de sueldos, liquidaciones y licencias médicas a los roles expresamente autorizados. La jefatura puede ver los datos básicos y gestionar las novedades de su equipo (incluidas licencias médicas sin diagnóstico clínico), pero tiene ocultos o bloqueados los contratos, los sueldos base y las liquidaciones; el Trabajador solo puede ver sus propias liquidaciones de períodos cerrados.
+- **FR-053**: El rol Jefatura DEBE operar las novedades de su equipo según las reglas de la Historia de Usuario 3 y NO DEBE acceder a liquidaciones ni a sueldos base.
+- **FR-054**: El sistema DEBE ocultar o bloquear los datos sensibles no autorizados en listados, detalles, búsquedas y vistas imprimibles, según el rol de la sesión identificada (simulada): la jefatura no accede a contratos, sueldos base ni liquidaciones de su equipo, y el Trabajador no accede a información sensible distinta de sus propias liquidaciones de períodos cerrados.
+- **FR-055**: El sistema DEBE registrar automáticamente en la bitácora de auditoría toda consulta, creación, modificación o eliminación, desactivación, cancelación o anulación de información sensible según corresponda, los cambios de rol, los accesos denegados y las operaciones de exportación e importación de respaldo, indicando al menos usuario, rol, fecha y hora, acción y registro afectado; si la bitácora no puede escribirse, la operación no se completa.
 - **FR-056**: La bitácora de auditoría DEBE ser de solo inserción y NO DEBE permitir la edición ni la eliminación de sus registros por ningún rol.
 - **FR-057**: Las restricciones de acceso DEBEN aplicarse tanto en la interfaz como en la capa de acceso a los datos, impidiendo la consulta no autorizada por enlaces directos u otras vías.
 - **FR-058**: El sistema DEBE conservar la bitácora de auditoría mientras dure la relación laboral y durante 6 años posteriores al término de esta, conforme a la Ley 21.719.
-- **FR-059**: El sistema DEBE informar de forma clara al usuario cuando una acción o consulta es denegada por falta de permisos, sin revelar el contenido protegido.
-- **FR-060**: El sistema DEBE permitir exportar e importar un respaldo completo de los datos en formato JSON para respaldo y restauración.
+- **FR-059**: El sistema DEBE informar de forma clara a la sesión identificada (simulada) cuando una acción o consulta es denegada por falta de permisos, sin revelar el contenido protegido.
+- **FR-060**: El sistema DEBE permitir exportar e importar un respaldo completo de los datos en formato JSON para respaldo y restauración. Estas operaciones DEBEN quedar registradas en la bitácora de auditoría y, al importar un respaldo, el sistema NO DEBE sobrescribir ni eliminar los registros previos de la bitácora (que se mantiene de solo inserción).
 - **FR-061**: El sistema DEBE impedir que dos fichas de trabajador compartan el mismo RUT, comparándolo normalizado (sin puntos, guiones ni espacios) y sin distinguir mayúsculas.
 - **FR-062**: El sistema DEBE impedir que dos fichas de trabajador compartan el mismo código, comparándolo sin distinguir mayúsculas ni acentos e ignorando espacios al inicio y al final.
+- **FR-063**: El sistema DEBE permitir crear, consultar y actualizar fichas de Trabajador con nombre, código y RUT obligatorios, validando el dígito verificador del RUT y los formatos de correo y fecha de ingreso cuando se informen (Historia de Usuario 1).
+- **FR-064**: El sistema DEBE gestionar los catálogos de cargo, departamento y centro de costo, permitiendo crear, editar, ocultar y reactivar opciones (sin eliminarlas), impidiendo asignar opciones desactivadas a nuevas fichas y mostrando la etiqueta "desactivado" en fichas existentes (Historia de Usuario 1).
+- **FR-065**: El sistema DEBE permitir desactivar un Trabajador activo solo con confirmación explícita y sin dependencias activas que lo impidan, manteniendo el estado activo/inactivo, registrando la fecha de desvinculación y conservando la ficha para consulta histórica sin eliminarla ni reactivarla en esta versión (Historia de Usuario 1).
+- **FR-066**: El sistema DEBE permitir asignar una jefatura directa opcional a cada Trabajador, restringida a Trabajadores activos, impidiendo la autoasignación y ocultando Trabajadores inactivos del selector de jefatura (Historia de Usuario 1).
+- **FR-067**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización y desactivación de fichas de Trabajador con usuario, fecha y hora, y valores anteriores y nuevos de los campos modificados (Historia de Usuario 1).
+- **FR-068**: El sistema DEBE gestionar contratos por Trabajador con sueldo base, jornada, tipo de contrato y vigencia, manteniendo sus estados (vigente, vencido, terminado, cancelado) y el historial de vigencias (Historia de Usuario 2).
+- **FR-069**: El sistema DEBE garantizar que cada Trabajador tenga como máximo un contrato vigente y exactamente un contrato activo o futuro, impidiendo fechas de vigencia superpuestas entre contratos vigentes (Historia de Usuario 2).
+- **FR-070**: El sistema DEBE aplicar las transiciones de estado de contratos: marcar como vencido al superar la fecha de fin sin terminación ni cancelación, permitir terminar solo un contrato activo, impedir reactivar un contrato cancelado y no permitir eliminar contratos lógica ni físicamente (Historia de Usuario 2).
+- **FR-071**: El sistema DEBE impedir la edición de campos de vigencia de un contrato existente; los cambios de vigencia DEBEN materializarse creando un nuevo registro y ajustando la fecha de fin del anterior sin superposición (Historia de Usuario 2).
+- **FR-072**: El sistema DEBE generar alertas de contratos próximos a vencer (30 días o menos) y vencidos, y exigir que el Trabajador cuente con contrato vigente para registrar novedades o ser incluido en el cálculo de remuneraciones (Historia de Usuario 2).
+- **FR-073**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización y cambios de estado de contratos con usuario, fecha y hora, y valores anteriores y nuevos de los campos modificados (Historia de Usuario 2).
+- **FR-074**: El sistema DEBE permitir registrar novedades de horas extra, licencia médica y ausencia asociadas a un Trabajador y al período de su fecha, exigiendo que el período se encuentre activo; las licencias médicas no DEBEN registrar diagnóstico clínico (Historia de Usuario 3).
+- **FR-075**: Cuando el rango de una novedad cruza meses, el sistema DEBE dividirla automáticamente por mes calendario; si alguno de los períodos no está activo, la operación completa DEBE rechazarse sin crear registros parciales (Historia de Usuario 3).
+- **FR-076**: El sistema DEBE gestionar los estados de las novedades (pendiente, aprobada, rechazada, anulada), impidiendo registrar o modificar novedades de períodos cerrados y excluyendo del cálculo las novedades cuyo período no esté activo (Historia de Usuario 3).
+- **FR-077**: El sistema DEBE aplicar la segregación de funciones en novedades: la jefatura puede registrar y aprobar/rechazar las de su equipo pero no las que ella misma registró; el analista de remuneraciones puede registrar y ver novedades, y anular o rechazar una aprobada o rechazada que él mismo registró, pero no aprobarlas (Historia de Usuario 3).
+- **FR-078**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización, aprobación, rechazo y anulación de novedades con usuario, fecha y hora, y valores anteriores y nuevos de los campos modificados (Historia de Usuario 3).
+- **FR-079**: El sistema DEBE permitir crear períodos de remuneración por mes y año con parámetros legales obligatorios y estado inicial "abierto", impidiendo períodos duplicados o con mes calendario inválido (Historia de Usuario 4).
+- **FR-080**: El sistema DEBE ejecutar el cálculo de remuneraciones de un período considerando únicamente contratos vigentes y novedades aprobadas del período, dejando el período en estado "calculado" y permitiendo recalcular mientras esté abierto o calculado (Historia de Usuario 4).
+- **FR-081**: El sistema DEBE marcar como desactualizada la liquidación de un Trabajador cuando, tras el último cálculo, se apruebe una novedad o cambie su contrato, obligando a recalcular antes del cierre (Historia de Usuario 4).
+- **FR-082**: El sistema DEBE impedir cerrar un período con novedades pendientes o con Trabajadores sin calcular (según la definición de la Historia de Usuario 4); al cerrar DEBE congelar UF, UTM y tasas, registrar quién y cuándo lo cerró y pasar el período a "cerrado" sin posibilidad de reapertura (Historia de Usuario 4).
+- **FR-083**: Cada línea de liquidación DEBE redondearse al peso entero y los totales DEBEN obtenerse sumando las líneas ya redondeadas; las liquidaciones de períodos cerrados no DEBEN poder modificarse y su corrección queda fuera del alcance de esta versión (Historia de Usuario 4).
+- **FR-084**: El sistema DEBE registrar en la bitácora de auditoría la creación, cálculo, recálculo y cierre de períodos de remuneración con usuario, fecha y hora, y los datos relevantes de la operación (Historia de Usuario 4).
+- **FR-085**: El sistema DEBE aplicar los permisos detallados por rol de la sesión identificada (simulada), en complemento a FR-051, FR-052 y FR-053 (Historia de Usuario 6): el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5, cierra períodos, consulta la bitácora de auditoría, exporta e importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo; la jefatura ve los datos básicos de su equipo y gestiona sus novedades (incluidas licencias médicas sin diagnóstico clínico), aprobando o rechazando las que no haya registrado ella misma, sin acceso a contratos, sueldos base ni liquidaciones; el Trabajador solo consulta sus propias liquidaciones de períodos cerrados, incluidas las históricas si se encuentra desvinculado.
+- **FR-086**: Al cambiar de rol durante una sesión activa, el sistema DEBE aplicar de inmediato los permisos del nuevo rol, volver a solicitar el Trabajador que se representa cuando el rol sea jefatura o Trabajador, y registrar el cambio en la bitácora de auditoría (Historia de Usuario 6).
+- **FR-087**: La consulta de la bitácora de auditoría DEBE estar disponible exclusivamente para el rol administrador/a de RR.HH., quien puede visualizar y reconstruir los accesos y modificaciones registrados (Historia de Usuario 6).
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -400,15 +448,15 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Liquidación**: Documento que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales y líquido a pagar, junto con el estado del cálculo y la fecha de emisión del comprobante.
 - **Línea de Liquidación**: Cada concepto que compone una liquidación (haber, descuento o impuesto), con su monto, la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal que la respalda; las líneas manuales registran un motivo en lugar de una fórmula.
 - **Parámetro Legal**: Valor normativo vigente en una fecha determinada (tasa, tope, tramo o monto fijo) que sustenta el cálculo de una línea y que se conserva congelado para los períodos ya calculados.
-- **Rol**: Perfil asignado a un usuario que determina las funciones y los datos a los que puede acceder (p. ej., Administrador, Jefatura, Analista).
+- **Rol**: Perfil que determina las funciones y los datos a los que puede acceder un usuario en la sesión simulada; los roles son administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador.
 - **Permiso de Acceso**: Regla que asocia un rol con la capacidad de consultar o modificar un tipo de información sensible.
-- **Dato Sensible**: Información personal o financiera protegida (sueldos, cuentas bancarias, cuotas sindicales) cuyo acceso está restringido según el rol.
+- **Dato Sensible**: Información personal o financiera protegida (sueldos, liquidaciones y licencias médicas) cuyo acceso está restringido según el rol.
 - **Registro de Auditoría**: Entrada inmutable que documenta quién consultó o modificó información sensible, cuándo, con qué rol y sobre qué registro.
 - **Bitácora de Auditoría**: Colección de solo inserción de registros de auditoría, conservada para efectos de trazabilidad y cumplimiento normativo.
-- **Trabajador**: Entidad que representa a una persona empleada; reutiliza la Entidad (nombre, código y RUT como identificación fiscal) y se vincula a su perfil de RR.HH. por entity_id.
+- **Trabajador**: Entidad que representa a una persona empleada; reutiliza la Entidad (nombre, código y RUT como identificación fiscal), se vincula a su perfil de RR.HH. por entity_id y puede tener una jefatura directa opcional.
 - **Contrato**: Condiciones laborales de un Trabajador (sueldo base, jornada y tipo de contrato) con historial por vigencia y alertas de vencimiento; pertenece a un Trabajador.
-- **Novedad**: Evento de un período (horas extra, licencia médica o ausencia) asociado a un Trabajador y a un Período de Remuneración, con estado Pendiente/Aprobada/Rechazada y sin diagnóstico clínico.
-- **Período de Remuneración**: Mes y año de liquidación con estado Abierto/Cerrado; al cerrarse congela UF, UTM, ingreso mínimo y parámetros legales, y agrupa Novedades y Liquidaciones.
+- **Novedad**: Evento de un período (horas extra, licencia médica o ausencia) asociado a un Trabajador y a un Período de Remuneración, con estado Pendiente/Aprobada/Rechazada/anulada y sin diagnóstico clínico.
+- **Período de Remuneración**: Mes y año de liquidación con estado Abierto/Calculado/Cerrado; al cerrarse congela UF, UTM, ingreso mínimo y parámetros legales, y agrupa Novedades y Liquidaciones.
 
 > El detalle de atributos, claves de almacenamiento y relaciones de las entidades de Recursos Humanos se documenta en `specs/002-rrhh-planilla/data-model.md`.
 
@@ -445,7 +493,7 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - El módulo base gestiona datos para un único espacio de trabajo en lugar de una base de datos multiinquilino compartida.
 - La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales.
 - Cada entidad incluye información básica suficiente para identificación y seguimiento; los módulos personalizados aportan los campos específicos del dominio.
-- La versión inicial incluye la gestión de datos maestros y documentos, el registro y aprobación de novedades (US3), el cálculo y cierre de períodos de remuneración (US4) y la vista explicativa e impresión de liquidaciones (US5). Quedan fuera capacidades ERP avanzadas como contabilidad general, informes financieros y planificación presupuestaria.
+- La versión inicial incluye la gestión de fichas de trabajadores y catálogos base (US1), la gestión de contratos y alertas de plazo (US2), el registro y aprobación de novedades (US3), el cálculo y cierre de períodos de remuneración (US4), la vista explicativa e impresión de liquidaciones (US5) y la seguridad, roles y gobierno de datos (US6). Quedan fuera capacidades ERP avanzadas como contabilidad general, informes financieros y planificación presupuestaria.
 - La búsqueda se realiza sobre los registros de entidad almacenados.
 - La pantalla de gestión consolida los formularios de añadir/editar entidad y añadir/editar documento en una sola pantalla de gestión.
 - La navegación entre áreas ocurre mediante una barra lateral persistente; la pantalla de gestión aloja ambos paneles de gestión y no muestra la lista de entidades.
@@ -463,9 +511,9 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - Los parámetros legales (UF, UTM, tasas y tramos) se cargan y versionan manualmente por un administrador mediante formulario o archivo de configuración; no se integran servicios externos de indicadores previsionales.
 - Los montos se presentan en pesos chilenos con separador de miles.
 - El acceso a la explicación y al comprobante respeta los permisos vigentes del usuario.
-- Existen roles predefinidos (al menos Administrador, Jefatura y Analista/Trabajador), y el administrador gestiona su asignación.
+- Los roles de la sesión simulada son administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador, sin gestión de asignación.
 - La identidad y el rol del usuario se determinan al iniciar una sesión simulada mediante un selector de rol; no se implementa autenticación real ni manejo de credenciales.
-- Los datos sensibles (sueldos, cuentas bancarias, cuotas sindicales) están clasificados explícitamente en el modelo de datos.
+- Los datos sensibles (sueldos, liquidaciones y licencias médicas) están clasificados explícitamente en el modelo de datos.
 - Las restricciones de acceso se aplican tanto en la interfaz como en la capa de datos, por lo que no pueden eludirse mediante enlaces directos.
 - La bitácora de auditoría se conserva mientras dure la relación laboral y 6 años después del término, conforme a la Ley 21.719.
 - La auditoría registra tanto los accesos autorizados como los denegados.
