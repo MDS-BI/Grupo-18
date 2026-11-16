@@ -1,7 +1,6 @@
 /** Worker file form with RUT validation and catalog selectors. */
 
 import {
-  ESTADOS_LABORALES,
   actualizarTrabajador,
   crearTrabajador
 } from '../utils/trabajadores-service.js';
@@ -17,6 +16,18 @@ function optionsFor(catalogos, tipo) {
   ];
 }
 
+function jefeOptions(trabajadores = [], excludeId = '') {
+  return [
+    { value: '', label: 'Sin jefatura directa' },
+    ...trabajadores
+      .filter((row) => row.activo && String(row.entityId) !== String(excludeId))
+      .map((row) => ({
+        value: row.entityId,
+        label: `${row.name}${row.code ? ` — ${row.code}` : ''}`
+      }))
+  ];
+}
+
 function errorMessages(error) {
   if (!error) return ['No se pudo guardar el trabajador.'];
   if (Array.isArray(error.errors)) return error.errors;
@@ -29,9 +40,13 @@ function errorMessages(error) {
  *
  * @returns {{edit: Function, reset: Function, getValues: Function, element: HTMLFormElement}}
  */
-export function renderTrabajadorForm(root, { doc, viewer, catalogos, onSaved } = {}) {
+export function renderTrabajadorForm(
+  root,
+  { doc, viewer, catalogos, trabajadores = [], onSaved } = {}
+) {
   const documentRef = doc || root.ownerDocument;
   const catalogs = catalogos || listCatalogos();
+  let workers = trabajadores;
   let editing = null;
 
   const form = el(documentRef, 'form', 'panel form-panel rrhh-trabajador-form');
@@ -47,7 +62,7 @@ export function renderTrabajadorForm(root, { doc, viewer, catalogos, onSaved } =
       documentRef,
       'p',
       'panel-copy',
-      'La ficha reutiliza la entidad base: nombre, código, RUT y datos de contacto, más cargo, departamento y centro de costo.'
+      'La ficha reutiliza la entidad base: nombre, código, RUT obligatorio y datos de contacto, más cargo, departamento, centro de costo y jefatura directa.'
     )
   );
   form.appendChild(header);
@@ -64,7 +79,8 @@ export function renderTrabajadorForm(root, { doc, viewer, catalogos, onSaved } =
   fields.appendChild(wrap(documentRef, 'trabajador-code', 'Código *', codeInput));
 
   const rutInput = input(documentRef, { id: 'trabajador-rut', placeholder: '12.345.678-5' });
-  fields.appendChild(wrap(documentRef, 'trabajador-rut', 'RUT', rutInput));
+  rutInput.required = true;
+  fields.appendChild(wrap(documentRef, 'trabajador-rut', 'RUT *', rutInput));
 
   const emailInput = input(documentRef, { id: 'trabajador-email', type: 'email' });
   fields.appendChild(wrap(documentRef, 'trabajador-email', 'Correo electrónico', emailInput));
@@ -75,12 +91,13 @@ export function renderTrabajadorForm(root, { doc, viewer, catalogos, onSaved } =
   const dateInput = input(documentRef, { id: 'trabajador-fechaIngreso', type: 'date' });
   fields.appendChild(wrap(documentRef, 'trabajador-fechaIngreso', 'Fecha de ingreso', dateInput));
 
-  const stateSelect = select(documentRef, {
-    id: 'trabajador-estadoLaboral',
-    options: ESTADOS_LABORALES.map((value) => ({ value, label: value })),
-    value: 'Activo'
+  const jefeSelect = select(documentRef, {
+    id: 'trabajador-jefeId',
+    options: jefeOptions(workers)
   });
-  fields.appendChild(wrap(documentRef, 'trabajador-estadoLaboral', 'Estado laboral', stateSelect));
+  fields.appendChild(
+    wrap(documentRef, 'trabajador-jefeId', 'Jefatura directa (opcional)', jefeSelect, true)
+  );
 
   const cargoSelect = select(documentRef, {
     id: 'trabajador-cargo',
@@ -128,6 +145,15 @@ export function renderTrabajadorForm(root, { doc, viewer, catalogos, onSaved } =
     return wrapper;
   }
 
+  function refreshJefes(excludeId = '') {
+    jefeSelect.textContent = '';
+    for (const option of jefeOptions(workers, excludeId)) {
+      const node = el(documentRef, 'option', null, option.label);
+      node.value = option.value;
+      jefeSelect.appendChild(node);
+    }
+  }
+
   function getValues() {
     return {
       name: nameInput.value,
@@ -136,7 +162,7 @@ export function renderTrabajadorForm(root, { doc, viewer, catalogos, onSaved } =
       email: emailInput.value,
       phone: phoneInput.value,
       fechaIngreso: dateInput.value,
-      estadoLaboral: stateSelect.value,
+      jefeId: jefeSelect.value,
       cargoId: cargoSelect.value,
       departamentoId: departamentoSelect.value,
       centroCostoId: centroSelect.value
@@ -151,7 +177,8 @@ export function renderTrabajadorForm(root, { doc, viewer, catalogos, onSaved } =
     emailInput.value = trabajador.email || '';
     phoneInput.value = trabajador.phone || '';
     dateInput.value = trabajador.fechaIngreso || '';
-    stateSelect.value = trabajador.estadoLaboral || 'Activo';
+    refreshJefes(trabajador.entityId || '');
+    jefeSelect.value = trabajador.jefeId || '';
     cargoSelect.value = trabajador.cargoId || '';
     departamentoSelect.value = trabajador.departamentoId || '';
     centroSelect.value = trabajador.centroCostoId || '';
@@ -161,7 +188,8 @@ export function renderTrabajadorForm(root, { doc, viewer, catalogos, onSaved } =
     editing = null;
     form.reset();
     hiddenId.value = '';
-    stateSelect.value = 'Activo';
+    refreshJefes();
+    jefeSelect.value = '';
     hideFeedback(messages);
     cancel.hidden = true;
     submit.textContent = 'Guardar trabajador';

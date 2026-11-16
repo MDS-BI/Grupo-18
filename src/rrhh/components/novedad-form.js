@@ -6,7 +6,8 @@ import {
   UNIDAD_POR_TIPO,
   validarNovedad
 } from '../utils/novedades-data.js';
-import { crearNovedad, actualizarNovedad, reenviarNovedad } from '../utils/novedades-service.js';
+import { crearNovedad, actualizarNovedad } from '../utils/novedades-service.js';
+import { equipoDeJefatura } from '../utils/jefatura.js';
 import { loadEntities } from '../../storage.js';
 import { rangoPeriodo } from '../utils/periodos.js';
 import { currentPeriodoId, el, feedback, hideFeedback, input, select, showFeedback } from './dom.js';
@@ -14,9 +15,10 @@ import { currentPeriodoId, el, feedback, hideFeedback, input, select, showFeedba
 function entitiesForOptions(viewer) {
   try {
     const entities = loadEntities();
-    if (viewer?.role === 'jefatura' && Array.isArray(viewer.equipo)) {
-      const team = new Set(viewer.equipo.map((value) => String(value)));
-      return entities.filter((entity) => team.has(String(entity.entity_id || entity.id)));
+    const team = equipoDeJefatura(viewer);
+    if (team) {
+      const allowed = new Set(team.map((value) => String(value)));
+      return entities.filter((entity) => allowed.has(String(entity.entity_id || entity.id)));
     }
     return entities;
   } catch {
@@ -113,6 +115,23 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     true
   );
   fields.appendChild(observationField);
+
+  const justificationField = fieldWrapper(
+    documentRef,
+    'novedad-justificacion',
+    'Justificación de horas extra sobre el máximo legal',
+    (() => {
+      const textarea = el(documentRef, 'textarea');
+      textarea.id = 'novedad-justificacion';
+      textarea.name = 'novedad-justificacion';
+      textarea.rows = 2;
+      textarea.maxLength = 500;
+      return textarea;
+    })(),
+    true
+  );
+  justificationField.hidden = true;
+  fields.appendChild(justificationField);
   form.appendChild(fields);
 
   const privacy = el(
@@ -155,7 +174,11 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     quantityInput.placeholder = unit ? `Cantidad en ${unit}` : '';
     quantityInput.step = tipo === 'horas_extra' ? '0.5' : '1';
     observationField.hidden = tipo === 'licencia_medica';
+    justificationField.hidden = tipo !== 'horas_extra';
     if (tipo === 'licencia_medica') observationField.querySelector('textarea').value = '';
+    if (tipo !== 'horas_extra') {
+      justificationField.querySelector('textarea').value = '';
+    }
   }
 
   function fillDates(value) {
@@ -177,6 +200,8 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
       fechaInicio: startInput.value,
       fechaFin: endInput.value,
       observacion: tipo === 'licencia_medica' ? '' : observationField.querySelector('textarea').value,
+      justificacion:
+        tipo === 'horas_extra' ? justificationField.querySelector('textarea').value : '',
       estado: editing?.estado || 'pendiente'
     };
   }
@@ -190,6 +215,8 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     endInput.value = novedad.fechaFin || '';
     observationField.querySelector('textarea').value =
       novedad.tipo === 'licencia_medica' ? '' : novedad.observacion || '';
+    justificationField.querySelector('textarea').value =
+      novedad.tipo === 'horas_extra' ? novedad.justificacion || '' : '';
     updateUnitHint();
   }
 
@@ -200,8 +227,11 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     workerSelect.value = '';
     periodInput.value = periodo || currentPeriodoId();
     quantityInput.value = '';
+    observationField.querySelector('textarea').value = '';
+    justificationField.querySelector('textarea').value = '';
     hideFeedback(errorsNode);
     observationField.hidden = false;
+    justificationField.hidden = true;
     cancel.hidden = true;
     submit.textContent = 'Registrar novedad';
     title.textContent = 'Registrar novedad';
@@ -209,8 +239,16 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
   }
 
   function edit(novedad) {
+    if (novedad?.estado && novedad.estado !== 'pendiente') {
+      showFeedback(
+        errorsNode,
+        'Solo las novedades pendientes se pueden editar. Registra una novedad nueva.',
+        'error'
+      );
+      return;
+    }
     editing = novedad;
-    entities = entitiesForOptions();
+    entities = entitiesForOptions(viewer);
     workerSelect.textContent = '';
     const placeholder = el(documentRef, 'option', null, 'Selecciona un trabajador');
     placeholder.value = '';
@@ -222,8 +260,8 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     }
     setValues(novedad);
     cancel.hidden = false;
-    submit.textContent = 'Guardar corrección y reenviar';
-    title.textContent = 'Corregir novedad rechazada';
+    submit.textContent = 'Guardar cambios';
+    title.textContent = 'Editar novedad pendiente';
     form.scrollIntoView?.({ block: 'nearest' });
   }
 
@@ -233,7 +271,7 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     const values = getValues();
     const validation = validarNovedad(
       { ...values, unidad: UNIDAD_POR_TIPO[values.tipo] },
-      { entities }
+      { entities, permitirMultiPeriodo: true }
     );
     if (!validation.valid) {
       showFeedback(errorsNode, validation.errors.join(' '), 'error');
@@ -241,9 +279,8 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     }
     try {
       if (editing) {
-        const updated = actualizarNovedad(editing.id, values, viewer);
-        if (updated.estado === 'rechazada') reenviarNovedad(editing.id, {}, viewer);
-        showFeedback(errorsNode, 'Novedad corregida y reenviada para aprobación.', 'ok');
+        actualizarNovedad(editing.id, values, viewer);
+        showFeedback(errorsNode, 'Novedad pendiente actualizada.', 'ok');
       } else {
         crearNovedad(values, viewer);
         showFeedback(errorsNode, 'Novedad registrada en estado pendiente.', 'ok');

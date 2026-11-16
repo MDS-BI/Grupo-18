@@ -11,6 +11,8 @@ import { insert, list, update } from '../storage-rrhh.js';
 import { formatearRut, validarRut } from '../calculo/rut.js';
 import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { can } from '../seguridad/roles.js';
+import { listContratos, terminarContrato } from './contratos-service.js';
+import { equipoDeJefatura } from './jefatura.js';
 import { TIPO_CATALOGO_LABELS, listCatalogos } from './catalogos-service.js';
 
 export const TRABAJADORES_TABLE = 'trabajadores';
@@ -33,6 +35,13 @@ function fail(errors, code = 'TRABAJADOR_INVALIDO') {
   throw error;
 }
 
+function failValidation(errors, code = 'TRABAJADOR_INVALIDO') {
+  const error = new Error('Trabajador inválido.');
+  error.errors = errors;
+  error.code = code;
+  throw error;
+}
+
 function normalizeText(value) {
   return String(value ?? '')
     .trim()
@@ -43,6 +52,12 @@ function normalizeText(value) {
 
 function normalizeSearch(value) {
   return normalizeText(value).replace(/[^a-z0-9]/g, '');
+}
+
+function normalizeRut(value) {
+  return String(value ?? '')
+    .replace(/[^0-9kK]/g, '')
+    .toUpperCase();
 }
 
 function entityIdOf(entity) {
@@ -61,6 +76,16 @@ function profileFor(entityId) {
   return profiles().find((row) => row.entityId === entityId) || null;
 }
 
+function workerIsActive(entity, profile) {
+  return Boolean(
+    entity &&
+      !entity.bajaLogica &&
+      entity.activo !== false &&
+      profile?.activo !== false &&
+      profile?.estadoLaboral !== 'Desvinculado'
+  );
+}
+
 export function puedeGestionarTrabajadores(viewer) {
   return can(viewer?.role, 'canManageTrabajadores');
 }
@@ -76,12 +101,35 @@ export function validarTrabajador(input = {}, context = {}) {
   const code = String(input.code ?? '').trim();
   const rut = String(input.rut ?? input.taxId ?? '').trim();
   const email = String(input.email ?? '').trim();
+  const entities = context.entities || loadEntities();
+  const currentId = context.entityId || input.entityId || '';
 
   if (!name) errors.name = 'El nombre del trabajador es obligatorio.';
   if (!code) errors.code = 'El código del trabajador es obligatorio.';
-  if (rut && !validarRut(rut)) {
+  if (!rut) {
+    errors.rut = 'El RUT del trabajador es obligatorio.';
+  } else if (!validarRut(rut)) {
     errors.rut = 'El RUT no tiene un dígito verificador válido.';
   }
+
+  if (code) {
+    const normalizedCode = normalizeSearch(code);
+    const duplicate = entities.find(
+      (entity) => entityIdOf(entity) !== currentId && normalizeSearch(entity.code) === normalizedCode
+    );
+    if (duplicate) errors.code = 'El código del trabajador ya está registrado.';
+  }
+
+  if (rut && validarRut(rut)) {
+    const normalized = normalizeRut(rut);
+    const duplicate = entities.find(
+      (entity) =>
+        entityIdOf(entity) !== currentId &&
+        normalizeRut(entity.taxId || entity.rut) === normalized
+    );
+    if (duplicate) errors.rut = 'El RUT ya está registrado en otra ficha de trabajador.';
+  }
+
   if (email && !EMAIL_PATTERN.test(email)) {
     errors.email = 'El correo electrónico no tiene un formato válido.';
   }
@@ -90,6 +138,18 @@ export function validarTrabajador(input = {}, context = {}) {
   }
   if (input.estadoLaboral && !ESTADOS_LABORALES.includes(input.estadoLaboral)) {
     errors.estadoLaboral = `El estado laboral debe ser uno de: ${ESTADOS_LABORALES.join(', ')}.`;
+  }
+
+  const jefeId = String(input.jefeId || '');
+  if (jefeId) {
+    if (currentId && jefeId === currentId) {
+      errors.jefeId = 'Un trabajador no puede ser su propia jefatura.';
+    } else {
+      const jefe = entities.find((entity) => entityIdOf(entity) === jefeId);
+      if (!jefe || !workerIsActive(jefe, profileFor(jefeId))) {
+        errors.jefeId = 'La jefatura directa debe ser un trabajador activo.';
+      }
+    }
   }
 
   const catalogos = context.catalogos || listCatalogos({ incluirInactivos: true });
@@ -105,11 +165,13 @@ export function validarTrabajador(input = {}, context = {}) {
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
-function join(entity, profile, catalogos) {
+function join(entity, profile, catalogos, entities = []) {
   const byId = (id) => catalogos.find((row) => row.id === id) || null;
   const cargo = byId(profile?.cargoId);
   const departamento = byId(profile?.departamentoId);
   const centroCosto = byId(profile?.centroCostoId);
+  const jefeId = profile?.jefeId || '';
+  const jefe = entities.find((row) => entityIdOf(row) === jefeId);
   return {
     id: entity.id,
     entityId: entityIdOf(entity),
@@ -126,9 +188,12 @@ function join(entity, profile, catalogos) {
     centroCostoId: profile?.centroCostoId || '',
     centroCosto: centroCosto?.nombre || '',
     fechaIngreso: profile?.fechaIngreso || '',
+    fechaDesvinculacion: profile?.fechaDesvinculacion || '',
+    jefeId,
+    jefeNombre: jefe?.name || '',
     estadoLaboral:
       profile?.estadoLaboral || (entity.bajaLogica || entity.activo === false ? 'Desvinculado' : 'Activo'),
-    activo: profile?.activo !== false && entity.activo !== false && !entity.bajaLogica,
+    activo: workerIsActive(entity, profile),
     bajaLogica: Boolean(entity.bajaLogica)
   };
 }
@@ -136,15 +201,19 @@ function join(entity, profile, catalogos) {
 /** List workers joined with their RRHH profile and catalog labels. */
 export function listTrabajadores({ term = '', incluirBaja = false, viewer } = {}) {
   const catalogos = listCatalogos({ incluirInactivos: true });
-  let entities = loadEntities();
+  const allEntities = loadEntities();
+  let entities = allEntities;
   if (!incluirBaja) entities = entities.filter((entity) => !entity.bajaLogica);
 
-  if (viewer?.role === 'jefatura' && Array.isArray(viewer.equipo)) {
-    const team = new Set(viewer.equipo.map(String));
-    entities = entities.filter((entity) => team.has(String(entityIdOf(entity))));
+  const team = equipoDeJefatura(viewer);
+  if (team) {
+    const allowed = new Set(team.map(String));
+    entities = entities.filter((entity) => allowed.has(String(entityIdOf(entity))));
   }
 
-  const rows = entities.map((entity) => join(entity, profileFor(entityIdOf(entity)), catalogos));
+  const rows = entities.map((entity) =>
+    join(entity, profileFor(entityIdOf(entity)), catalogos, allEntities)
+  );
   const query = normalizeSearch(term);
   if (!query) return rows.sort((a, b) => a.name.localeCompare(b.name));
   return rows
@@ -157,7 +226,8 @@ export function listTrabajadores({ term = '', incluirBaja = false, viewer } = {}
         row.cargo,
         row.departamento,
         row.centroCosto,
-        row.estadoLaboral
+        row.estadoLaboral,
+        row.jefeNombre
       ].some((value) => normalizeSearch(value).includes(query))
     )
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -171,7 +241,7 @@ export function getTrabajador(entityId) {
   const entities = loadEntities();
   const entity = entities.find((row) => entityIdOf(row) === entityId);
   if (!entity) return null;
-  return join(entity, profileFor(entityId), listCatalogos({ incluirInactivos: true }));
+  return join(entity, profileFor(entityId), listCatalogos({ incluirInactivos: true }), entities);
 }
 
 export function crearTrabajador(input = {}, viewer) {
@@ -180,17 +250,14 @@ export function crearTrabajador(input = {}, viewer) {
   }
   const validation = validarTrabajador(input);
   if (!validation.valid) {
-    const error = new Error('Trabajador inválido.');
-    error.errors = validation.errors;
-    error.code = 'TRABAJADOR_INVALIDO';
-    throw error;
+    failValidation(validation.errors);
   }
 
   const rut = String(input.rut ?? input.taxId ?? '').trim();
   const entity = addEntity({
     name: input.name,
     code: input.code,
-    taxId: rut ? formatearRut(rut) : '',
+    taxId: formatearRut(rut),
     email: input.email,
     phone: input.phone,
     address: input.address,
@@ -208,6 +275,8 @@ export function crearTrabajador(input = {}, viewer) {
       departamentoId: input.departamentoId || '',
       centroCostoId: input.centroCostoId || '',
       fechaIngreso: input.fechaIngreso || '',
+      fechaDesvinculacion: '',
+      jefeId: input.jefeId || '',
       estadoLaboral: input.estadoLaboral || 'Activo',
       activo: true
     },
@@ -218,7 +287,15 @@ export function crearTrabajador(input = {}, viewer) {
     accion: 'crear',
     tabla: TRABAJADORES_TABLE,
     registroId: id,
-    camposModificados: ['name', 'code', 'taxId', 'cargoId', 'departamentoId', 'centroCostoId'],
+    camposModificados: [
+      'name',
+      'code',
+      'taxId',
+      'cargoId',
+      'departamentoId',
+      'centroCostoId',
+      'jefeId'
+    ],
     motivo: 'Alta de ficha de trabajador',
     actor: viewer?.usuario || viewer?.role,
     rol: viewer?.role
@@ -237,12 +314,22 @@ export function actualizarTrabajador(entityId, changes = {}, viewer) {
 
   const current = getTrabajador(entityId);
   const merged = { ...current, ...changes };
-  const validation = validarTrabajador(merged);
+  if (current.estadoLaboral === 'Desvinculado' && merged.estadoLaboral === 'Activo') {
+    fail('Un trabajador desvinculado no puede reactivarse.', 'REACTIVACION_PROHIBIDA');
+  }
+  if (
+    current.estadoLaboral !== 'Desvinculado' &&
+    merged.estadoLaboral === 'Desvinculado'
+  ) {
+    fail(
+      'La desvinculación se registra con fecha mediante la acción Desvincular.',
+      'DESVINCULACION_REQUERIDA'
+    );
+  }
+
+  const validation = validarTrabajador(merged, { entities, entityId });
   if (!validation.valid) {
-    const error = new Error('Trabajador inválido.');
-    error.errors = validation.errors;
-    error.code = 'TRABAJADOR_INVALIDO';
-    throw error;
+    failValidation(validation.errors);
   }
 
   const baseChanges = {};
@@ -258,7 +345,14 @@ export function actualizarTrabajador(entityId, changes = {}, viewer) {
   const id = entityIdOf(entity);
   const profile = profileFor(id);
   const profileChanges = {};
-  for (const key of ['cargoId', 'departamentoId', 'centroCostoId', 'fechaIngreso', 'estadoLaboral']) {
+  for (const key of [
+    'cargoId',
+    'departamentoId',
+    'centroCostoId',
+    'fechaIngreso',
+    'jefeId',
+    'fechaDesvinculacion'
+  ]) {
     if (changes[key] !== undefined) profileChanges[key] = changes[key];
   }
   if (profile) {
@@ -273,6 +367,8 @@ export function actualizarTrabajador(entityId, changes = {}, viewer) {
         departamentoId: '',
         centroCostoId: '',
         fechaIngreso: '',
+        fechaDesvinculacion: '',
+        jefeId: '',
         estadoLaboral: 'Activo',
         activo: true,
         ...profileChanges
@@ -294,9 +390,100 @@ export function actualizarTrabajador(entityId, changes = {}, viewer) {
   return getTrabajador(id);
 }
 
-/** Logical deactivation that keeps historical payroll records reproducible. */
-export function desactivarTrabajador(entityId, viewer) {
-  return actualizarTrabajador(entityId, { estadoLaboral: 'Desvinculado' }, viewer);
+export function tieneNovedadesPendientes(entityId) {
+  return list('novedades').some(
+    (row) =>
+      String(row.trabajadorEntityId || row.entity_id || '') === String(entityId) &&
+      String(row.estado || '').toLowerCase() === 'pendiente'
+  );
+}
+
+/**
+ * Register a worker's desvinculación.
+ *
+ * The date is mandatory, pending novedades block the operation, the active
+ * contract is terminated, and direct reports are left without a jefatura.
+ */
+export function desactivarTrabajador(entityId, fechaDesvinculacion, viewer) {
+  let fecha = fechaDesvinculacion;
+  let actor = viewer;
+  if (fecha && typeof fecha === 'object' && !actor) {
+    actor = fecha;
+    fecha = '';
+  }
+
+  if (actor && !puedeGestionarTrabajadores(actor)) {
+    fail('Tu rol no puede gestionar fichas de trabajadores.', 'PERMISO_DENEGADO');
+  }
+  const current = getTrabajador(entityId);
+  if (!current) fail('El trabajador no existe.', 'TRABAJADOR_NO_ENCONTRADO');
+  if (current.estadoLaboral === 'Desvinculado') {
+    fail('El trabajador ya está desvinculado.', 'TRABAJADOR_YA_DESVINCULADO');
+  }
+  if (!fecha) {
+    fail('La fecha de desvinculación es obligatoria.', 'FECHA_DESVINCULACION_REQUERIDA');
+  }
+  if (!isValidDate(fecha)) {
+    fail('La fecha de desvinculación debe tener formato AAAA-MM-DD.', 'FECHA_DESVINCULACION_INVALIDA');
+  }
+  if (current.fechaIngreso && fecha < current.fechaIngreso) {
+    fail(
+      'La fecha de desvinculación no puede ser anterior a la fecha de ingreso.',
+      'FECHA_DESVINCULACION_INVALIDA'
+    );
+  }
+  if (tieneNovedadesPendientes(entityId)) {
+    fail(
+      'El trabajador tiene novedades pendientes. Resuélvelas antes de desvincularlo.',
+      'NOVEDADES_PENDIENTES'
+    );
+  }
+
+  const contracts = listContratos({ entityId }).filter((row) => row.estado !== 'terminado');
+  const contract = contracts.sort((a, b) =>
+    String(b.fechaInicio).localeCompare(String(a.fechaInicio))
+  )[0];
+  if (contract) {
+    terminarContrato(contract.id, fecha, actor);
+  }
+
+  const profile = profileFor(entityId);
+  if (profile) {
+    update(TRABAJADORES_TABLE, profile.id, {
+      estadoLaboral: 'Desvinculado',
+      activo: false,
+      fechaDesvinculacion: fecha
+    });
+  } else {
+    insert(
+      TRABAJADORES_TABLE,
+      {
+        id: profileId(entityId),
+        entityId,
+        estadoLaboral: 'Desvinculado',
+        activo: false,
+        fechaDesvinculacion: fecha
+      },
+      { prefix: 'trab' }
+    );
+  }
+
+  const reports = profiles().filter((row) => String(row.jefeId || '') === String(entityId));
+  for (const report of reports) {
+    update(TRABAJADORES_TABLE, report.id, { jefeId: '' });
+  }
+
+  registrarAuditoria({
+    accion: 'desvincular',
+    tabla: TRABAJADORES_TABLE,
+    registroId: entityId,
+    camposModificados: ['estadoLaboral', 'fechaDesvinculacion'],
+    motivo: `Desvinculación con fecha ${fecha}`,
+    actor: actor?.usuario || actor?.role,
+    rol: actor?.role
+  });
+
+  return getTrabajador(entityId);
 }
 
 export function clearTrabajadores() {

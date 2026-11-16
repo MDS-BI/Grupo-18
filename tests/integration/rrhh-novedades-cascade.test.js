@@ -1,27 +1,30 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
+import { addDocument, loadDocuments, loadEntities } from '../../src/storage.js';
 import {
-  addEntity,
-  addDocument,
-  deleteEntity,
-  loadDocuments,
-  loadEntities
-} from '../../src/storage.js';
-import {
+  aprobarNovedad,
   crearNovedad,
   listNovedades
 } from '../../src/rrhh/utils/novedades-service.js';
 import { validarNovedad } from '../../src/rrhh/utils/novedades-data.js';
+import {
+  actualizarTrabajador,
+  crearTrabajador,
+  desactivarTrabajador,
+  getTrabajador
+} from '../../src/rrhh/utils/trabajadores-service.js';
+import { crearContrato, listContratos } from '../../src/rrhh/utils/contratos-service.js';
 import { abrirPeriodo } from '../../src/rrhh/utils/periodos-service.js';
 
 const analista = { role: 'analista', usuario: 'Analista RRHH' };
+const jefatura = { role: 'jefatura', usuario: 'Jefatura RRHH' };
 const admin = { role: 'administrador', usuario: 'Administrador' };
 
 let dom;
 
 function novedad(worker, extra = {}) {
   return {
-    trabajadorEntityId: worker.entity_id,
+    trabajadorEntityId: worker.entityId,
     periodo: '2026-09',
     tipo: 'horas_extra',
     cantidad: 3,
@@ -31,22 +34,21 @@ function novedad(worker, extra = {}) {
   };
 }
 
-function addLiquidation(worker, estado) {
-  localStorage.setItem(
-    'erp_rrhh:liquidaciones',
-    JSON.stringify([
-      {
-        id: `liq-${estado}`,
-        estado,
-        trabajador: {
-          id: worker.entity_id,
-          entityId: worker.entity_id,
-          nombre: worker.name,
-          rut: worker.rut
-        },
-        totales: { haberes: 1000000, liquido: 900000 }
-      }
-    ])
+function seedWorker(name, code, rut) {
+  return crearTrabajador({ name, code, rut }, analista);
+}
+
+function seedContract(worker) {
+  return crearContrato(
+    {
+      entityId: worker.entityId,
+      tipoContrato: 'indefinido',
+      sueldoBase: 1000000,
+      jornadaHorasSemanales: 42,
+      fechaInicio: '2026-01-01',
+      modalidadGratificacion: 'art50'
+    },
+    analista
   );
 }
 
@@ -63,12 +65,11 @@ afterEach(() => {
   dom.window.close();
 });
 
-describe('US14 - worker entity link and cascade deletion', () => {
+describe('US14 - worker link and historical preservation', () => {
   it('requires the novedad to reference an existing worker entity', () => {
-    const worker = addEntity({ name: 'Fabian Perez', code: 'TRAB-006', rut: '12.345.678-5' });
-    expect(
-      validarNovedad(novedad(worker), { entities: loadEntities() }).valid
-    ).toBe(true);
+    const worker = seedWorker('Fabian Perez', 'TRAB-006', '12.345.678-5');
+    seedContract(worker);
+    expect(validarNovedad(novedad(worker), { entities: loadEntities() }).valid).toBe(true);
 
     const invalid = validarNovedad(
       { ...novedad(worker), trabajadorEntityId: 'no-existe' },
@@ -78,52 +79,54 @@ describe('US14 - worker entity link and cascade deletion', () => {
     expect(invalid.errors.join(' ')).toMatch(/no existe/i);
   });
 
-  it('deletes novedades and documents in cascade when there are no closed liquidations', () => {
-    const worker = addEntity({ name: 'Gabriela Nunez', code: 'TRAB-007', rut: '12.345.678-5' });
-    const document = addDocument({
-      entity_id: worker.entity_id,
+  it('preserves the worker, documents, novedades and contracts after desvinculación', () => {
+    const worker = seedWorker('Gabriela Nunez', 'TRAB-007', '11.111.111-1');
+    const contrato = seedContract(worker);
+    addDocument({
+      entity_id: worker.entityId,
       folio: 1,
       startDate: '2026-09-01',
       endDate: '2026-09-30'
     });
-    crearNovedad(novedad(worker), analista);
-    expect(listNovedades()).toHaveLength(1);
-    expect(loadDocuments()).toHaveLength(1);
+    const created = crearNovedad(novedad(worker), analista);
+    aprobarNovedad(created.id, jefatura);
 
-    expect(deleteEntity(worker.id)).toBe(true);
-    expect(loadEntities()).toHaveLength(0);
-    expect(listNovedades()).toHaveLength(0);
-    expect(loadDocuments()).toHaveLength(0);
-    expect(document.id).toBeTruthy();
+    const stored = desactivarTrabajador(worker.entityId, '2026-09-30', analista);
+    expect(stored.estadoLaboral).toBe('Desvinculado');
+    expect(stored.fechaDesvinculacion).toBe('2026-09-30');
+    expect(loadEntities()).toHaveLength(1);
+    expect(getTrabajador(worker.entityId).name).toBe('Gabriela Nunez');
+    expect(loadDocuments()).toHaveLength(1);
+    expect(listNovedades({ trabajadorEntityId: worker.entityId })).toHaveLength(1);
+
+    const terminated = listContratos({ entityId: worker.entityId }).find(
+      (row) => row.id === contrato.id
+    );
+    expect(terminated.estado).toBe('terminado');
+    expect(terminated.fechaTermino).toBe('2026-09-30');
   });
 
-  for (const estado of ['aprobada', 'pagada']) {
-    it(`applies logical deletion and retains novedades with a ${estado} liquidation`, () => {
-      const worker = addEntity({
-        name: `Worker ${estado}`,
-        code: `TRAB-${estado}`,
-        rut: '12.345.678-5'
-      });
-      crearNovedad(novedad(worker), analista);
-      addLiquidation(worker, estado);
-
-      expect(deleteEntity(worker.id)).toBe(true);
-      const stored = loadEntities().find((row) => row.id === worker.id);
-      expect(stored).toBeTruthy();
-      expect(stored.bajaLogica).toBe(true);
-      expect(stored.activo).toBe(false);
-      expect(stored.deletedAt).toBeTruthy();
-      expect(listNovedades({ trabajadorEntityId: worker.entity_id })).toHaveLength(1);
-    });
-  }
-
-  it('still deletes normally when the liquidation is only calculated', () => {
-    const worker = addEntity({ name: 'Hugo Lara', code: 'TRAB-008', rut: '12.345.678-5' });
+  it('blocks desvinculación while the worker has pending novedades', () => {
+    const worker = seedWorker('Hugo Lara', 'TRAB-008', '22.222.222-2');
+    seedContract(worker);
     crearNovedad(novedad(worker), analista);
-    addLiquidation(worker, 'calculada');
 
-    deleteEntity(worker.id);
-    expect(loadEntities()).toHaveLength(0);
-    expect(listNovedades()).toHaveLength(0);
+    expect(() => desactivarTrabajador(worker.entityId, '2026-09-30', analista)).toThrow(
+      /pendientes/i
+    );
+    expect(getTrabajador(worker.entityId).estadoLaboral).toBe('Activo');
+    expect(listNovedades({ trabajadorEntityId: worker.entityId })).toHaveLength(1);
+  });
+
+  it('leaves direct reports without a jefatura', () => {
+    const jefe = seedWorker('Jefa Equipo', 'TRAB-009', '13.579.246-2');
+    seedContract(jefe);
+    const report = seedWorker('Reporte Directo', 'TRAB-010', '24.680.135-5');
+    seedContract(report);
+    actualizarTrabajador(report.entityId, { jefeId: jefe.entityId }, analista);
+
+    desactivarTrabajador(jefe.entityId, '2026-09-30', analista);
+
+    expect(getTrabajador(report.entityId).jefeId).toBe('');
   });
 });

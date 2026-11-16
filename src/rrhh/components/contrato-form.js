@@ -84,7 +84,7 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     min: 1,
     max: 45,
     step: 1,
-    value: '45'
+    value: '42'
   });
   fields.appendChild(wrap(documentRef, 'contrato-jornadaHorasSemanales', 'Jornada semanal (horas) *', jornadaInput));
 
@@ -168,18 +168,25 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     };
   }
 
+  function actualizarTipo() {
+    const indefinido = tipoSelect.value === 'indefinido';
+    if (indefinido) terminoInput.value = '';
+    terminoInput.disabled = indefinido || editing !== null;
+  }
+
   function setValues(current = {}) {
     hiddenId.value = current.id || '';
     workerSelect.value = current.entityId || current.entity_id || '';
     tipoSelect.value = current.tipoContrato || 'indefinido';
     sueldoInput.value = current.sueldoBase ?? '';
-    jornadaInput.value = current.jornadaHorasSemanales ?? 45;
+    jornadaInput.value = current.jornadaHorasSemanales ?? 42;
     inicioInput.value = current.fechaInicio || '';
     terminoInput.value = current.fechaTermino || '';
     modalidadSelect.value = current.modalidadGratificacion || 'art50';
     colacionInput.value = current.asignacionColacion ?? 0;
     movilizacionInput.value = current.asignacionMovilizacion ?? 0;
     observacionInput.value = current.observacion || '';
+    actualizarTipo();
   }
 
   function reset() {
@@ -188,8 +195,11 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     form.reset();
     hiddenId.value = '';
     workerSelect.value = '';
+    workerSelect.disabled = false;
     tipoSelect.value = 'indefinido';
-    jornadaInput.value = '45';
+    inicioInput.disabled = false;
+    terminoInput.disabled = false;
+    jornadaInput.value = '42';
     modalidadSelect.value = 'art50';
     colacionInput.value = '0';
     movilizacionInput.value = '0';
@@ -197,27 +207,39 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     cancel.hidden = true;
     submit.textContent = 'Guardar contrato';
     title.textContent = 'Registrar contrato';
+    actualizarTipo();
   }
 
   function edit(current) {
     editing = current;
     cambioSueldo = false;
     setValues(current);
+    workerSelect.disabled = true;
+    inicioInput.disabled = true;
+    terminoInput.disabled = true;
     cancel.hidden = false;
     submit.textContent = 'Guardar cambios';
     title.textContent = 'Editar contrato';
+    hideFeedback(messages);
+    form.scrollIntoView?.({ block: 'nearest' });
   }
 
   function prepareCambio(current) {
     editing = null;
     cambioSueldo = true;
+    workerSelect.disabled = false;
+    inicioInput.disabled = false;
+    terminoInput.disabled = false;
+    const jornada = Number(current.jornadaHorasSemanales || 42);
     setValues({
       ...current,
       id: '',
       fechaInicio: new Date().toISOString().slice(0, 10),
       fechaTermino: '',
+      jornadaHorasSemanales: jornada > 42 ? 42 : jornada,
       observacion: ''
     });
+    workerSelect.disabled = true;
     cancel.hidden = false;
     submit.textContent = 'Registrar cambio';
     title.textContent = 'Cambio de sueldo';

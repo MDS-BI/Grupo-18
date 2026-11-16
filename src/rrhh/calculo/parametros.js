@@ -33,6 +33,7 @@ export const PARAMETROS_INICIALES = [
   { codigo: 'APORTE_EMP_PREVISIONAL', descripcion: 'Aporte previsional del empleador (reforma)', valor: 3.5, unidad: 'pct', vigenciaDesde: '2026-08-01', fuente: 'Ley 21.735' },
   { codigo: 'MUTUAL', descripcion: 'Cotización mutual de seguridad', valor: 0.93, unidad: 'pct', vigenciaDesde: '2026-01-01', fuente: 'Ley 16.744' },
   { codigo: 'JORNADA_MAX', descripcion: 'Jornada semanal máxima', valor: 42, unidad: 'horas', vigenciaDesde: '2026-04-26', fuente: 'Ley 21.561' },
+  { codigo: 'MAX_HORAS_EXTRA', descripcion: 'Máximo diario de horas extraordinarias', valor: 2, unidad: 'horas', vigenciaDesde: '2026-01-01', fuente: 'Art. 31 Código del Trabajo' },
   { codigo: 'RECARGO_HORA_EXTRA', descripcion: 'Recargo por horas extraordinarias', valor: 50, unidad: 'pct', vigenciaDesde: '2026-01-01', fuente: 'Art. 32 Código del Trabajo' },
   { codigo: 'TOPE_GRATIF_ANUAL_IMM', descripcion: 'Tope anual de gratificación en IMM', valor: 4.75, unidad: 'IMM', vigenciaDesde: '2026-01-01', fuente: 'Art. 50 Código del Trabajo' },
   { codigo: 'TOPE_DESC_VOLUNTARIOS', descripcion: 'Tope legal de descuentos voluntarios', valor: 15, unidad: 'pct', vigenciaDesde: '2026-01-01', fuente: 'Art. 58 Código del Trabajo' }

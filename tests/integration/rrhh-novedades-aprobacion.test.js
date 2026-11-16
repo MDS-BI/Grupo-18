@@ -11,6 +11,7 @@ import {
   rechazarNovedad
 } from '../../src/rrhh/utils/novedades-service.js';
 import { asegurarPeriodo } from '../../src/rrhh/utils/periodos-service.js';
+import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 
 const analista = { role: 'analista', usuario: 'Analista RRHH' };
 
@@ -48,6 +49,17 @@ beforeEach(() => {
   localStorage.clear();
   entity = addEntity({ name: 'Bruno Diaz', code: 'TRAB-002', rut: '12.345.678-5' });
   asegurarPeriodo('2026-09');
+  crearContrato(
+    {
+      entityId: entity.entity_id,
+      tipoContrato: 'indefinido',
+      sueldoBase: 1000000,
+      jornadaHorasSemanales: 42,
+      fechaInicio: '2026-01-01',
+      modalidadGratificacion: 'art50'
+    },
+    analista
+  );
   root = document.getElementById('root');
 });
 
@@ -72,11 +84,11 @@ describe('US14 - individual approval and rejection', () => {
     expect(document.querySelector(`[data-novedad-id="${novedad.id}"]`).textContent).toContain(
       'Aprobada'
     );
-    expect(document.getElementById('novedades-eligibility').textContent).toMatch(/elegibles/i);
+    expect(document.getElementById('novedades-eligibility').textContent).toMatch(/habilitado/i);
     expect(controller.getPeriodo()).toBe('2026-09');
   });
 
-  it('requires a motive to reject and then blocks eligibility', () => {
+  it('requires a motive to reject and only pending novedades block eligibility', () => {
     const novedad = createNovedad();
     renderNovedadesView(root, {
       doc: document,
@@ -96,8 +108,8 @@ describe('US14 - individual approval and rejection', () => {
     const [stored] = listNovedades();
     expect(stored.estado).toBe('rechazada');
     expect(stored.motivoRechazo).toBe('No corresponde al periodo');
-    expect(document.getElementById('novedades-eligibility').textContent).toMatch(/bloqueado/i);
-    expect(document.getElementById('novedades-eligibility').textContent).toMatch(/rechazada/i);
+    expect(document.getElementById('novedades-eligibility').textContent).toMatch(/habilitado/i);
+    expect(document.getElementById('novedades-summary').textContent).toMatch(/Rechazadas/i);
   });
 
   it('does not expose approval actions to an analyst', () => {
@@ -130,13 +142,13 @@ describe('US14 - individual approval and rejection', () => {
     expect(eligibility.pendientes).toBe(1);
     expect(eligibility.rechazadas).toBe(1);
     expect(eligibility.advertencias.join(' ')).toMatch(/pendiente/i);
-    expect(eligibility.advertencias.join(' ')).toMatch(/rechazada/i);
+    expect(eligibility.advertencias.join(' ')).not.toMatch(/rechazada/i);
     expect([aprobada.id, pendiente.id, rechazada.id]).toHaveLength(3);
   });
 
-  it('allows correcting and resubmitting a rejected novedad', () => {
+  it('does not allow correcting a rejected novedad in place', () => {
     const novedad = createNovedad();
-    rechazarNovedad(novedad.id, { role: 'jefatura' }, 'Falta detalle');
+    rechazarNovedad(novedad.id, { role: 'jefatura', usuario: 'Jefatura' }, 'Falta detalle');
     renderNovedadesView(root, {
       doc: document,
       viewer: analista,
@@ -145,11 +157,17 @@ describe('US14 - individual approval and rejection', () => {
 
     const item = document.querySelector(`[data-novedad-id="${novedad.id}"]`);
     expect(item.textContent).toContain('Motivo del rechazo: Falta detalle');
-    click(item.querySelector('.rrhh-resubmit'));
+    expect(item.querySelector('.rrhh-edit')).toBeNull();
+    expect(item.querySelector('.rrhh-annul')).toBeNull();
+    expect(item.querySelector('.rrhh-resubmit')).toBeNull();
+    expect(listNovedades()[0].estado).toBe('rechazada');
 
-    expect(document.getElementById('novedad-submit').textContent).toMatch(/reenviar/i);
-    expect(document.getElementById('novedad-form').querySelector('h4').textContent).toMatch(
-      /corregir/i
-    );
+    const corrected = createNovedad({
+      cantidad: 2,
+      fechaInicio: '2026-09-08',
+      fechaFin: '2026-09-09'
+    });
+    expect(corrected.id).not.toBe(novedad.id);
+    expect(corrected.estado).toBe('pendiente');
   });
 });

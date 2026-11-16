@@ -17,11 +17,17 @@ export const CAMPOS_PERMITIDOS = [
   'fechaInicio',
   'fechaFin',
   'observacion',
+  'justificacion',
   'estado',
   'registradoPor',
+  'registradoPorRol',
+  'registradoPorId',
   'aprobadoPor',
   'fechaAprobacion',
   'motivoRechazo',
+  'anuladoPor',
+  'fechaAnulacion',
+  'motivoAnulacion',
   'createdAt',
   'updatedAt'
 ];

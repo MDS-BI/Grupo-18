@@ -4,6 +4,7 @@ import { addEntity } from '../../src/storage.js';
 import { renderNovedadesView } from '../../src/rrhh/views/novedades.js';
 import { renderLiquidacionesView } from '../../src/rrhh/views/liquidaciones.js';
 import { crearNovedad } from '../../src/rrhh/utils/novedades-service.js';
+import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 import { abrirPeriodo } from '../../src/rrhh/utils/periodos-service.js';
 import {
   SENSITIVE_DATA,
@@ -45,7 +46,20 @@ beforeEach(() => {
   localStorage.clear();
   abrirPeriodo('2026-09', admin);
   workerA = addEntity({ name: 'Equipo A', code: 'EQ-A', rut: '12.345.678-5' });
-  workerB = addEntity({ name: 'Equipo B', code: 'EQ-B', rut: '12.345.678-5' });
+  workerB = addEntity({ name: 'Equipo B', code: 'EQ-B', rut: '11.111.111-1' });
+  for (const worker of [workerA, workerB]) {
+    crearContrato(
+      {
+        entityId: worker.entity_id,
+        tipoContrato: 'indefinido',
+        sueldoBase: 1000000,
+        jornadaHorasSemanales: 42,
+        fechaInicio: '2026-01-01',
+        modalidadGratificacion: 'art50'
+      },
+      analista
+    );
+  }
   novedad(workerA);
   novedad(workerB);
   root = document.getElementById('root');

@@ -62,7 +62,6 @@ beforeEach(() => {
   abrirPeriodo('2026-09', { role: 'administrador', usuario: 'Administrador' });
   writeTable('novedades', [
     novedad('nov-aprobada', 'aprobada'),
-    novedad('nov-pendiente', 'pendiente', { cantidad: 2, fechaInicio: '2026-09-08', fechaFin: '2026-09-09' }),
     novedad('nov-rechazada', 'rechazada', { cantidad: 1, fechaInicio: '2026-09-10', fechaFin: '2026-09-10' })
   ]);
 });
@@ -97,18 +96,31 @@ describe('US15 - payroll calculation for a period', () => {
     });
   });
 
-  it('uses only approved novedades and warns about pending/rejected ones', () => {
+  it('uses only approved novedades and ignores pending/rejected ones', () => {
     const result = calculate();
     const [liquidacion] = result.liquidaciones;
 
     expect(liquidacion.novedadesAplicadas).toEqual(['nov-aprobada']);
     expect(liquidacion.bases.horasExtra).toBe(5);
     expect(result.resumen.novedadesAprobadas).toBe(1);
-    expect(result.resumen.novedadesPendientes).toBe(1);
+    expect(result.resumen.novedadesPendientes).toBe(0);
     expect(result.resumen.novedadesRechazadas).toBe(1);
-    expect(result.advertencias.join(' ')).toMatch(/pendiente/i);
-    expect(result.advertencias.join(' ')).toMatch(/rechazada/i);
-    expect(liquidacion.advertencias.join(' ')).toMatch(/pendiente/i);
+    expect(result.advertencias.join(' ')).not.toMatch(/pendiente/i);
+    expect(liquidacion.novedadesAplicadas).not.toContain('nov-rechazada');
+  });
+
+  it('blocks the calculation while pending novedades exist', () => {
+    writeTable('novedades', [
+      ...JSON.parse(localStorage.getItem('erp_rrhh:novedades')),
+      novedad('nov-pendiente', 'pendiente', {
+        cantidad: 2,
+        fechaInicio: '2026-09-08',
+        fechaFin: '2026-09-09'
+      })
+    ]);
+
+    expect(() => calculate()).toThrow(/pendiente/i);
+    expect(listLiquidacionesPeriodo('2026-09')).toHaveLength(0);
   });
 
   it('replaces the previous calculation instead of duplicating it', () => {
@@ -132,12 +144,34 @@ describe('US15 - payroll calculation for a period', () => {
     expect(() => calculate({ viewer: { role: 'auditor' } })).toThrow(/permiso|puede calcular/i);
   });
 
-  it('excludes workers whose contract is not vigente', () => {
+  it('excludes workers whose contract does not overlap the period', () => {
     const result = calculate({
-      contratos: [{ ...contratoA, estado: 'terminado' }]
+      contratos: [
+        {
+          ...contratoA,
+          estado: 'terminado',
+          fechaInicio: '2025-01-01',
+          fechaTermino: '2025-12-31'
+        }
+      ]
     });
     expect(result.liquidaciones).toHaveLength(0);
     expect(result.trabajadoresExcluidos).toHaveLength(2);
+  });
+
+  it('includes a terminated contract that covered part of the period', () => {
+    const result = calculate({
+      contratos: [
+        {
+          ...contratoA,
+          estado: 'terminado',
+          fechaInicio: '2026-01-01',
+          fechaTermino: '2026-09-15'
+        }
+      ]
+    });
+    expect(result.liquidaciones).toHaveLength(1);
+    expect(result.liquidaciones[0].bases.diasTrabajados).toBe(15);
   });
 
   it('rejects a calculation when a worker RUT is invalid', () => {

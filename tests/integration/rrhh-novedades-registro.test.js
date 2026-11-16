@@ -4,6 +4,7 @@ import { addEntity } from '../../src/storage.js';
 import { renderNovedadesView } from '../../src/rrhh/views/novedades.js';
 import { listNovedades } from '../../src/rrhh/utils/novedades-service.js';
 import { asegurarPeriodo } from '../../src/rrhh/utils/periodos-service.js';
+import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 
 let dom;
 let entity;
@@ -46,6 +47,17 @@ beforeEach(() => {
     cargo: 'Analista'
   });
   asegurarPeriodo('2026-09');
+  crearContrato(
+    {
+      entityId: entity.entity_id,
+      tipoContrato: 'indefinido',
+      sueldoBase: 1000000,
+      jornadaHorasSemanales: 42,
+      fechaInicio: '2026-01-01',
+      modalidadGratificacion: 'art50'
+    },
+    { role: 'analista', usuario: 'Analista RRHH' }
+  );
   root = document.getElementById('root');
 });
 
