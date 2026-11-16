@@ -26,7 +26,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 ### Historia de Usuario 1 - Gestión de Fichas de Trabajadores y Catálogos Base (Prioridad: P1)
 
 **Como** administrador/a de RR.HH. o analista de remuneraciones,  
-**quiero** registrar, buscar, actualizar y desactivar la ficha de cada trabajador (nombre, código, RUT, datos de contacto, fecha de ingreso, cargo, departamento y centro de costo) y mantener los catálogos base,  
+**quiero** registrar, buscar, actualizar y desactivar la ficha de cada trabajador (nombre, código, RUT, datos de contacto, fecha de ingreso, cargo, departamento, centro de costo y jefatura directa opcional) y mantener los catálogos base,  
 **para** que las contrataciones y liquidaciones posteriores se calculen sobre datos completos, válidos y sin duplicados.
 
 **Por qué esta prioridad**: Es el valor central del producto y el prerrequisito de datos de las Historias de Usuario 2 a 4: sin fichas válidas no hay a quién asignar un contrato, una novedad o una liquidación.
@@ -38,10 +38,12 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - El administrador/a de RR.HH. y el analista de remuneraciones pueden crear, editar y desactivar fichas de trabajadores y catálogos base.
 - El nombre y el código son obligatorios; el RUT es obligatorio y se valida con módulo 11.
 - La fecha de ingreso, si se informa, debe ser una fecha de calendario válida.
+- La jefatura directa, si se informa, debe corresponder a un Trabajador existente y activo; el equipo de una jefatura son los Trabajadores que la tienen como jefatura directa.
+- Si la jefatura directa de un equipo es desvinculada, ese equipo pasa a tratarse como "sin jefatura directa" hasta que se asigne otra.
 - El RUT identifica a una persona: dos fichas no pueden compartir el mismo RUT, comparado sin puntos, guiones ni espacios y sin distinguir mayúsculas.
 - El código del trabajador es único: no pueden existir dos fichas con el mismo código, comparado sin distinguir mayúsculas ni acentos e ignorando espacios al inicio y al final.
 - Cada ficha conserva un identificador interno que no cambia al actualizarla, de modo que contratos, novedades y liquidaciones sigan apuntando a la misma persona.
-- Desactivar una ficha no la elimina ni borra su historia: la ficha pasa a estado laboral "Desvinculado" y conserva sus datos y sus referencias para liquidaciones anteriores.
+- Desactivar una ficha no la elimina ni borra su historia: se pide la fecha de desvinculación, la ficha pasa a estado laboral "Desvinculado" y conserva sus datos y sus referencias para liquidaciones anteriores.
 - Un catálogo tiene tipo (cargo, departamento o centro de costo), código y nombre; el código es único dentro de su tipo.
 - Desactivar un catálogo no borra historia: deja de ofrecerse en fichas nuevas pero se sigue mostrando en las fichas que ya lo usaban.
 
@@ -55,11 +57,14 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 4. **Dado** que ya existe una ficha con un código registrado, **cuando** un usuario intenta crear u actualizar otra ficha con ese mismo código, **entonces** el sistema rechaza la operación e indica que el código ya está asociado a otro trabajador.
 5. **Dado** que existen fichas registradas, **cuando** el usuario busca por nombre, código o RUT (con o sin puntos y guion), **entonces** obtiene las fichas que coinciden; **y cuando** la búsqueda no arroja coincidencias, **entonces** el listado muestra un estado vacío explicativo en lugar de una tabla en blanco.
 6. **Dado** un trabajador existente, **cuando** el usuario actualiza sus datos o su cargo, departamento o centro de costo, **entonces** los cambios se guardan sobre la misma ficha y se reflejan de inmediato en el listado y en la búsqueda.
-7. **Dado** un trabajador activo, **cuando** el usuario desactiva su ficha, **entonces** la ficha queda con estado laboral "Desvinculado" y conserva sus datos e historia, sin eliminarse del sistema.
+7. **Dado** un trabajador activo, **cuando** el usuario desactiva su ficha indicando la fecha de desvinculación, **entonces** la ficha queda con estado laboral "Desvinculado" con esa fecha y conserva sus datos e historia, sin eliminarse del sistema.
 8. **Dado** que un usuario gestiona catálogos base, **cuando** crea un cargo, departamento o centro de costo con código y nombre, **entonces** queda disponible para asignarlo a fichas.
 9. **Dado** que ya existe un catálogo activo con un código, **cuando** el usuario intenta crear o editar otro catálogo del mismo tipo con ese código, **entonces** el sistema lo rechaza e indica que el código ya está en uso.
 10. **Dado** un catálogo en uso por fichas existentes, **cuando** el usuario lo desactiva, **entonces** deja de ofrecerse para fichas nuevas pero se sigue mostrando en las fichas que ya lo usaban.
-11. **Dado** que un usuario con sesión identificada crea, actualiza o desactiva una ficha de trabajador o un catálogo, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados, en una entrada de solo inserción (regla transversal provista por la US6).
+11. **Dado** un trabajador activo, **cuando** el usuario intenta desactivar su ficha sin indicar la fecha de desvinculación o con una fecha anterior a la fecha de ingreso, **entonces** el sistema rechaza la operación y señala el campo que debe corregirse.
+12. **Dado** una ficha de trabajador, **cuando** el usuario indica como jefatura directa a un Trabajador que no existe, que no está activo o al mismo Trabajador de la ficha, **entonces** el sistema rechaza la operación y señala el campo que debe corregirse.
+13. **Dado** un Trabajador que es jefatura directa de otros Trabajadores, **cuando** el usuario lo desvincula, **entonces** su equipo (los Trabajadores que la tenían como jefatura directa) pasa a tratarse como "sin jefatura directa", y las novedades pendientes de ese equipo pasan a ser aprobadas o rechazadas por el administrador/a de RR.HH.
+14. **Dado** que un usuario con sesión identificada crea, actualiza o desactiva una ficha de trabajador o un catálogo, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados, en una entrada de solo inserción (regla transversal provista por la US6).
 
 ---
 
@@ -75,8 +80,10 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 **Reglas de negocio**:
 
-- El administrador/a de RR.HH. y el analista de remuneraciones pueden registrar, modificar y terminar contratos.
-- Un contrato está vigente desde su fecha de inicio hasta su fecha de término, o sin fecha de término si es indefinido, mientras no haya sido terminado.
+- El administrador/a de RR.HH. y el analista de remuneraciones pueden registrar contratos, registrar cambios de condiciones y terminar contratos (fin anticipado).
+- Un contrato está vigente desde su fecha de inicio hasta su fecha de término (o sin fecha de término si es indefinido), mientras no haya sido terminado; un contrato a plazo fijo con fecha de término pasada ya no está vigente y se muestra como "vencido" hasta que se renueve o se termine.
+- Terminar un contrato registra su fecha de término efectiva, que no puede ser anterior a la fecha de inicio, lo deja en estado "terminado", deja de generar alertas y se conserva en el historial. Puede terminarse un contrato vigente o vencido, incluido uno indefinido. Un cambio de condiciones deja el contrato anterior en estado "terminado" el día previo a la nueva vigencia.
+- Al desvincular a un Trabajador, el sistema termina automáticamente el contrato vigente o vencido con esa fecha de desvinculación.
 - Solo se puede registrar un contrato para un Trabajador existente y no desvinculado.
 - El tipo de contrato, la fecha de inicio, el sueldo base y la jornada son obligatorios; la fecha de término es obligatoria en contratos a plazo fijo y no aplica a los indefinidos.
 - Un contrato indefinido no lleva fecha de término y el sistema no la admite.
@@ -84,8 +91,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - El sueldo base debe ser mayor que cero y no inferior al mínimo legal vigente del período, tomado de los parámetros legales versionados.
 - La jornada semanal no puede superar el máximo legal vigente del período, tomado de los parámetros legales versionados.
 - Un Trabajador tiene como máximo un contrato vigente a la vez: el sistema rechaza un contrato nuevo cuyas fechas se superpongan con otro contrato vigente del mismo Trabajador.
-- Un cambio de condiciones se registra como un contrato nuevo: el sistema cierra el contrato anterior el día previo a la fecha de vigencia y conserva ambos en el historial. No existe una entidad separada de anexo.
-- Una renovación se registra como un contrato nuevo que continúa desde el día siguiente al término del contrato anterior; el contrato anterior queda en el historial y su alerta deja de mostrarse. No existe una entidad separada de renovación.
+- Un cambio de condiciones se registra como un contrato nuevo: el sistema deja el contrato anterior en estado "terminado" el día previo a la fecha de vigencia y conserva ambos en el historial. No existe una entidad separada de anexo.
+- Una renovación se registra como un contrato nuevo que continúa desde el día siguiente al término del contrato anterior; el sistema deja el contrato anterior en estado "terminado", lo conserva en el historial y su alerta deja de mostrarse. No existe una entidad separada de renovación.
 - Un cambio de condiciones con nuevo sueldo base tiene fecha de vigencia: los Períodos anteriores conservan el sueldo anterior y los posteriores usan el nuevo.
 - Un contrato a plazo fijo se considera "por vencer" cuando faltan 30 días o menos para su fecha de término, y "vencido" cuando esa fecha ya pasó.
 - La alerta de un contrato a plazo fijo aparece desde 30 días antes de su fecha de término y se mantiene mientras el contrato no sea renovado ni terminado.
@@ -103,48 +110,58 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 6. **Dado** un contrato a plazo fijo, **cuando** faltan 30 días o menos para su fecha de término, **entonces** el panel principal muestra una alerta con el nombre del Trabajador, la fecha de término y los días restantes.
 7. **Dado** un contrato a plazo fijo cuya fecha de término ya pasó, **cuando** el usuario abre el panel principal, **entonces** el contrato se muestra con una etiqueta visible "vencido", diferenciado de los "por vencer".
 8. **Dado** un contrato indefinido, **cuando** el usuario abre el panel principal, **entonces** no se genera ninguna alerta de vencimiento.
-9. **Dado** un contrato con alerta activa, **cuando** el usuario registra una renovación como un contrato nuevo que continúa desde el día siguiente al término del contrato anterior, **entonces** la alerta desaparece y el contrato anterior queda en el historial.
-10. **Dado** un contrato vigente, **cuando** se registra un cambio de condiciones con nuevo sueldo base y fecha de vigencia, **entonces** el sistema cierra el contrato anterior el día previo y crea un contrato nuevo; los Períodos anteriores a esa fecha conservan el sueldo anterior y los posteriores usan el nuevo.
-11. **Dado** un Trabajador desvinculado, **cuando** el usuario intenta registrarle un contrato nuevo, **entonces** el sistema lo rechaza; y sus contratos anteriores siguen visibles en su historial.
-12. **Dado** que un usuario con sesión identificada registra o modifica un contrato o un cambio de condiciones, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados (regla transversal provista por la US6).
+9. **Dado** un contrato con alerta activa, **cuando** el usuario registra una renovación como un contrato nuevo que continúa desde el día siguiente al término del contrato anterior, **entonces** la alerta desaparece y el contrato anterior queda en el historial en estado "terminado".
+10. **Dado** un contrato vigente, **cuando** se registra un cambio de condiciones con nuevo sueldo base y fecha de vigencia, **entonces** el sistema deja el contrato anterior en estado "terminado" el día previo a la nueva vigencia y crea un contrato nuevo; los Períodos anteriores a esa fecha conservan el sueldo anterior y los posteriores usan el nuevo.
+11. **Dado** un contrato vigente o vencido, **cuando** el usuario lo termina con una fecha de término efectiva no anterior a la fecha de inicio, **entonces** el contrato queda en estado "terminado", su alerta desaparece y se conserva en el historial.
+12. **Dado** un contrato vigente o vencido, **cuando** el usuario intenta terminarlo con una fecha de término efectiva anterior a la fecha de inicio, **entonces** el sistema rechaza la operación y señala el campo que debe corregirse.
+13. **Dado** un Trabajador con un contrato vigente o vencido, **cuando** el usuario lo desvincula, **entonces** el sistema termina automáticamente el contrato vigente o vencido con esa fecha de desvinculación y lo conserva en el historial.
+14. **Dado** un Trabajador desvinculado, **cuando** el usuario intenta registrarle un contrato nuevo, **entonces** el sistema lo rechaza; y sus contratos anteriores siguen visibles en su historial.
+15. **Dado** que un usuario con sesión identificada registra o termina un contrato, registra un cambio de condiciones, o el sistema termina un contrato por una desvinculación, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados (regla transversal provista por la US6).
 
 ---
 
 ### Historia de Usuario 3 - Registro y Aprobación de Novedades del Mes (Prioridad: P1)
 
-**Como** analista de remuneraciones o jefatura,  
-**quiero** registrar y aprobar las novedades del período (horas extra, licencias médicas y ausencias),  
-**para que** el motor de cálculo procese únicamente montos validados.
+**Como** analista de remuneraciones o jefatura,
+**quiero** registrar y aprobar las novedades del período (horas extra, licencias médicas y ausencias) de cada Trabajador,
+**para que** el motor de cálculo procese únicamente novedades validadas.
 
-- **Por qué esta prioridad**: Las variables mensuales modifican el sueldo proporcional y son críticas para evitar pagos incorrectos o reprocesos en las liquidaciones finales.
-- **Prueba Independiente**: Una jefatura registra novedades para su equipo y el sistema exige su aprobación explícita antes de habilitar el cálculo de la planilla; un período cerrado impide cualquier modificación posterior.
+**Por qué esta prioridad**: Las variables mensuales modifican el sueldo proporcional y son críticas para evitar pagos incorrectos o reprocesos en las liquidaciones finales.
 
-#### Escenarios de Aceptación
+**Alcance**: incluye el registro, la aprobación o rechazo y la consulta de novedades por período. No incluye fichas de trabajadores (US1), contratos (US2) ni el cálculo y cierre del período (US4); esta historia solo determina qué novedades están en condiciones de ser calculadas.
 
-1. **Escenario 1 (Privacidad en Licencias Médicas - Ley 21.719):**
-   * **Dado** el formulario de registro de licencias médicas,
-   * **cuando** el usuario ingresa un nuevo registro,
-   * **entonces** el sistema solo permite capturar tipo de licencia y cantidad de días de reposo, bloqueando u omitiendo cualquier campo de diagnóstico clínico para resguardar datos sensibles de salud.
+**Reglas de negocio**:
 
-2. **Escenario 2 (Control de Aprobación Previo al Cálculo Masivo):**
-   * **Dado** que existen novedades registradas en estado "Pendiente" dentro de un período activo,
-   * **cuando** el analista intenta ejecutar el cálculo masivo de remuneraciones,
-   * **entonces** el sistema bloquea la acción, muestra una alerta con las novedades no resueltas y solo permite procesar la planilla cuando todas hayan cambiado a estado "Aprobada" o "Rechazada".
+- Las novedades son de tres tipos: horas extra, licencias médicas y ausencias.
+- El analista de remuneraciones puede registrar novedades de cualquier Trabajador. La jefatura puede registrar novedades de Trabajadores de su equipo, y aprobar o rechazar las novedades de su equipo que no haya registrado ella misma. El administrador/a de RR.HH. aprueba o rechaza las novedades de Trabajadores sin jefatura directa y las registradas por la jefatura de ese equipo. Solo ellos pueden aprobar o rechazar, y quien registró una novedad nunca puede aprobarla ni rechazarla.
+- Solo se puede registrar una novedad para un Trabajador existente, no desvinculado y con un contrato cuya vigencia incluya la fecha de la novedad, aunque el contrato haya sido terminado después.
+- Toda novedad tiene Trabajador, tipo, fecha o rango de fechas dentro de un período y una cantidad (horas o días) mayor que cero.
+- Toda novedad nueva queda en estado "Pendiente" y pasa a "Aprobada" o "Rechazada"; un rechazo requiere un motivo.
+- Solo una novedad "Pendiente" puede editarse o anularse; las "Aprobadas" y "Rechazadas" no se modifican, y una corrección se registra como una novedad nueva. Las novedades anuladas no se borran.
+- Una licencia médica registra únicamente el tipo de licencia y los días de reposo con sus fechas; el sistema no captura ni almacena diagnóstico ni ningún otro dato clínico, tampoco al importar un respaldo (Ley 21.719).
+- Las licencias y ausencias de un mismo Trabajador no pueden superponerse en fechas.
+- El máximo de horas extra por día se toma de los parámetros legales versionados; superarlo exige una justificación escrita para guardar la novedad como "Pendiente".
+- Solo las novedades "Aprobadas" las considera el cálculo; las "Rechazadas" y las anuladas no. El cálculo del período no puede iniciarse mientras existan novedades "Pendientes" en ese período.
+- En un período cerrado no se puede crear, editar, anular ni cambiar de estado ninguna novedad; el sistema rechaza el cambio y muestra las novedades en solo lectura.
 
-3. **Escenario 3 (Validación de Topes en Horas Extraordinarias):**
-   * **Dado** el registro de horas extra para un colaborador,
-   * **cuando** la jefatura ingresa una cantidad superior al máximo legal permitido (máximo 2 horas diarias según la normativa laboral chilena),
-   * **entonces** el sistema emite una advertencia de validación y exige confirmación con justificación antes de enviarla a aprobación.
+**Prueba Independiente**: Con Trabajadores y contratos precargados como datos semilla, un analista registra novedades, una jefatura las aprueba o rechaza, y el sistema bloquea o permite iniciar el cálculo según existan o no novedades pendientes; el cálculo en sí corresponde a la US4. Un período marcado como cerrado en los datos semilla impide cualquier cambio. No requiere ejecutar el cálculo.
 
-4. **Escenario 4 (Inmutabilidad en Período Cerrado):**
-   * **Dado** un período mensual que ya fue procesado y cerrado,
-   * **cuando** un usuario intenta crear, editar o eliminar una novedad asociada a dicho mes,
-   * **entonces** la interfaz inhabilita los botones de acción y despliega el registro en modo de solo lectura.
+**Escenarios de Aceptación**:
 
-5. **Escenario 5 (Trazabilidad y Auditoría de Estados):**
-   * **Dado** el flujo de aprobación de novedades,
-   * **cuando** una jefatura aprueba o rechaza una solicitud,
-   * **entonces** el sistema almacena automáticamente la fecha, la hora y el identificador del usuario que realizó la acción, permitiendo consultar el historial en el listado del módulo.
+1. **Dado** un Trabajador activo con contrato vigente, **cuando** el usuario registra una novedad con todos los campos obligatorios, **entonces** queda en estado "Pendiente" y aparece en el listado del período.
+2. **Dado** un formulario de novedad, **cuando** falta un campo obligatorio, la cantidad es cero o menor, o la fecha queda fuera del período, **entonces** el sistema rechaza el registro y señala el campo que debe corregirse.
+3. **Dado** un Trabajador desvinculado o sin un contrato cuya vigencia incluya la fecha de la novedad, **cuando** el usuario intenta registrarle una novedad, **entonces** el sistema la rechaza e indica el motivo.
+4. **Dado** el formulario de licencias médicas, **cuando** el usuario ingresa un registro, **entonces** el sistema solo captura tipo de licencia, días de reposo y fechas, y no admite ningún campo de diagnóstico clínico.
+5. **Dado** un Trabajador con una licencia o ausencia registrada, **cuando** el usuario registra otra que se superpone en fechas, **entonces** el sistema la rechaza e indica la novedad con la que se superpone.
+6. **Dado** el registro de horas extra, **cuando** la cantidad diaria supera el máximo legal vigente, **entonces** el sistema exige una justificación escrita y no guarda la novedad sin ella.
+7. **Dado** una novedad "Pendiente", **cuando** la aprueba o rechaza (con motivo) la jefatura del equipo o, según corresponda, el administrador/a de RR.HH., **entonces** la novedad pasa a "Aprobada" o "Rechazada" y se muestra en el listado con su nuevo estado.
+8. **Dado** una novedad "Pendiente", **cuando** intenta aprobarla o rechazarla el mismo usuario que la registró, un analista, o una jefatura de otro equipo, **entonces** el sistema lo impide e indica que no tiene autorización.
+9. **Dado** un Trabajador que no pertenece al equipo de una jefatura, **cuando** esa jefatura intenta registrar, aprobar o rechazar una novedad para dicho Trabajador, **entonces** el sistema lo impide e indica que no tiene autorización.
+10. **Dado** una novedad "Aprobada" o "Rechazada", **cuando** el usuario intenta editarla o anularla, **entonces** el sistema lo impide e indica que debe registrar una novedad nueva.
+11. **Dado** que existen novedades "Pendientes" en un período activo, **cuando** el analista intenta iniciar el cálculo del período, **entonces** el sistema lo bloquea y muestra la lista de novedades pendientes.
+12. **Dado** un período activo sin novedades "Pendientes", **cuando** el analista inicia el cálculo, **entonces** el sistema lo permite y considera solo las novedades "Aprobadas".
+13. **Dado** un período cerrado, **cuando** un usuario intenta crear, editar, anular o cambiar el estado de una novedad de ese período, **entonces** el sistema rechaza el cambio y muestra las novedades en solo lectura.
+14. **Dado** que un usuario con sesión identificada registra, edita, anula, aprueba o rechaza una novedad, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados (regla transversal provista por la US6).
 
 ---
 
@@ -196,10 +213,15 @@ Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuen
 
 **Prueba Independiente**: Al simular el rol de "Jefatura", la interfaz oculta automáticamente los sueldos y los datos financieros confidenciales.
 
+**Reglas de negocio**:
+
+- Al seleccionar el rol Jefatura en la sesión simulada, el selector pide además el Trabajador activo que representa, y su equipo son los Trabajadores que lo tienen como jefatura directa; si no se selecciona un Trabajador, el sistema no muestra ni permite operar novedades.
+
 **Escenarios de Aceptación**:
 
-1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** visualiza las novedades de su equipo pero no tiene acceso a las liquidaciones ni a los sueldos base.
-2. **Dado** cualquier cambio o consulta de información sensible, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
+1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** ve y registra las novedades de su equipo, y aprueba o rechaza las novedades de su equipo que no haya registrado ella misma, sin acceso a las liquidaciones ni a los sueldos base.
+2. **Dado** que el usuario selecciona el rol Jefatura en la sesión simulada, **cuando** no selecciona el Trabajador activo que representa, **entonces** el sistema no muestra ni permite operar novedades.
+3. **Dado** cualquier cambio o consulta de información sensible, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
 
 ---
 
@@ -293,7 +315,7 @@ Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuen
 - **FR-050**: El sistema DEBE indicar claramente cuándo una línea no dispone de fórmula o parámetro legal asociado, sin omitir la línea del comprobante.
 - **FR-051**: El sistema DEBE basar el acceso a la información sensible en el rol del usuario autenticado.
 - **FR-052**: El sistema DEBE restringir la visualización y consulta de sueldos, liquidaciones, cuentas bancarias y cuotas sindicales a los roles expresamente autorizados.
-- **FR-053**: El rol Jefatura DEBE poder ver únicamente las novedades de su equipo y NO DEBE acceder a liquidaciones ni a sueldos base.
+- **FR-053**: El rol Jefatura DEBE poder ver y registrar las novedades de su equipo, y aprobar o rechazar las novedades de su equipo que no haya registrado ella misma, y NO DEBE acceder a liquidaciones ni a sueldos base.
 - **FR-054**: El sistema DEBE ocultar o enmascarar los datos sensibles no autorizados en listados, detalles, búsquedas y vistas imprimibles.
 - **FR-055**: El sistema DEBE registrar automáticamente en la bitácora de auditoría toda consulta, creación, modificación o eliminación de información sensible, indicando al menos usuario, rol, fecha y hora, acción y registro afectado.
 - **FR-056**: La bitácora de auditoría DEBE ser de solo inserción y NO DEBE permitir la edición ni la eliminación de sus registros por ningún rol.
