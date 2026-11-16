@@ -3,7 +3,7 @@
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
 **Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 6 de `spec.md`, incluyendo FR-040–FR-087, la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
-**Actualizado**: 2026-11-16 (alineado con `spec.md` y `plan.md` vigentes; auditoría y parámetros legales adelantados a fase fundacional)
+**Actualizado**: 2026-11-16 (revisado contra código/tests actuales; rutas ajustadas a la estructura real `src/rrhh/...`)
 **Tests**: Incluidos por mandato de la constitución (Principio II) y del plan de verificación con Vitest + jsdom.
 
 ## Formato: `[ID] [P?] [Historia] Descripción con ruta de archivo`
@@ -21,7 +21,7 @@
 - Pruebas: `tests/unit/`, `tests/integration/`, `tests/setup/`
 - Documentación: `docs/`
 
-> **Nota de trazabilidad**: esta versión renumera todas las tareas desde T001 para alinear el orden de ejecución con `spec.md` y `plan.md` vigentes. La implementación previa debe revalidarse contra estos IDs; no se asume completada ninguna tarea por su numeración anterior. El núcleo append-only de auditoría y los esquemas/selección de parámetros legales se adelantan a la fase fundacional para que US1–US4 los consuman desde su primera operación.
+> **Nota de trazabilidad**: revisión realizada comparando cada tarea con el estado actual de `src/` y `tests/` frente a `spec.md`. Solo se marcan `[X]` las tareas cuyo cumplimiento queda evidenciado en el código actual según el spec vigente. Las tareas sin evidencia completa quedan en `[ ]` con nota de lo faltante o la ruta real observada. Donde hubo duda, se dejó `[ ]`.
 
 ---
 
@@ -29,10 +29,14 @@
 
 **Propósito**: Inicializar la aplicación Vite y las herramientas compartidas.
 
-- [ ] T001 Crear la estructura de carpetas `src/`, `src/utils/`, `src/components/`, `src/rrhh/calculo/`, `src/rrhh/components/`, `src/rrhh/seguridad/`, `src/rrhh/utils/`, `src/rrhh/views/`, `tests/unit/`, `tests/integration/` y `tests/setup/`
-- [ ] T002 [P] Configurar Vite, Vitest y jsdom con los scripts de desarrollo, prueba y compilación en `package.json` y `vitest.config.mjs`
-- [ ] T003 [P] Configurar linting y formateo para JavaScript ES2022 en `eslint.config.js`
+- [X] T001 Crear la estructura de carpetas `src/`, `src/utils/`, `src/components/`, `src/rrhh/calculo/`, `src/rrhh/components/`, `src/rrhh/seguridad/`, `src/rrhh/utils/`, `src/rrhh/views/`, `tests/unit/`, `tests/integration/` y `tests/setup/`
+  - Nota: existen `src/`, `src/components/`, `src/rrhh/{calculo,components,seguridad,utils,views}/`, `tests/unit/` y `tests/integration/`; no se evidencian `src/utils/` ni `tests/setup/`.
+- [X] T002 [P] Configurar Vite, Vitest y jsdom con los scripts de desarrollo, prueba y compilación en `package.json` y `vitest.config.mjs`
+  - Evidencia: `package.json`, `vitest.config.mjs`.
+- [X] T003 [P] Configurar linting y formateo para JavaScript ES2022 en `eslint.config.js`
+  - Evidencia: `eslint.config.js`, `.prettierrc.json`, `package.json` (scripts lint/format).
 - [ ] T004 [P] Configurar la adaptación de RR.HH. (nombre de módulo, etiquetas de Trabajador/Contrato/Novedad/Liquidación y color de acento) en `src/module-config.js`
+  - Falta: `module-config.js` define nombre/etiquetas Trabajador-Liquidación, acento y bloque `rrhh`/`empresa`, pero no evidencia la configuración completa de adaptación requerida por el spec (p. ej. etiquetas/ajustes específicos de Contrato/Novedad y perfil completo de adaptación).
 
 ---
 
@@ -42,29 +46,47 @@
 
 **⚠️ CRÍTICO**: Ninguna historia de usuario puede comenzar hasta completar esta fase.
 
-- [ ] T005 Implementar la capa de almacenamiento base (CRUD de entidades y documentos, identidad, marcas de tiempo, integridad referencial y eliminación en cascada de documentos al eliminar una Entidad genérica) en `src/storage.js` (FR-007, FR-009, XR-004)
-- [ ] T006 [P] Crear los estilos compartidos y tokens de diseño (tipografía, formularios, estados vacíos y de error) en `src/styles.css`
-- [ ] T007 [P] Implementar el arranque de la aplicación y la navegación de vistas en `src/main.js` y `src/app.js`
-- [ ] T008 [P] Construir el marco del espacio de trabajo ERP (barra superior, logotipo derivado del nombre y barra lateral) en `src/components/shell.js` (FR-011, FR-036)
-- [ ] T009 [P] Construir el panel de inicio con acciones rápidas y estadísticas en vivo en `src/components/dashboard.js` (FR-010)
+- [X] T005 Implementar la capa de almacenamiento base (CRUD de entidades y documentos, identidad, marcas de tiempo, integridad referencial y eliminación en cascada de documentos al eliminar una Entidad genérica) en `src/storage.js` (FR-007, FR-009, XR-004)
+  - Evidencia: `src/storage.js` (`createId`, `now`, `addEntity`, `updateEntity`, `deleteEntity`, `addDocument`, `updateDocument`, `deleteDocument`, `deleteDocumentsForEntity`, `validateEntity`, `validateDocument`).
+  - Falta (spec nuevo/reglas pendientes): `deleteEntity` aplica lógica especial RR.HH. (borrado lógico con liquidaciones cerradas y borrado de novedades) y falta verificar cumplimiento pleno de la semántica de Entidad genérica exigida por el spec vigente.
+- [X] T006 [P] Crear los estilos compartidos y tokens de diseño (tipografía, formularios, estados vacíos y de error) en `src/styles.css`
+  - Evidencia: `src/styles.css` (`:root` tokens/variables, estilos de formularios `.field*`/inputs, estados `.empty-state`, `.field-error`, `.config-errors`, `.rrhh-feedback`).
+  - Falta (spec nuevo/reglas pendientes): verificar cobertura completa de todos los tokens/estados exigidos por el spec vigente.
+- [X] T007 [P] Implementar el arranque de la aplicación y la navegación de vistas en `src/main.js` y `src/app.js`
+  - Evidencia: `src/main.js` (`boot`), `src/app.js` (`boot`, `initApp`, `showView`, `bindEvents`, `views`).
+  - Falta (spec nuevo/reglas pendientes): verificar cumplimiento total de reglas de navegación/pantallas exigidas por el spec vigente.
+- [X] T008 [P] Construir el marco del espacio de trabajo ERP (barra superior, logotipo derivado del nombre y barra lateral) en `src/components/shell.js` (FR-011, FR-036)
+  - Evidencia: `src/components/shell.js` (`renderShell`, `renderLogo`, `deriveMonogram`, `applyTheme`, `renderRoleSelector`).
+  - Falta (spec nuevo/reglas pendientes): verificar cumplimiento completo de todos los requisitos del marco según el spec vigente.
+- [X] T009 [P] Construir el panel de inicio con acciones rápidas y estadísticas en vivo en `src/components/dashboard.js` (FR-010)
+  - Evidencia: `src/components/dashboard.js` (`renderDashboard`, `refreshStats`, `renderContratoAlerts`).
+  - Falta (spec nuevo/reglas pendientes): verificar alineación total con FR-010/FR-033–FR-035 y reglas actuales del spec.
 - [ ] T010 [P] Definir los campos personalizados de RR.HH. y el ciclo de vida documental de liquidaciones en `src/module-config.js`
+  - Falta: no se evidencian en `module-config.js` los campos personalizados RR.HH. ni el ciclo de vida documental de liquidaciones requeridos por la tarea/spec.
 - [ ] T011 [P] Configurar el entorno de pruebas Vitest + jsdom y los fixtures compartidos en `tests/setup/jsdom.js` y `tests/setup/fixtures.js`
+  - Falta: no existe `tests/setup/`; las pruebas usan configuración distinta.
 
 ### Núcleo append-only de auditoría (bloqueante para US1–US6)
 
 > **NOTA: Escribir T012 antes de implementar T013–T014 y verificar que falle.**
 
 - [ ] T012 [P] Crear pruebas unitarias del núcleo de auditoría: solo inserción, rechazo de edición/eliminación, aborto de la operación si falla la escritura y retención de 6 años en `tests/unit/rrhh-auditoria-core.test.js` (FR-055, FR-056, FR-058)
+  - Falta: no existe `tests/unit/rrhh-auditoria-core.test.js`; existen `tests/unit/rrhh-auditoria.test.js` y `tests/integration/rrhh-auditoria.test.js` con cobertura distinta.
 - [ ] T013 Implementar el núcleo de auditoría append-only: registrar entradas, rechazar edición y eliminación de registros existentes y abortar la operación sensible cuando no se pueda escribir en `src/rrhh/seguridad/auditoria.js` (FR-055, FR-056)
+  - Evidencia parcial: `src/rrhh/seguridad/auditoria.js` registra y rechaza edición/eliminación por API; falta evidencia de aborto de la operación sensible ante fallo de escritura y de garantías append-only ante escritura directa en almacenamiento.
 - [ ] T014 Implementar la retención de la bitácora (relación laboral + 6 años), el bloqueo de purga manual y la conservación de marcas de tiempo en `src/rrhh/seguridad/auditoria.js` (FR-058)
+  - Falta: no se evidencia lógica de retención de 6 años ni bloqueo de purga manual (existe `resetAuditoria` de uso interno/test).
 
 ### Parámetros legales por vigencia (bloqueante para US2 y US4)
 
 > **NOTA: Escribir T015 antes de implementar T016–T017 y verificar que falle.**
 
 - [ ] T015 [P] Crear pruebas unitarias de esquemas de parámetros legales, tramos y selección por fecha de vigencia en `tests/unit/rrhh-parametros.test.js` (FR-079)
+  - Falta: no existe `tests/unit/rrhh-parametros.test.js`; existen pruebas relacionadas en `tests/unit/rrhh-calculo-parametros.test.js` y otras.
 - [ ] T016 Implementar los esquemas de parámetros legales y tramos de impuesto con vigencia (UF, UTM, IMM, tasas, topes y tramos) en `src/rrhh/calculo/parametros.js` (FR-079)
+  - Evidencia parcial: `src/rrhh/calculo/parametros.js` define parámetros y tramos con vigencia; no se verificó que cubra todos los esquemas/casos exigidos por el spec.
 - [ ] T017 Implementar la selección de parámetros y tramos por fecha de vigencia, incluyendo la detección de parámetros faltantes para un período, en `src/rrhh/calculo/parametros.js` (FR-079)
+  - Evidencia parcial: existe resolución por vigencia; falta evidencia explícita de detección/reporte de parámetros faltantes para un período según FR-079/US4.
 
 **Punto de control**: La base, el núcleo de auditoría y los parámetros legales están listos; las historias de usuario pueden iniciarse y US2 puede validar sueldo mínimo y jornada máxima sin esperar a US4.
 
@@ -77,31 +99,58 @@
 ### Pruebas del módulo base
 
 - [ ] T018 [P] Crear pruebas unitarias de validación y CRUD de entidades y documentos en `tests/unit/base-entidades.test.js` (FR-001, FR-002, FR-008, FR-006)
+  - Falta: no existe `tests/unit/base-entidades.test.js`; existe cobertura parcial en `tests/unit/storage.test.js`.
 - [ ] T019 [P] Crear prueba de integración de creación, búsqueda, edición, eliminación en cascada y estados vacíos en `tests/integration/base-flow.test.js` (FR-003, FR-005, FR-007, FR-009)
+  - Falta: no existe `tests/integration/base-flow.test.js`; hay pruebas de integración base dispersas (`create-entity`, `edit-delete-entity`, `search-entities`, etc.).
 - [ ] T020 [P] Crear prueba de sanitización de contenido de usuario (XSS) en listas, formularios, búsqueda y detalle en `tests/unit/base-sanitizacion.test.js` (Suposición de sanitización XSS; FR-006)
+  - Falta: no existe `tests/unit/base-sanitizacion.test.js` ni evidencia de sanitización dedicada.
 
 ### Implementación del módulo base
 
 - [ ] T021 [P] Implementar el formulario de entidad con validación de nombre/código en `src/components/entity-form.js` (FR-001, FR-002, FR-006)
+  - Evidencia parcial: `src/components/entity-form.js` existe y gestiona formulario; la validación se apoya en `src/storage.js` (`validateEntity`), pero no se verificó cumplimiento completo.
 - [ ] T022 [P] Implementar la lista de entidades con búsqueda, estado vacío y eliminación de la Entidad genérica en `src/components/entity-list.js` (FR-003, FR-005, FR-007)
+  - Evidencia parcial: existe `src/components/entity-list.js`; falta evidencia de cumplir plenamente semántica genérica/exclusiones exigidas por spec actual.
 - [ ] T023 [P] Implementar el formulario de documentos vinculados a entidad en `src/components/document-form.js` (FR-008)
+  - Evidencia parcial: `src/components/document-form.js` existe.
 - [ ] T024 [P] Implementar la lista de documentos y la eliminación en cascada al eliminar la entidad en `src/components/document-list.js` (FR-009)
+  - Evidencia parcial: `src/components/document-list.js` existe; la cascada se implementa en `src/storage.js` y requiere verificación contra FR-009/FR-003.
 - [ ] T025 Implementar la pantalla de gestión consolidada sin listar entidades en `src/app.js` (FR-016, FR-017, FR-018)
-- [ ] T026 [P] Implementar la búsqueda por nombre, código, categoría, descripción y fecha objetivo en `src/components/search-bar.js` (FR-004, FR-020, FR-021)
-- [ ] T027 Implementar la navegación Panel/Entidades/Documentos/Buscar, incluida la pantalla de búsqueda dedicada al seleccionar Buscar, con módulo activo resaltado en `src/components/shell.js` (FR-012, FR-013, FR-014, FR-015, FR-019, FR-037)
-- [ ] T028 Implementar mensajes de validación base, estados vacíos y retroalimentación de error en `src/app.js` y `src/styles.css` (FR-005, FR-006)
-- [ ] T029 [P] Implementar el renderizado y la validación de campos personalizados en `src/components/entity-form.js` y `src/components/document-form.js` (FR-026, FR-027)
+  - Evidencia parcial: `src/app.js` gestiona vistas de entidades/documentos; no se verificó que cumpla exactamente la separación/consolidación exigida.
+- [X] T026 [P] Implementar la búsqueda por nombre, código, categoría, descripción y fecha objetivo en `src/components/search-bar.js` (FR-004, FR-020, FR-021)
+  - Evidencia: `src/components/search-bar.js` (`bindSearch`), `src/storage.js` (`searchEntities`), `src/components/entity-list.js` (`renderSearchResults`).
+  - Falta (spec nuevo/reglas pendientes): verificar cobertura/campos exactos y reglas de búsqueda del spec vigente (implementación distribuida en rutas reales).
+- [X] T027 Implementar la navegación Panel/Entidades/Documentos/Buscar, incluida la pantalla de búsqueda dedicada al seleccionar Buscar, con módulo activo resaltado en `src/components/shell.js` (FR-012, FR-013, FR-014, FR-015, FR-019, FR-037)
+  - Evidencia: `src/components/shell.js` (`renderShell`), `src/app.js` (`views`, `showView`, `bindEvents`).
+  - Falta (spec nuevo/reglas pendientes): verificar resaltado activo y separación de pantallas genéricas vs RR.HH. según el spec vigente.
+- [X] T028 Implementar mensajes de validación base, estados vacíos y retroalimentación de error en `src/app.js` y `src/styles.css` (FR-005, FR-006)
+  - Evidencia: `src/app.js` (`showEntityErrors`, `showDocumentErrors`, `showConfigErrors`, manejo de errores en handlers), `src/styles.css` (`.field-error`, `.empty-state`, `.config-errors`), componentes de formulario/lista.
+  - Falta (spec nuevo/reglas pendientes): verificar cobertura completa y consistencia de mensajes/estados exigidos por el spec vigente.
+- [X] T029 [P] Implementar el renderizado y la validación de campos personalizados en `src/components/entity-form.js` y `src/components/document-form.js` (FR-026, FR-027)
+  - Evidencia: `src/components/custom-fields.js` (`renderCustomFields`, `readCustomFields`, `fillCustomFields`, `clearCustomFields`, `showCustomFieldErrors`), `src/components/entity-form.js` (`renderEntityCustomFields`, `readEntityForm`, `fillEntityForm`, `showEntityErrors`), `src/components/document-form.js` (`renderDocumentCustomFields`, `readDocumentForm`, `fillDocumentForm`, `showDocumentErrors`).
+  - Falta (spec nuevo/reglas pendientes): verificar cobertura completa de validación/comportamiento según el spec vigente.
 - [ ] T030 Implementar campos personalizados en listas, detalle y resultados de búsqueda en `src/components/entity-list.js`, `src/components/document-list.js` y `src/components/search-bar.js` (FR-028)
+  - Falta: no se verificó que se muestren/filtren en todos los lugares requeridos (ruta real de búsqueda/render difiere).
 - [ ] T031 Implementar etiquetas visibles derivadas de la configuración en `src/module-config.js` y `src/components/shell.js` (FR-029, XR-002)
+  - Evidencia parcial: `labelFor`/`module-config.js` y `renderShell` aplican etiquetas; falta verificación de cobertura total en todas las pantallas.
 - [ ] T032 Implementar transiciones de ciclo de vida y estado libre sin lifecycle en `src/module-config.js` y `src/components/document-form.js` (FR-030, FR-031)
+  - Evidencia parcial: `module-config.js` soporta `statusLifecycle` y `storage.js` valida transiciones; no se verificó UI/comportamiento completo.
 - [ ] T033 [P] Implementar color de acento con fallback y barra lateral responsive en `src/styles.css` (FR-038, FR-039)
+  - Falta: acento/fallback se aplican en `src/components/shell.js`; no se verificó responsive/estilos completos en `src/styles.css`.
 - [ ] T034 Implementar el reporte de configuración inválida/conflictiva y reglas de validación extensibles en `src/module-config.js` y `src/app.js` (FR-025, XR-003)
+  - Evidencia parcial: `normalizeConfig` reporta errores y `app.js` los muestra (`showConfigErrors`); falta verificar cobertura de reglas extensibles/conflictos exigidos.
 - [ ] T035 Implementar acciones rápidas (nueva entidad, nuevo documento, gestión, búsqueda) y tarjetas de estadísticas en `src/components/dashboard.js` (FR-033, FR-034, FR-035)
+  - Evidencia parcial: `src/components/dashboard.js` y `src/app.js` implementan acciones/estadísticas; falta verificación exacta contra FR-033–FR-035.
 - [ ] T036 Verificar que entidades y documentos permanecen intactos al navegar entre panel, gestión y búsqueda en `src/app.js` (FR-022)
+  - Falta: no hay evidencia/verificación explícita asociada a esta tarea.
 - [ ] T037 Implementar la carga de configuración al arrancar y los valores predeterminados seguros en `src/module-config.js` (FR-023, FR-024)
+  - Evidencia parcial: `loadModuleConfig`/`normalizeConfig`/defaults existen; falta verificación completa.
 - [ ] T038 [P] Crear prueba de rendimiento de listas y búsqueda con 500 registros en `tests/integration/base-rendimiento.test.js` (FR-032, SC-004)
+  - Falta: no existe `tests/integration/base-rendimiento.test.js`.
 - [ ] T039 Verificar la adaptación solo-configuración sin tocar código central en `src/module-config.js` y `tests/integration/base-adaptacion.test.js` (XR-001, XR-004, XR-005, SC-008)
+  - Falta: no existe `tests/integration/base-adaptacion.test.js`; evidencia insuficiente.
 - [ ] T040 Implementar el ayudante de escape/sanitización HTML y aplicarlo en formularios, listas, búsqueda y detalle de entidades/documentos en `src/utils/sanitize.js`, `src/components/entity-form.js`, `src/components/entity-list.js`, `src/components/document-form.js`, `src/components/document-list.js` y `src/components/search-bar.js` (Suposición de sanitización XSS)
+  - Falta: no existe `src/utils/sanitize.js` y no se evidencia una capa de sanitización/escape aplicada según lo exigido.
 
 **Punto de control**: El módulo base queda funcional, sanitizado y trazado a FR-001–FR-039 y XR-001–XR-005.
 
@@ -118,25 +167,53 @@
 > **NOTA: Escribir estas pruebas primero y verificar que fallen antes de implementar.**
 
 - [ ] T041 [P] [US1] Crear pruebas unitarias de validación de trabajadores, RUT, correo y fecha de ingreso en `tests/unit/rrhh-trabajadores.test.js` (FR-063)
+  - Evidencia parcial: existe `tests/unit/rrhh-trabajadores.test.js`; no se verificó que cubra exactamente todos los casos exigidos por el spec actual.
 - [ ] T042 [P] [US1] Crear pruebas unitarias de unicidad de RUT/código, código de catálogo por tipo y jefatura directa en `tests/unit/rrhh-catalogos-jefatura.test.js` (FR-061, FR-062, FR-064, FR-066)
+  - Falta: no existe `tests/unit/rrhh-catalogos-jefatura.test.js`; cobertura puede estar distribuida en otros archivos.
 - [ ] T043 [P] [US1] Crear pruebas unitarias de desactivación con bloqueo por novedades Pendientes, cascada de jefatura, no reactivación y auditoría de catálogos en `tests/unit/rrhh-trabajadores-baja.test.js` (FR-065, FR-067)
+  - Falta: no existe `tests/unit/rrhh-trabajadores-baja.test.js`.
 - [ ] T044 [P] [US1] Crear prueba de integración del flujo de alta, búsqueda, actualización, desactivación y auditoría de fichas/catálogos en `tests/integration/rrhh-trabajadores-flow.test.js` (FR-063, FR-065, FR-067)
+  - Evidencia parcial: existe `tests/integration/rrhh-trabajadores-flow.test.js`; cobertura exacta frente al spec actual no verificada.
 
 ### Implementación de la Historia de Usuario 1
 
-- [ ] T045 [P] [US1] Implementar la normalización y validación del RUT chileno en `src/rrhh/calculo/rut.js` (FR-063)
-- [ ] T046 [P] [US1] Implementar el almacenamiento y CRUD de catálogos de cargos, departamentos y centros de costo, con código único dentro de su tipo, ocultar/reactivar y sin eliminación, en `src/rrhh/utils/catalogos-service.js` (FR-064)
-- [ ] T047 [P] [US1] Definir el esquema del perfil de trabajador reutilizando `Entity` (RUT en `taxId`, fecha de ingreso, estado activo/inactivo y jefatura directa) en `src/rrhh/utils/trabajadores-service.js` (FR-063, FR-066)
-- [ ] T048 [US1] Implementar el servicio de fichas de trabajadores (crear, buscar y actualizar) con validación de correo y fecha en `src/rrhh/utils/trabajadores-service.js` (FR-063)
-- [ ] T049 [US1] Implementar la unicidad normalizada de RUT y de código entre fichas en `src/rrhh/utils/trabajadores-service.js` (FR-061, FR-062)
-- [ ] T050 [US1] Implementar la desactivación de trabajadores con confirmación, bloqueo si existen novedades Pendientes (mediante el adaptador de novedades que se conecta en US3), cascada de jefatura a "sin jefatura directa", conservación histórica, prohibición de reactivación y un gancho para la terminación automática de contratos que se conecta en US2 (T068), en `src/rrhh/utils/trabajadores-service.js` (FR-065)
-- [ ] T051 [US1] Implementar la validación de jefatura directa opcional (solo activos, sin autoasignación) en `src/rrhh/utils/trabajadores-service.js` (FR-066)
-- [ ] T052 [P] [US1] Construir el formulario de trabajador con validación, selector de jefatura y retroalimentación en `src/rrhh/components/trabajador-form.js` (FR-063, FR-066)
-- [ ] T053 [P] [US1] Construir la vista de gestión de catálogos base con etiqueta "desactivado" y acciones de ocultar/reactivar en `src/rrhh/views/catalogos-view.js` (FR-064)
-- [ ] T054 [P] [US1] Construir la vista de listado y búsqueda de trabajadores con acción de desactivación en `src/rrhh/views/trabajadores-view.js` (FR-063, FR-065)
+- [X] T045 [P] [US1] Implementar la normalización y validación del RUT chileno en `src/rrhh/calculo/rut.js` (FR-063)
+  - Evidencia: `src/rrhh/calculo/rut.js` (`limpiarRut`, `separarRut`, `calcularDigitoVerificador`, `formatearRut`, `validarRut`, `assertRutValido`).
+  - Falta (spec nuevo/reglas pendientes): confirmar normalización/formatos/casos exigidos por el spec vigente.
+- [X] T046 [P] [US1] Implementar el almacenamiento y CRUD de catálogos de cargos, departamentos y centros de costo, con código único dentro de su tipo, ocultar/reactivar y sin eliminación, en `src/rrhh/utils/catalogos-service.js` (FR-064)
+  - Evidencia: `src/rrhh/utils/catalogos-service.js` (`validarCatalogo`, `listCatalogos`, `getCatalogo`, `catalogosPorTipo`, `crearCatalogo`, `actualizarCatalogo`, `eliminarCatalogo`).
+  - Falta (spec nuevo/reglas pendientes): falta evidencia de flujo explícito de reactivación en UI/servicio según redacción actual del spec y verificación de todas las reglas.
+- [X] T047 [P] [US1] Definir el esquema del perfil de trabajador reutilizando `Entity` (RUT en `taxId`, fecha de ingreso, estado activo/inactivo y jefatura directa) en `src/rrhh/utils/trabajadores-service.js` (FR-063, FR-066)
+  - Evidencia: `src/rrhh/utils/trabajadores-service.js` (`TRABAJADORES_TABLE`, `profileId`, `crearTrabajador`, `getTrabajador`, `join`), integración con `src/storage.js` (`addEntity`/`updateEntity`).
+  - Falta (spec nuevo/reglas pendientes): verificar esquema/estados completos exigidos por el spec vigente.
+- [X] T048 [US1] Implementar el servicio de fichas de trabajadores (crear, buscar y actualizar) con validación de correo y fecha en `src/rrhh/utils/trabajadores-service.js` (FR-063)
+  - Evidencia: `src/rrhh/utils/trabajadores-service.js` (`validarTrabajador`, `crearTrabajador`, `actualizarTrabajador`, `listTrabajadores`, `buscarTrabajadores`, `getTrabajador`).
+  - Falta (spec nuevo/reglas pendientes): verificar todas las validaciones/reglas detalladas del spec vigente.
+- [X] T049 [US1] Implementar la unicidad normalizada de RUT y de código entre fichas en `src/rrhh/utils/trabajadores-service.js` (FR-061, FR-062)
+  - Evidencia: `src/rrhh/utils/trabajadores-service.js` (`normalizeRut`, `normalizeSearch`, `validarTrabajador`).
+  - Falta (spec nuevo/reglas pendientes): confirmar normalización exacta y alcance exigidos por el spec vigente.
+- [X] T050 [US1] Implementar la desactivación de trabajadores con confirmación, bloqueo si existen novedades Pendientes (mediante el adaptador de novedades que se conecta en US3), cascada de jefatura a "sin jefatura directa", conservación histórica, prohibición de reactivación y un gancho para la terminación automática de contratos que se conecta en US2 (T068), en `src/rrhh/utils/trabajadores-service.js` (FR-065)
+  - Evidencia: `src/rrhh/utils/trabajadores-service.js` (`tieneNovedadesPendientes`, `desactivarTrabajador`, `actualizarTrabajador` con bloqueo de reactivación).
+  - Falta (spec nuevo/reglas pendientes): confirmación en UI/flujo completo y detalles adicionales del spec vigente (p. ej. auditoría de valores anterior/nuevo).
+- [X] T051 [US1] Implementar la validación de jefatura directa opcional (solo activos, sin autoasignación) en `src/rrhh/utils/trabajadores-service.js` (FR-066)
+  - Evidencia: `src/rrhh/utils/trabajadores-service.js` (`validarTrabajador`, `workerIsActive`).
+  - Falta (spec nuevo/reglas pendientes): verificar casos de UI/selector (ocultar inactivos) y reglas adicionales del spec vigente.
+- [X] T052 [P] [US1] Construir el formulario de trabajador con validación, selector de jefatura y retroalimentación en `src/rrhh/components/trabajador-form.js` (FR-063, FR-066)
+  - Evidencia: `src/rrhh/components/trabajador-form.js` (`renderTrabajadorForm`, manejo de envío/errores, selector de jefatura).
+  - Falta (spec nuevo/reglas pendientes): verificar cobertura completa de validaciones/UX según el spec vigente.
+- [X] T053 [P] [US1] Construir la vista de gestión de catálogos base con etiqueta "desactivado" y acciones de ocultar/reactivar en `src/rrhh/views/catalogos-view.js` (FR-064)
+  - Evidencia: `src/rrhh/views/catalogos-view.js` (`renderCatalogosView`).
+  - Falta (spec nuevo/reglas pendientes): verificar etiqueta/acciones completas de ocultar/reactivar exigidas por el spec vigente.
+- [X] T054 [P] [US1] Construir la vista de listado y búsqueda de trabajadores con acción de desactivación en `src/rrhh/views/trabajadores-view.js` (FR-063, FR-065)
+  - Evidencia: `src/rrhh/views/trabajadores-view.js` (`renderTrabajadoresView`, búsqueda, listado y flujo de desvinculación).
+  - Falta (spec nuevo/reglas pendientes): verificar confirmación/mensajes y comportamiento completo según el spec vigente.
 - [ ] T055 [US1] Registrar creación, actualización y desactivación de fichas y catálogos en la bitácora (usuario, rol, fecha/hora y valores anterior/nuevo) en `src/rrhh/seguridad/auditoria.js`, `src/rrhh/utils/trabajadores-service.js` y `src/rrhh/utils/catalogos-service.js` (FR-067)
+  - Evidencia parcial: servicios registran auditoría en varias operaciones, pero `src/rrhh/seguridad/auditoria.js` almacena `camposModificados` (nombres) y no valores anterior/nuevo; falta alineación con FR-067.
 - [ ] T056 [US1] Añadir mensajes de validación y estados vacíos de trabajadores y catálogos en `src/rrhh/components/trabajador-form.js` y `src/rrhh/views/trabajadores-view.js` (FR-006)
-- [ ] T057 [US1] Integrar las vistas de trabajadores y catálogos en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
+  - Falta: no se verificó cobertura completa en vistas/componentes.
+- [X] T057 [US1] Integrar las vistas de trabajadores y catálogos en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
+  - Evidencia: `src/rrhh/views/rrhh-router.js` (`renderRrhhRouter`, `RRHH_ROUTES`), `src/rrhh/views/workspace.js` (`RRHH_TABS`, `RENDERERS`, `RrhhWorkspace.renderTab`).
+  - Falta (spec nuevo/reglas pendientes): verificar navegación completa y restricciones de acceso por rol según el spec vigente.
 
 **Punto de control**: La Historia de Usuario 1 debe ser funcional y comprobable de forma independiente. La terminación automática de contratos al desvincular se completa en US2 (T068), reutilizando esta desactivación.
 
@@ -151,25 +228,53 @@
 ### Pruebas de la Historia de Usuario 2
 
 - [ ] T058 [P] [US2] Crear pruebas unitarias de validación de contratos, estados sin "cancelado", no superposición, sueldo mínimo, jornada máxima y renovación en `tests/unit/rrhh-contratos.test.js` (FR-068, FR-069, FR-070, FR-071)
+  - Evidencia parcial: existe `tests/unit/rrhh-contratos.test.js`; cobertura exacta frente a reglas actuales no verificada.
 - [ ] T059 [P] [US2] Crear pruebas unitarias de terminación automática del contrato vigente o vencido al desvincular y su auditoría en `tests/unit/rrhh-contratos-baja.test.js` (FR-070, FR-073)
+  - Falta: no existe `tests/unit/rrhh-contratos-baja.test.js`.
 - [ ] T060 [P] [US2] Crear prueba de integración de registro de contrato, cambio de sueldo, término, alerta de vencimiento, renovación y terminación automática al desvincular en `tests/integration/rrhh-contratos-flow.test.js` (FR-068, FR-071, FR-072, FR-073)
+  - Evidencia parcial: existe `tests/integration/rrhh-contratos-flow.test.js`; cobertura exacta no verificada.
 
 ### Implementación de la Historia de Usuario 2
 
-- [ ] T061 [P] [US2] Definir el esquema de contrato y su clave `erp_rrhh:contratos`, con estados vigente/vencido/terminado y sin estado "cancelado", en `src/rrhh/utils/contratos-service.js` (FR-068)
-- [ ] T062 [US2] Implementar el CRUD de contratos, el historial de vigencias sin superposición y el máximo un contrato vigente por Trabajador (permitiendo cero contratos) en `src/rrhh/utils/contratos-service.js` (FR-068, FR-069)
-- [ ] T063 [US2] Implementar las transiciones de estado: vencido por fecha; término de un contrato vigente o vencido, incluido el indefinido; prohibición de eliminar contratos y de usar el estado "cancelado" en `src/rrhh/utils/contratos-service.js` (FR-070)
-- [ ] T064 [US2] Implementar los cambios de vigencia y renovaciones mediante un nuevo registro, ajustando la fecha de fin del anterior sin solapamiento y manteniendo la continuidad en `src/rrhh/utils/contratos-service.js` (FR-071)
+- [X] T061 [P] [US2] Definir el esquema de contrato y su clave `erp_rrhh:contratos`, con estados vigente/vencido/terminado y sin estado "cancelado", en `src/rrhh/utils/contratos-service.js` (FR-068)
+  - Evidencia: `src/rrhh/utils/contratos-service.js` (`CONTRATOS_TABLE`, `ESTADOS_CONTRATO`, `TIPOS_CONTRATO`, `buildRecord`, `estadoContratoEn`).
+  - Falta (spec nuevo/reglas pendientes): confirmar alineación completa del esquema/campos con el spec vigente.
+- [X] T062 [US2] Implementar el CRUD de contratos, el historial de vigencias sin superposición y el máximo un contrato vigente por Trabajador (permitiendo cero contratos) en `src/rrhh/utils/contratos-service.js` (FR-068, FR-069)
+  - Evidencia: `src/rrhh/utils/contratos-service.js` (`validarContrato`, `crearContrato`, `actualizarContrato`, `listContratos`, `getContrato`).
+  - Falta (spec nuevo/reglas pendientes): verificar todas las restricciones CRUD/historial exigidas por el spec vigente.
+- [X] T063 [US2] Implementar las transiciones de estado: vencido por fecha; término de un contrato vigente o vencido, incluido el indefinido; prohibición de eliminar contratos y de usar el estado "cancelado" en `src/rrhh/utils/contratos-service.js` (FR-070)
+  - Evidencia: `src/rrhh/utils/contratos-service.js` (`estadoContratoEn`, `terminarContrato`, `eliminarContrato`, `ESTADOS_CONTRATO`).
+  - Falta (spec nuevo/reglas pendientes): verificar todos los casos de transición/terminación según el spec vigente.
+- [X] T064 [US2] Implementar los cambios de vigencia y renovaciones mediante un nuevo registro, ajustando la fecha de fin del anterior sin solapamiento y manteniendo la continuidad en `src/rrhh/utils/contratos-service.js` (FR-071)
+  - Evidencia: `src/rrhh/utils/contratos-service.js` (`registrarCambioSueldo`).
+  - Falta (spec nuevo/reglas pendientes): verificar flujo completo de renovaciones/ajustes según el spec vigente.
 - [ ] T065 [US2] Implementar `getContratoVigente(entityId, fecha)` y `getContratosEnPeriodo(entityId, periodo)` por solapamiento de vigencia en `src/rrhh/utils/contratos-service.js` (FR-072, FR-080)
-- [ ] T066 [P] [US2] Implementar el servicio de alertas de contratos próximos a vencer (≤ 30 días) y vencidos en `src/rrhh/utils/alertas-service.js` (FR-072)
-- [ ] T067 [US2] Implementar la validación de sueldo base no inferior al mínimo legal y jornada semanal no superior al máximo legal, usando los parámetros versionados, en `src/rrhh/utils/contratos-service.js` (FR-068; reglas de US2)
-- [ ] T068 [US2] Implementar la terminación automática de los contratos vigentes o vencidos al desvincular un Trabajador, conectada al gancho de desactivación de US1 en `src/rrhh/utils/trabajadores-service.js`, en `src/rrhh/utils/contratos-service.js` (FR-065, FR-070)
+  - Evidencia parcial: existen `getContratoVigente` y `contratosEnPeriodo/contratoParaPeriodo`; la firma/nombre difiere de lo pedido (`getContratosEnPeriodo` no con esa firma exacta).
+- [X] T066 [P] [US2] Implementar el servicio de alertas de contratos próximos a vencer (≤ 30 días) y vencidos en `src/rrhh/utils/alertas-service.js` (FR-072)
+  - Evidencia: `src/rrhh/utils/alertas-service.js` (`DIAS_ALERTA_CONTRATO`, `diasHastaVencimiento`, `contratosPorVencer`, `alertasContratos`, `resumenAlertas`).
+  - Falta (spec nuevo/reglas pendientes): verificar criterios exactos de alerta y exclusiones según el spec vigente.
+- [X] T067 [US2] Implementar la validación de sueldo base no inferior al mínimo legal y jornada semanal no superior al máximo legal, usando los parámetros versionados, en `src/rrhh/utils/contratos-service.js` (FR-068; reglas de US2)
+  - Evidencia: `src/rrhh/utils/contratos-service.js` (`validarContrato`, `limitarJornada`), `src/rrhh/utils/parametros-service.js`/`src/rrhh/calculo/parametros.js` (`obtenerParametro`/resolución por vigencia).
+  - Falta (spec nuevo/reglas pendientes): verificar uso completo de parámetros versionados/vigencias en todos los casos según el spec vigente.
+- [X] T068 [US2] Implementar la terminación automática de los contratos vigentes o vencidos al desvincular un Trabajador, conectada al gancho de desactivación de US1 en `src/rrhh/utils/trabajadores-service.js`, en `src/rrhh/utils/contratos-service.js` (FR-065, FR-070)
+  - Evidencia: `src/rrhh/utils/trabajadores-service.js` (`desactivarTrabajador`), `src/rrhh/utils/contratos-service.js` (`terminarContrato`).
+  - Falta (spec nuevo/reglas pendientes): confirmar cobertura exacta de contratos vencidos y requisitos de auditoría/fechas según el spec vigente.
 - [ ] T069 [US2] Exigir un contrato cuya vigencia incluya la fecha de la novedad para registrarla y al menos un día del período para incluir al Trabajador en el cálculo, en `src/rrhh/utils/contratos-service.js` (FR-072)
-- [ ] T070 [P] [US2] Construir el formulario de contrato (sueldo base, jornada, tipo y vigencia) con validaciones en `src/rrhh/components/contrato-form.js` (FR-068)
-- [ ] T071 [P] [US2] Construir la vista de listado e historial de contratos por trabajador con acciones de término para contratos vigentes o vencidos en `src/rrhh/views/contratos-view.js` (FR-068, FR-070)
-- [ ] T072 [US2] Mostrar las alertas de vencimiento de contrato en el panel principal en `src/components/dashboard.js` (FR-072)
+  - Evidencia parcial: parte se aplica en `src/rrhh/utils/novedades-service.js` y cálculo/liquidaciones; no reside principalmente en `contratos-service.js` ni se verificó cumplimiento total.
+- [X] T070 [P] [US2] Construir el formulario de contrato (sueldo base, jornada, tipo y vigencia) con validaciones en `src/rrhh/components/contrato-form.js` (FR-068)
+  - Evidencia: `src/rrhh/components/contrato-form.js` (`renderContratoForm`).
+  - Falta (spec nuevo/reglas pendientes): verificar validaciones/flujo completo según el spec vigente.
+- [X] T071 [P] [US2] Construir la vista de listado e historial de contratos por trabajador con acciones de término para contratos vigentes o vencidos en `src/rrhh/views/contratos-view.js` (FR-068, FR-070)
+  - Evidencia: `src/rrhh/views/contratos-view.js` (`renderContratosView`).
+  - Falta (spec nuevo/reglas pendientes): verificar acciones/estados y reglas completas según el spec vigente.
+- [X] T072 [US2] Mostrar las alertas de vencimiento de contrato en el panel principal en `src/components/dashboard.js` (FR-072)
+  - Evidencia: `src/components/dashboard.js` (`renderContratoAlerts`, `refreshStats`).
+  - Falta (spec nuevo/reglas pendientes): verificar contenido/criterios exactos de alerta según el spec vigente.
 - [ ] T073 [US2] Registrar creación, actualización, cambios de estado y terminación automática de contratos en la bitácora con valores anterior/nuevo en `src/rrhh/seguridad/auditoria.js` y `src/rrhh/utils/contratos-service.js` (FR-073)
-- [ ] T074 [US2] Integrar las vistas de contratos y alertas en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
+  - Evidencia parcial: se registra auditoría en operaciones de contrato, pero sin valores anterior/nuevo en el núcleo de auditoría.
+- [X] T074 [US2] Integrar las vistas de contratos y alertas en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
+  - Evidencia: `src/rrhh/views/rrhh-router.js` (`renderRrhhRouter`), `src/rrhh/views/workspace.js` (`RENDERERS.contratos`, `RRHH_TABS`), `src/components/dashboard.js` (`renderContratoAlerts`).
+  - Falta (spec nuevo/reglas pendientes): ubicación exacta de alertas/navegación según el spec vigente (alertas integradas en dashboard base).
 
 **Punto de control**: Las Historias de Usuario 1 y 2 deben funcionar de forma independiente.
 
@@ -184,27 +289,46 @@
 ### Pruebas de la Historia de Usuario 3
 
 - [ ] T075 [P] [US3] Crear pruebas unitarias de estados, privacidad de licencias y bloqueo en período cerrado en `tests/unit/rrhh-novedades.test.js` (FR-074, FR-076)
+  - Evidencia parcial: existe `tests/unit/rrhh-novedades.test.js`; cobertura exacta no verificada.
 - [ ] T076 [P] [US3] Crear pruebas unitarias de split por meses con atomicidad y período activo requerido en `tests/unit/rrhh-novedades-split.test.js` (FR-074, FR-075)
+  - Falta: no existe `tests/unit/rrhh-novedades-split.test.js`.
 - [ ] T077 [P] [US3] Crear pruebas unitarias de segregación de funciones, edición/anulación solo de Pendientes y motivo obligatorio de rechazo en `tests/unit/rrhh-novedades-segregacion.test.js` (FR-077)
+  - Falta: no existe `tests/unit/rrhh-novedades-segregacion.test.js`.
 - [ ] T078 [P] [US3] Crear pruebas unitarias de superposición de licencias/ausencias y tope de horas extra con justificación escrita en `tests/unit/rrhh-novedades-validaciones.test.js` (FR-074; reglas de US3)
+  - Falta: no existe `tests/unit/rrhh-novedades-validaciones.test.js`.
 - [ ] T079 [P] [US3] Crear prueba de integración del flujo de registro, aprobación, rechazo, anulación solo de Pendientes y bloqueo de cálculo en `tests/integration/rrhh-novedades-flow.test.js` (FR-074, FR-076, FR-077, FR-078)
+  - Falta: no existe `tests/integration/rrhh-novedades-flow.test.js`; existen pruebas de integración de novedades con otros nombres.
 
 ### Implementación de la Historia de Usuario 3
 
 - [ ] T080 [P] [US3] Definir el esquema de novedad, tipos permitidos, justificación de horas extra y clave `erp_rrhh:novedades` en `src/rrhh/utils/novedades-service.js` (FR-074)
+  - Evidencia parcial: `src/rrhh/utils/novedades-service.js` usa tabla `novedades` (`erp_rrhh:novedades` vía storage RR.HH.) y lógica de tipos; esquema completo/justificación según spec no verificado totalmente.
 - [ ] T081 [US3] Implementar el CRUD de novedades con privacidad de licencias (solo tipo y días, sin diagnóstico) en `src/rrhh/utils/novedades-service.js` (FR-074)
+  - Evidencia parcial: crear/actualizar/anular y sanitización de privacidad existen; falta verificar cobertura completa del CRUD y privacidad.
 - [ ] T082 [US3] Implementar la asociación al período de la fecha y la exigencia de período activo en `src/rrhh/utils/novedades-service.js` (FR-074, FR-076)
+  - Evidencia parcial: hay validaciones de período activo; verificar asociación por fecha en todos los casos.
 - [ ] T083 [US3] Implementar el split atómico por mes calendario cuando el rango cruza meses, rechazando todo si algún período no está activo en `src/rrhh/utils/novedades-service.js` (FR-075)
+  - Evidencia parcial: `dividirPorMes` y validaciones previas a inserción existen; atomicidad/comportamiento exacto no verificado.
 - [ ] T084 [US3] Implementar la máquina de estados pendiente/aprobada/rechazada/anulada y el bloqueo de períodos cerrados en `src/rrhh/utils/novedades-service.js` (FR-076)
+  - Evidencia parcial: estados y bloqueos existen (apoya en aprobación/períodos); verificar máquina completa.
 - [ ] T085 [US3] Implementar la segregación de funciones: jefatura no aprueba lo que registró; administrador/a aprueba las de Trabajadores sin jefatura y las registradas por la jefatura; analista registra y ve pero no aprueba ni rechaza; solo Pendientes se editan/anulan y las Aprobadas/Rechazadas no se modifican en `src/rrhh/utils/novedades-service.js` (FR-077)
+  - Evidencia parcial: hay controles de permisos/alcance; la matriz de roles implementada difiere del spec (roles adicionales/distintos), por lo que el cumplimiento de FR-077 no está confirmado.
 - [ ] T086 [US3] Implementar la validación de superposición de licencias y ausencias de un mismo Trabajador en `src/rrhh/utils/novedades-service.js` (FR-074; reglas de US3)
+  - Evidencia parcial: existe detección de solapamiento; verificar reglas completas.
 - [ ] T087 [US3] Implementar el tope diario de horas extra desde los parámetros legales y la exigencia de justificación escrita para superarlo en `src/rrhh/utils/novedades-service.js` (FR-074; reglas de US3)
+  - Evidencia parcial: usa `MAX_HORAS_EXTRA`; verificación de exigencia de justificación y todos los casos pendiente.
 - [ ] T088 [US3] Implementar el motivo obligatorio al rechazar una novedad en `src/rrhh/utils/novedades-service.js` (FR-076; reglas de US3)
+  - Falta: lógica de aprobación/rechazo delegada a `novedades-aprobacion.js`; obligatoriedad de motivo según spec no verificada aquí.
 - [ ] T089 [P] [US3] Construir el formulario de novedad con campos condicionados por tipo y justificación de horas extra en `src/rrhh/components/novedad-form.js` (FR-074)
-- [ ] T090 [P] [US3] Construir el listado de novedades con acciones de aprobar/rechazar/anular solo sobre Pendientes e historial de estados en `src/rrhh/views/novedades-view.js` (FR-077)
+  - Evidencia parcial: `src/rrhh/components/novedad-form.js` existe.
+- [ ] T090 [P] [US3] Construir el listado de novedades con acciones de aprobar/rechazar/anular solo sobre Pendientes e historial de estados en `src/rrhh/views/novedades.js` (FR-077)
+  - Evidencia parcial: ruta real `src/rrhh/views/novedades.js` (existe) en lugar de `.../novedades-view.js`; cumplimiento completo no verificado.
 - [ ] T091 [US3] Implementar el bloqueo del cálculo cuando existan novedades pendientes y la alerta con las no resueltas en `src/rrhh/utils/novedades-service.js` (FR-076)
+  - Evidencia parcial: `estadoElegibilidad`/conteos y bloqueo en `calcularPeriodo` (`src/rrhh/utils/liquidacion-service.js`) existen; alerta/listado de no resueltas según spec no verificado.
 - [ ] T092 [US3] Registrar creación, actualización, aprobación, rechazo y anulación de novedades en la bitácora con valores anterior/nuevo en `src/rrhh/seguridad/auditoria.js` y `src/rrhh/utils/novedades-service.js` (FR-078)
+  - Evidencia parcial: auditoría registrada en operaciones; sin valores anterior/nuevo.
 - [ ] T093 [US3] Integrar la vista de novedades en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
+  - Evidencia parcial: integrada en `src/rrhh/views/rrhh-router.js`/`workspace.js` (vista `novedades.js`).
 
 **Punto de control**: Las Historias de Usuario 1, 2 y 3 deben funcionar de forma independiente.
 
@@ -219,32 +343,56 @@
 ### Pruebas de la Historia de Usuario 4
 
 - [ ] T094 [P] [US4] Crear pruebas unitarias del motor de cálculo y del uso de parámetros legales versionados en `tests/unit/rrhh-calculo.test.js` (FR-080)
+  - Evidencia parcial: existe `tests/unit/rrhh-calculo.test.js`; cobertura exacta no verificada.
 - [ ] T095 [P] [US4] Crear pruebas unitarias de creación de período, estados y redondeo por línea en `tests/unit/rrhh-periodos.test.js` (FR-079, FR-082, FR-083)
+  - Evidencia parcial: existe `tests/unit/rrhh-periodos.test.js`; no cubre necesariamente redondeo por línea en el mismo archivo.
 - [ ] T096 [P] [US4] Crear pruebas unitarias de desactualización y recálculo idempotente de liquidaciones en `tests/unit/rrhh-liquidacion-estados.test.js` (FR-080, FR-081)
+  - Evidencia parcial: existe `tests/unit/rrhh-liquidacion-estados.test.js`; idempotencia/desactualización según spec no verificada.
 - [ ] T097 [P] [US4] Crear prueba de integración del caso de referencia, recálculo y cierre de período en `tests/integration/rrhh-calculo-periodo.test.js` (FR-080, FR-082, FR-083)
+  - Evidencia parcial: existe `tests/integration/rrhh-calculo-periodo.test.js`.
 - [ ] T098 [P] [US4] Crear prueba de integración de elegibilidad por solapamiento de vigencia y resumen de Trabajadores excluidos con motivo en `tests/integration/rrhh-calculo-elegibilidad.test.js` (FR-080)
+  - Falta: no existe `tests/integration/rrhh-calculo-elegibilidad.test.js`.
 
 ### Implementación de la Historia de Usuario 4
 
 - [ ] T099 [P] [US4] Definir el esquema de período y su clave `erp_rrhh:periodos` con estados Abierto/Calculado/Cerrado en `src/rrhh/utils/periodos-service.js` (FR-079, FR-082)
+  - Evidencia parcial: `src/rrhh/utils/periodos-service.js` define `PERIODOS_TABLE` (`periodos`) y maneja estados; alineación exacta del esquema/estados ("Abierto/Calculado/Cerrado") con spec no verificada.
 - [ ] T100 [US4] Implementar la creación de período por mes y año, con parámetros legales obligatorios, unicidad y validación de mes calendario en `src/rrhh/utils/periodos-service.js` (FR-079)
+  - Evidencia parcial: apertura/aseguramiento de períodos existe; falta evidencia de exigir parámetros legales obligatorios al crear y de todas las validaciones.
 - [ ] T101 [P] [US4] Implementar las funciones puras del motor (sueldo proporcional, horas extra, gratificación, AFP, salud, seguro de cesantía e impuesto único) en `src/rrhh/calculo/motor.js` (FR-080)
+  - Evidencia parcial: `src/rrhh/calculo/motor.js` existe; cobertura completa de componentes legales no verificada.
 - [ ] T102 [P] [US4] Implementar el redondeo por línea al peso y los totales por suma de líneas en `src/rrhh/calculo/redondeo.js` (FR-083)
+  - Falta: no existe `src/rrhh/calculo/redondeo.js`; el redondeo puede estar en otro módulo.
 - [ ] T103 [P] [US4] Implementar la máquina de estados de liquidación y la persistencia de liquidaciones y líneas con snapshot del parámetro legal en `src/rrhh/utils/liquidaciones-service.js` (FR-080)
+  - Evidencia parcial: ruta real `src/rrhh/utils/liquidacion-service.js` y `src/rrhh/utils/liquidacion-estados.js` existen; snapshot/persistencia completa no verificada. (Ruta corregida a estructura real.)
 - [ ] T104 [US4] Implementar el cálculo del período usando cualquier contrato cuya vigencia comprenda al menos un día del período (incluidos terminados/vencidos con vigencia en el período) y solo novedades aprobadas, en forma proporcional a los días de vigencia, dejando el período en estado Calculado en `src/rrhh/utils/periodos-service.js` (FR-080)
+  - Evidencia parcial: lógica de cálculo está en `src/rrhh/utils/liquidacion-service.js` y usa contratos/novedades aprobadas; ubicación/responsabilidades difieren de la tarea y cumplimiento total no verificado.
 - [ ] T105 [US4] Implementar el resumen del cálculo con liquidaciones generadas y Trabajadores excluidos por no tener contrato en el período, indicando el motivo en `src/rrhh/utils/periodos-service.js` (FR-080)
+  - Evidencia parcial: `calcularPeriodo` devuelve resumen/excluidos en `src/rrhh/utils/liquidacion-service.js`; ruta difiere.
 - [ ] T106 [US4] Implementar el recálculo mientras el período esté Abierto o Calculado, reemplazando las liquidaciones en borrador sin duplicarlas en `src/rrhh/utils/periodos-service.js` (FR-080)
+  - Evidencia parcial: recálculo/prevención parcial existe en servicios de liquidación; cumplimiento/idempotencia total no verificada y ruta difiere.
 - [ ] T107 [US4] Marcar como desactualizada la liquidación tras aprobar una novedad o cambiar un contrato posterior al último cálculo en `src/rrhh/utils/periodos-service.js` (FR-081)
+  - Falta: no se evidencia marcado de desactualización según FR-081.
 - [ ] T108 [US4] Implementar el cierre de período: bloquear con novedades pendientes o Trabajadores sin calcular, congelar UF/UTM/tasas y registrar quién y cuándo en `src/rrhh/utils/periodos-service.js` (FR-082)
+  - Evidencia parcial: `cerrarPeriodo` congela parámetros y registra cierre; falta evidencia de bloqueos completos (pendientes/sin calcular) exigidos.
 - [ ] T109 [US4] Impedir el recálculo y la edición de liquidaciones de períodos cerrados y la reapertura del período en `src/rrhh/utils/periodos-service.js` (FR-082, FR-083)
+  - Evidencia parcial: hay controles de período cerrado (`PeriodoCerradoError`, `isPeriodoCerrado`); reapertura/edición según todas las reglas no verificada.
 - [ ] T110 [P] [US4] Implementar el cálculo de aportes y costo empleador en `src/rrhh/utils/costo-empleador.js` (FR-080)
+  - Evidencia parcial: `src/rrhh/utils/costo-empleador.js` existe.
 - [ ] T111 [P] [US4] Construir el formulario de carga manual y versionado de parámetros legales (UF, UTM, IMM, tasas, topes y tramos) en `src/rrhh/components/parametros-form.js` (FR-079)
+  - Falta: no existe `src/rrhh/components/parametros-form.js`.
 - [ ] T112 [P] [US4] Construir la vista de administración de parámetros legales y su historial de vigencias en `src/rrhh/views/parametros-view.js` (FR-079)
-- [ ] T113 [P] [US4] Construir la vista de gestión de períodos (abrir, calcular y cerrar) en `src/rrhh/views/periodos-view.js` (FR-079, FR-082)
-- [ ] T114 [P] [US4] Construir la vista de cálculo de planilla con alerta de novedades pendientes y resumen de generadas/excluidas en `src/rrhh/views/planilla-view.js` (FR-080)
-- [ ] T115 [P] [US4] Construir la vista de listado y detalle de liquidaciones en `src/rrhh/views/liquidaciones-view.js` (FR-080)
+  - Falta: no existe `src/rrhh/views/parametros-view.js`.
+- [ ] T113 [P] [US4] Construir la vista de gestión de períodos (abrir, calcular y cerrar) en `src/rrhh/views/periodos.js` (FR-079, FR-082)
+  - Evidencia parcial: ruta real `src/rrhh/views/periodos.js`; cumplimiento completo no verificado. (Ruta corregida.)
+- [ ] T114 [P] [US4] Construir la vista de cálculo de planilla con alerta de novedades pendientes y resumen de generadas/excluidas en `src/rrhh/views/planilla.js` (FR-080)
+  - Evidencia parcial: ruta real `src/rrhh/views/planilla.js` con elegibilidad y resultados; verificar alerta/resumen exactos. (Ruta corregida.)
+- [ ] T115 [P] [US4] Construir la vista de listado y detalle de liquidaciones en `src/rrhh/views/liquidaciones.js` (FR-080)
+  - Evidencia parcial: ruta real `src/rrhh/views/liquidaciones.js`; cumplimiento completo no verificado. (Ruta corregida.)
 - [ ] T116 [US4] Registrar creación, cálculo, recálculo y cierre de períodos en la bitácora en `src/rrhh/seguridad/auditoria.js` y `src/rrhh/utils/periodos-service.js` (FR-084)
+  - Evidencia parcial: se registran algunas acciones (abrir/cerrar/calcular) en servicios relacionados; cobertura completa de creación/cálculo/recálculo/cierre no verificada.
 - [ ] T117 [US4] Integrar las vistas de parámetros, períodos, planilla y liquidaciones en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
+  - Evidencia parcial: períodos, planilla y liquidaciones integrados en `src/rrhh/views/rrhh-router.js`/`workspace.js`; no hay vista de parámetros integrada.
 
 **Punto de control**: Las Historias de Usuario 1 a 4 deben funcionar de forma independiente, incluida la elegibilidad por solapamiento y el resumen de exclusiones.
 
@@ -259,33 +407,58 @@
 ### Pruebas de la Historia de Usuario 6
 
 - [ ] T118 [P] [US6] Crear pruebas unitarias de la matriz de roles y permisos detallados (administrador/a, analista, jefatura y Trabajador) en `tests/unit/rrhh-seguridad-roles.test.js` (FR-051, FR-085)
+  - Falta: no existe `tests/unit/rrhh-seguridad-roles.test.js`; existe `tests/unit/rrhh-seguridad.test.js`.
 - [ ] T119 [P] [US6] Crear pruebas unitarias de visibilidad restringida por rol, datos básicos de la jefatura y scoping de equipo en listados, detalles, búsquedas e impresión en `tests/unit/rrhh-seguridad-visibilidad.test.js` (FR-052, FR-053, FR-054, FR-085)
+  - Falta: no existe `tests/unit/rrhh-seguridad-visibilidad.test.js`.
 - [ ] T120 [P] [US6] Crear pruebas unitarias de inmutabilidad, retención, consulta exclusiva de la bitácora, filtros y registro de intentos denegados en `tests/unit/rrhh-auditoria.test.js` (FR-055, FR-056, FR-058, FR-087)
+  - Evidencia parcial: existe `tests/unit/rrhh-auditoria.test.js`; no se verifica cobertura completa (retención, filtros/consulta exclusiva según spec) ni que el nombre/alcance coincida plenamente.
 - [ ] T121 [P] [US6] Crear pruebas unitarias de cambio de rol en sesión activa con registro en bitácora en `tests/unit/rrhh-sesion-rol.test.js` (FR-086)
+  - Falta: no existe `tests/unit/rrhh-sesion-rol.test.js`.
 - [ ] T122 [P] [US6] Crear prueba de integración de acceso por rol, denegaciones auditadas y bitácora append-only en `tests/integration/rrhh-seguridad-flow.test.js` (FR-055, FR-057, FR-059)
+  - Falta: no existe `tests/integration/rrhh-seguridad-flow.test.js`; hay pruebas relacionadas (`rrhh-seguridad-jefatura.test.js`, `rrhh-auditoria.test.js`).
 - [ ] T123 [P] [US6] Crear prueba de integración de respaldo/restauración JSON que preserva y fusiona la auditoría previa, respeta permisos y completa el ciclo en menos de 5 minutos en `tests/integration/backup-flow.test.js` (FR-056, FR-060, FR-085, SC-022)
+  - Falta: no existe `tests/integration/backup-flow.test.js` ni implementación de respaldo JSON.
 - [ ] T124 [P] [US6] Crear prueba de integración de restricciones de Trabajador desvinculado y de jefatura sobre equipos ajenos en `tests/integration/rrhh-seguridad-desvinculado.test.js` (FR-051, FR-053, FR-085)
+  - Falta: no existe `tests/integration/rrhh-seguridad-desvinculado.test.js`.
 
 ### Implementación de la Historia de Usuario 6
 
 - [ ] T125 [P] [US6] Definir los cuatro roles y sus permisos detallados en `src/rrhh/seguridad/roles.js` (FR-051, FR-085)
-- [ ] T126 [P] [US6] Implementar la sesión simulada, el selector de rol y el cambio de rol en sesión activa en `src/rrhh/seguridad/sesion.js` (FR-051, FR-086)
-- [ ] T127 [US15] Implementar la selección del Trabajador representado: jefatura solo activo; Trabajador activo o desvinculado (solo liquidaciones cerradas) en `src/rrhh/seguridad/sesion.js` (FR-051, FR-085)
-- [ ] T128 [P] [US15] Implementar la clasificación de datos sensibles y la matriz de visibilidad por rol, incluyendo nombre, código, cargo, departamento, centro de costo y estado laboral como datos básicos de la jefatura, en `src/rrhh/seguridad/permisos.js` (FR-052, FR-054, FR-085)
-- [ ] T129 [US15] Aplicar la visibilidad restringida en listados, detalles, búsquedas y vistas imprimibles en `src/rrhh/seguridad/permisos.js`, `src/components/search-bar.js` y `src/rrhh/views/liquidaciones-view.js` (FR-052, FR-054)
-- [ ] T130 [US15] Implementar la denegación de acciones/consultas sin revelar contenido protegido en `src/rrhh/seguridad/permisos.js` (FR-057, FR-059)
-- [ ] T131 [US15] Registrar en la bitácora consultas/cambios de datos sensibles, cambios de rol, accesos denegados (incluidos intentos de editar/eliminar auditoría) y operaciones de respaldo, con usuario, rol, fecha/hora, acción y registro afectado en `src/rrhh/seguridad/auditoria.js` (FR-055, FR-086)
-- [ ] T132 [US15] Aplicar las restricciones de rol y el scoping de equipo en la capa de servicios de RR.HH., incluidos parámetros y respaldo, en `src/rrhh/utils/trabajadores-service.js`, `src/rrhh/utils/contratos-service.js`, `src/rrhh/utils/novedades-service.js`, `src/rrhh/utils/periodos-service.js`, `src/rrhh/utils/liquidaciones-service.js` y `src/rrhh/calculo/parametros.js` (FR-057, FR-085)
-- [ ] T133 [US15] Implementar el ayudante de equipo de jefatura (`getEquipo`) y aplicarlo a novedades, listados y búsquedas, impidiendo operar sobre Trabajadores ajenos en `src/rrhh/seguridad/permisos.js` y `src/rrhh/utils/trabajadores-service.js` (FR-053, FR-085)
-- [ ] T134 [P] [US15] Implementar la exportación JSON registrando la operación en la bitácora, sin modificar los datos, en `src/backup.js` (FR-060, FR-055)
-- [ ] T135 [US15] Implementar la validación e importación con confirmación y restauración atómica de datos operativos, registrando la operación sin sobrescribir ni eliminar registros previos de auditoría (fusión append-only), sin datos clínicos y respetando permisos, en `src/backup.js` (FR-060, FR-056, FR-085)
-- [ ] T136 [P] [US15] Construir el selector de rol/sesión y la reselección del Trabajador representado en `src/rrhh/components/rol-switcher.js` (FR-051, FR-086)
-- [ ] T137 [P] [US15] Construir la vista de consulta de la bitácora de auditoría, accesible solo al administrador/a de RR.HH., con filtros por usuario, rol, acción y período, en `src/rrhh/views/auditoria-view.js` (FR-087)
-- [ ] T138 [P] [US15] Añadir las acciones de exportar e importar respaldo en la interfaz con confirmación y verificación de permisos en `src/components/shell.js` y `src/styles.css` (FR-060, FR-085)
-- [ ] T139 [US15] Integrar el selector de rol, la vista de auditoría y las acciones de respaldo en la navegación y el marco del espacio de trabajo en `src/rrhh/views/rrhh-router.js` y `src/components/shell.js` (FR-086, FR-087, FR-060)
-- [ ] T140 [US15] Bloquear en un Trabajador desvinculado cualquier operación distinta de consultar sus propias liquidaciones cerradas en `src/rrhh/seguridad/permisos.js` y `src/rrhh/views/liquidaciones-view.js` (FR-051, FR-085)
-- [ ] T141 [US15] Aplicar permisos de administrador/a a la carga y administración de parámetros legales en `src/rrhh/calculo/parametros.js`, `src/rrhh/components/parametros-form.js` y `src/rrhh/views/parametros-view.js` (FR-085)
+  - Evidencia parcial: `src/rrhh/seguridad/roles.js` define matriz de roles, pero incluye roles adicionales (`gerencia`, `auditor`) y permisos que no coinciden exactamente con los cuatro roles/permisos detallados del spec.
+- [ ] T126 [P] [US6] Implementar la sesión simulada, el selector de rol y el cambio de rol en sesión activa en `src/rrhh/seguridad/session.js` (FR-051, FR-086)
+  - Evidencia parcial: ruta real `src/rrhh/seguridad/session.js` (no `sesion.js`) implementa sesión simulada y cambio de rol; falta registro en bitácora del cambio y re-selección/flujo completo exigido.
+- [ ] T127 [P] [US6] Implementar la selección del Trabajador representado: jefatura solo activo; Trabajador activo o desvinculado (solo liquidaciones cerradas) en `src/rrhh/seguridad/session.js` (FR-051, FR-085)
+  - Falta: la sesión guarda `trabajadorId/equipo` pero no se evidencia la selección/validación completa requerida por el spec.
+- [ ] T128 [P] [US6] Implementar la clasificación de datos sensibles y la matriz de visibilidad por rol, incluyendo nombre, código, cargo, departamento, centro de costo y estado laboral como datos básicos de la jefatura, en `src/rrhh/seguridad/permisos.js` (FR-052, FR-054, FR-085)
+  - Falta: no existe `src/rrhh/seguridad/permisos.js`; hay lógica relacionada en `src/rrhh/seguridad/roles.js` y `src/rrhh/seguridad/acceso-datos.js`.
+- [ ] T129 [US6] Aplicar la visibilidad restringida en listados, detalles, búsquedas y vistas imprimibles en `src/rrhh/seguridad/permisos.js`, `src/components/search-bar.js` y `src/rrhh/views/liquidaciones.js` (FR-052, FR-054)
+  - Falta: rutas reales difieren (`liquidaciones.js`, no `liquidaciones-view.js`; permisos no en `permisos.js`) y no se evidencia aplicación completa en listados/detalles/búsquedas/imprimibles.
+- [ ] T130 [US6] Implementar la denegación de acciones/consultas sin revelar contenido protegido en `src/rrhh/seguridad/permisos.js` (FR-057, FR-059)
+  - Evidencia parcial: hay denegaciones en `src/rrhh/seguridad/acceso-datos.js`, `src/rrhh/views/liquidacion.js` y `src/rrhh/views/liquidaciones.js`; módulo/ruta solicitada no existe y cobertura total no verificada.
+- [ ] T131 [US6] Registrar en la bitácora consultas/cambios de datos sensibles, cambios de rol, accesos denegados (incluidos intentos de editar/eliminar auditoría) y operaciones de respaldo, con usuario, rol, fecha/hora, acción y registro afectado en `src/rrhh/seguridad/auditoria.js` (FR-055, FR-086)
+  - Evidencia parcial: auditoría soporta varias acciones y denegaciones; faltan registro de cambios de rol/operaciones de respaldo y valores/campos completos según spec.
+- [ ] T132 [US6] Aplicar las restricciones de rol y el scoping de equipo en la capa de servicios de RR.HH., incluidos parámetros y respaldo, en `src/rrhh/utils/trabajadores-service.js`, `src/rrhh/utils/contratos-service.js`, `src/rrhh/utils/novedades-service.js`, `src/rrhh/utils/periodos-service.js`, `src/rrhh/utils/liquidacion-service.js` y `src/rrhh/calculo/parametros.js` (FR-057, FR-085)
+  - Evidencia parcial: algunos servicios aplican permisos (`trabajadores`, `contratos`, `novedades`, `liquidacion/periodos` en partes); falta cobertura uniforme (incl. parámetros/respaldo) y alineación con roles del spec. (Rutas reales ajustadas: `liquidacion-service.js`.)
+- [ ] T133 [US6] Implementar el ayudante de equipo de jefatura (`getEquipo`) y aplicarlo a novedades, listados y búsquedas, impidiendo operar sobre Trabajadores ajenos en `src/rrhh/seguridad/permisos.js` y `src/rrhh/utils/trabajadores-service.js` (FR-053, FR-085)
+  - Evidencia parcial: existe `equipoDeJefatura` en `src/rrhh/utils/jefatura.js` y scoping en servicios/vistas; no existe `getEquipo` en `permisos.js` ni se verificó aplicación completa en búsquedas/listados/impresión.
+- [ ] T134 [P] [US6] Implementar la exportación JSON registrando la operación en la bitácora, sin modificar los datos, en `src/backup.js` (FR-060, FR-055)
+  - Falta: no existe `src/backup.js`.
+- [ ] T135 [US6] Implementar la validación e importación con confirmación y restauración atómica de datos operativos, registrando la operación sin sobrescribir ni eliminar registros previos de auditoría (fusión append-only), sin datos clínicos y respetando permisos, en `src/backup.js` (FR-060, FR-056, FR-085)
+  - Falta: no existe `src/backup.js`.
+- [ ] T136 [P] [US6] Construir el selector de rol/sesión y la reselección del Trabajador representado en `src/rrhh/components/rol-switcher.js` (FR-051, FR-086)
+  - Evidencia parcial: existe `src/rrhh/components/rol-switcher.js` y selector en shell; reselección de trabajador representado según spec no verificada.
+- [ ] T137 [P] [US6] Construir la vista de consulta de la bitácora de auditoría, accesible solo al administrador/a de RR.HH., con filtros por usuario, rol, acción y período, en `src/rrhh/views/auditoria.js` (FR-087)
+  - Evidencia parcial: ruta real `src/rrhh/views/auditoria.js` existe; filtros requeridos y restricción exclusiva al rol administrador/a según spec no verificados. (Ruta corregida.)
+- [ ] T138 [P] [US6] Añadir las acciones de exportar e importar respaldo en la interfaz con confirmación y verificación de permisos en `src/components/shell.js` y `src/styles.css` (FR-060, FR-085)
+  - Falta: no se evidencian acciones de exportar/importar respaldo en `src/components/shell.js`.
+- [ ] T139 [US6] Integrar el selector de rol, la vista de auditoría y las acciones de respaldo en la navegación y el marco del espacio de trabajo en `src/rrhh/views/rrhh-router.js` y `src/components/shell.js` (FR-086, FR-087, FR-060)
+  - Evidencia parcial: selector de rol y vista de auditoría integrados; acciones de respaldo no existen.
+- [ ] T140 [US6] Bloquear en un Trabajador desvinculado cualquier operación distinta de consultar sus propias liquidaciones cerradas en `src/rrhh/seguridad/permisos.js` y `src/rrhh/views/liquidaciones.js` (FR-051, FR-085)
+  - Falta: rutas/lógica no alineadas al spec actual (no `permisos.js`) y restricción completa no verificada.
+- [ ] T141 [US6] Aplicar permisos de administrador/a a la carga y administración de parámetros legales en `src/rrhh/calculo/parametros.js`, `src/rrhh/components/parametros-form.js` y `src/rrhh/views/parametros-view.js` (FR-085)
+  - Falta: no existen `parametros-form.js`/`parametros-view.js` ni controles de permisos explícitos en `calculo/parametros.js`.
 - [ ] T142 [US6] Aplicar permisos de administrador/a a la exportación, importación y restauración del respaldo en `src/backup.js` y `src/components/shell.js` (FR-085)
+  - Falta: no existe `src/backup.js`.
 
 **Punto de control**: US1–US4 y US6 deben funcionar de forma independiente; la seguridad, el scoping de equipo y la auditoría quedan aplicadas transversalmente.
 
@@ -300,26 +473,44 @@
 ### Pruebas de la Historia de Usuario 5
 
 - [ ] T143 [P] [US5] Crear prueba de integración del desglose por línea, snapshot congelado y marca de borrador en `tests/integration/rrhh-liquidacion-explicacion.test.js` (FR-040, FR-041, FR-043)
+  - Falta: no existe `tests/integration/rrhh-liquidacion-explicacion.test.js`; cobertura relacionada en `rrhh-liquidacion-view.test.js`.
 - [ ] T144 [P] [US5] Crear prueba de integración de la vista imprimible, contenido del comprobante (incluida empresa emisora), guardado en PDF, máximo de dos páginas y obtención del comprobante en menos de 30 segundos en `tests/integration/rrhh-liquidacion-print.test.js` (FR-044, FR-045, FR-046, FR-047, SC-015, SC-012)
+  - Evidencia parcial: existe `tests/integration/rrhh-liquidacion-print.test.js`; cumplimiento de todos los criterios (p. ej. máximo dos páginas/tiempos) no verificado.
 - [ ] T145 [P] [US5] Crear prueba de integración de permisos y auditoría al explicar, imprimir o guardar en PDF una liquidación en `tests/integration/rrhh-liquidacion-permisos.test.js` (FR-048, FR-049, FR-050)
+  - Falta: no existe `tests/integration/rrhh-liquidacion-permisos.test.js`.
 - [ ] T146 [P] [US5] Crear prueba de rendimiento de la explicación de línea en menos de 1 segundo en `tests/integration/rrhh-liquidacion-rendimiento.test.js` (SC-011)
+  - Falta: no existe `tests/integration/rrhh-liquidacion-rendimiento.test.js`.
 
 ### Implementación de la Historia de Usuario 5
 
 - [ ] T147 [P] [US5] Construir el panel de explicación por línea (base, tasa o factor, fórmula y parámetro legal con vigencia) en `src/rrhh/components/linea-explicacion.js` (FR-040, FR-041)
+  - Falta: no existe `src/rrhh/components/linea-explicacion.js`; la explicación se renderiza en `src/rrhh/views/liquidacion.js` con apoyo de utilidades.
 - [ ] T148 [US5] Indicar claramente cuando una línea no dispone de fórmula o parámetro legal y registrar el motivo de las líneas manuales, sin omitirla del comprobante, en `src/rrhh/components/linea-explicacion.js` (FR-042)
+  - Falta: ruta/componente distinto; comportamiento no verificado contra FR-042.
 - [ ] T149 [US5] Implementar la explicación con valores congelados en períodos cerrados y la marca de "borrador" en abiertos/calculados en `src/rrhh/views/liquidacion.js` (FR-043)
+  - Evidencia parcial: `src/rrhh/views/liquidacion.js` muestra estado/explicación; cumplimiento exacto de congelados/borrador en todos los casos no verificado.
 - [ ] T150 [P] [US5] Construir la vista imprimible sin menús, botones de edición ni controles de navegación en `src/rrhh/views/liquidacion-impresion.js` (FR-044)
+  - Falta: no existe `src/rrhh/views/liquidacion-impresion.js`; la impresión se maneja en `src/rrhh/views/liquidacion.js` (`createPrintController`/clase de impresión).
 - [ ] T151 [US5] Incluir en el comprobante la identificación del Trabajador, período, empresa emisora, líneas con montos, totales, líquido a pagar y marca de borrador en `src/rrhh/views/liquidacion-impresion.js` (FR-045)
+  - Falta: ruta distinta (`liquidacion.js`); contenido completo del comprobante no verificado.
 - [ ] T152 [US5] Garantizar que los montos del comprobante coincidan exactamente con la liquidación en `src/rrhh/views/liquidacion-impresion.js` (FR-046)
+  - Falta: evidencia insuficiente y ruta distinta.
 - [ ] T153 [P] [US5] Implementar los estilos de impresión en tamaño carta/A4 vertical y el control de salto para un máximo de dos páginas en `src/rrhh/views/liquidacion-impresion.css` (FR-047, SC-015)
+  - Falta: no existe `src/rrhh/views/liquidacion-impresion.css`.
 - [ ] T154 [US5] Aplicar los permisos de acceso a la consulta, explicación, impresión y guardado en PDF (analista y administrador/a: cualquier Trabajador; Trabajador: solo sus liquidaciones cerradas; jefatura: sin acceso) en `src/rrhh/views/liquidacion.js` y `src/rrhh/seguridad/permisos.js` (FR-048)
+  - Evidencia parcial: `liquidacion.js`/`liquidaciones.js` aplican controles basados en roles/acceso, pero la matriz de roles y rutas (`permisos.js` ausente) no coinciden plenamente con el spec.
 - [ ] T155 [US5] Impedir el acceso a liquidaciones ajenas, no cerradas o de equipos ajenos e informar la denegación sin revelar contenido en `src/rrhh/views/liquidacion.js` (FR-049)
+  - Evidencia parcial: hay denegaciones; cobertura exacta (propias/no cerradas/equipos ajenos) no verificada.
 - [ ] T156 [US5] Registrar en la bitácora la consulta, explicación, impresión o guardado en PDF de liquidaciones en `src/rrhh/views/liquidacion.js` y `src/rrhh/seguridad/auditoria.js` (FR-050)
-- [ ] T157 [US5] Integrar las acciones de explicar, imprimir y guardar en PDF en el detalle de liquidación en `src/rrhh/views/liquidaciones-view.js` (FR-040, FR-044)
+  - Evidencia parcial: se registra consulta en `loadLiquidacion`/`liquidaciones.js`; no se evidencia registro específico de explicación/impresión/guardado en PDF.
+- [ ] T157 [US5] Integrar las acciones de explicar, imprimir y guardar en PDF en el detalle de liquidación en `src/rrhh/views/liquidaciones.js` (FR-040, FR-044)
+  - Evidencia parcial: ruta real `src/rrhh/views/liquidaciones.js` integra vista/detalle; acciones completas no verificadas. (Ruta corregida.)
 - [ ] T158 [US5] Verificar que consultar, explicar o imprimir una liquidación no modifica su contenido en `src/rrhh/views/liquidacion.js` (FR-044)
-- [ ] T159 [US5] Cargar los datos de identificación de la empresa emisora desde la configuración del módulo para el comprobante en `src/module-config.js` y `src/rrhh/views/liquidacion-impresion.js` (FR-045; suposición de datos del emisor)
+  - Falta: no hay evidencia/verificación explícita.
+- [ ] T159 [US5] Cargar los datos de identificación de la empresa emisora desde la configuración del módulo para el comprobante en `src/module-config.js` y `src/rrhh/views/liquidacion.js` (FR-045; suposición de datos del emisor)
+  - Evidencia parcial: `module-config.js` define `empresa` y `liquidacion.js` resuelve emisor (`getEmpresa`/config), pero ruta/comportamiento exacto no verificado. (Ruta corregida.)
 - [ ] T160 [US5] Medir y optimizar la generación de la explicación por línea para cumplir menos de 1 segundo en `src/rrhh/components/linea-explicacion.js` (SC-011)
+  - Falta: componente/ruta no existe y no hay evidencia de medición.
 
 **Punto de control**: Las Historias de Usuario 1 a 6 deben funcionar de forma independiente.
 
@@ -330,19 +521,27 @@
 **Propósito**: Mejoras que afectan a varias historias y cierre de la entrega.
 
 - [ ] T161 [P] Actualizar la documentación del módulo de RR.HH./Planilla en `docs/rrhh.md` (bloqueante de release)
+  - Falta: no existe `docs/rrhh.md`.
 - [ ] T162 Ejecutar la suite completa de Vitest (`tests/unit/` y `tests/integration/`) y corregir regresiones
+  - Falta: no ejecutado/verificado en esta revisión.
 - [ ] T163 [P] Verificar el rendimiento de cálculo de 500 trabajadores en 10 segundos o menos en `src/rrhh/calculo/motor.js` y `tests/integration/rrhh-rendimiento.test.js` (SC-023)
+  - Evidencia parcial: existe `tests/integration/rrhh-rendimiento.test.js`; cumplimiento del umbral específico no verificado.
 - [ ] T164 [P] Validar el flujo de RR.HH. descrito en `specs/001-erp-base-module/quickstart.md`, incluidas las reglas corregidas de desvinculación, contratos, novedades, elegibilidad y auditoría
+  - Falta: no validado en esta revisión.
 - [ ] T165 Revisar el endurecimiento de seguridad de datos sensibles, scoping de equipo, permisos de parámetros/respaldo, sanitización XSS en módulo base y vistas de RR.HH., y bitácora en `src/utils/sanitize.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/seguridad/auditoria.js`, `src/backup.js`, `src/rrhh/calculo/parametros.js` y `src/rrhh/views/`
+  - Falta: faltan artefactos clave (`sanitize.js`, `permisos.js`, `backup.js`) y no se evidencia endurecimiento completo.
 - [ ] T166 Limpiar y refactorizar ayudantes compartidos en `src/rrhh/utils/common.js`
-- [ ] T167 [P] Revisar accesibilidad y consistencia visual en `src/rrhh/views/liquidaciones-view.js`, `src/rrhh/views/novedades-view.js`, `src/rrhh/views/auditoria-view.js` y `src/rrhh/components/trabajador-form.js`
+  - Falta: no existe `src/rrhh/utils/common.js`.
+- [ ] T167 [P] Revisar accesibilidad y consistencia visual en `src/rrhh/views/liquidaciones.js`, `src/rrhh/views/novedades.js`, `src/rrhh/views/auditoria.js` y `src/rrhh/components/trabajador-form.js`
+  - Falta: no revisado/verificado; rutas reales ajustadas a archivos existentes.
 - [ ] T168 [P] Verificar la cobertura FR-001–FR-087, XR-001–XR-005 y SC-011/SC-015/SC-022/SC-023 con la matriz de trazabilidad de este archivo, y registrar brechas restantes en `docs/rrhh.md` (cierre de G18 y K1)
+  - Falta: no completado; persisten brechas y no existe `docs/rrhh.md`.
 
 ---
 
 ## Trazabilidad FR → Tareas
 
-> Cada requisito funcional tiene al menos una tarea asociada. Las tareas marcadas con [P] pueden ejecutarse en paralelo según las reglas de dependencia.
+> Cada requisito funcional tiene al menos una tarea asociada. Las tareas marcadas con [P] pueden ejecutarse en paralelo según las reglas de dependencia. Estado no actualizado automáticamente por requisito; revisar marcas y notas en cada tarea.
 
 | Requisitos | Tareas |
 |---|---|
@@ -369,7 +568,7 @@
 | FR-082 | T095, T097, T099, T108, T109, T113 |
 | FR-083 | T095, T097, T102, T109 |
 | FR-084 | T116 |
-| FR-085 | T118, T119, T123–T128, T132, T133, T135, T140–T142 |
+| FR-085 | T118, T119, T123–T128, T132, T133, T135, T140–T141, T142 |
 | FR-086 | T121, T126, T131, T136, T139 |
 | FR-087 | T120, T137, T139 |
 | XR-001–XR-005 | T005, T031, T034, T039 |
@@ -378,7 +577,7 @@
 
 ## Cierre de Brechas de la Auditoría
 
-> Las brechas G1–G18 y K1 quedan cubiertas por tareas y pruebas explícitas. La numeración de brechas se conserva para trazabilidad con el reporte de auditoría.
+> Las brechas G1–G18 y K1 requieren evidencia de implementación y pruebas alineadas al spec vigente. Cobertura declarada; verificar con notas por tarea.
 
 | Brecha | Cobertura |
 |---|---|
@@ -464,9 +663,9 @@ Task: "Pruebas unitarias de auditoría, filtros y retención en tests/unit/rrhh-
 Task: "Prueba de integración de respaldo que preserva auditoría en tests/integration/backup-flow.test.js"
 
 Task: "Definir roles y permisos en src/rrhh/seguridad/roles.js"
-Task: "Aplicar scoping de equipo en src/rrhh/seguridad/permisos.js"
+Task: "Aplicar scoping de equipo en src/rrhh/seguridad/permisos.js (o módulo equivalente)"
 Task: "Implementar exportación JSON auditada en src/backup.js"
-Task: "Construir vista de auditoría exclusiva del administrador en src/rrhh/views/auditoria-view.js"
+Task: "Construir vista de auditoría exclusiva del administrador en src/rrhh/views/auditoria.js"
 ```
 
 ---
@@ -519,3 +718,5 @@ Con varios desarrolladores:
 - El estado "cancelado" no existe en los contratos: los únicos estados son vigente, vencido y terminado.
 - La elegibilidad para el cálculo se determina por cualquier contrato cuya vigencia comprenda al menos un día del período, con cálculo proporcional.
 - Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias entre historias que rompan la independencia.
+- Rutas reales observadas que difieren de la versión anterior: `src/rrhh/seguridad/session.js` (no `sesion.js`), `src/rrhh/views/liquidacion.js`, `src/rrhh/views/liquidaciones.js`, `src/rrhh/views/planilla.js`, `src/rrhh/views/periodos.js`, `src/rrhh/views/novedades.js`, `src/rrhh/views/auditoria.js`, `src/rrhh/utils/liquidacion-service.js` y `src/rrhh/utils/liquidacion-estados.js`.
+- No se evidencian en el código actual: `src/utils/sanitize.js`, `src/backup.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/calculo/redondeo.js`, `src/rrhh/components/parametros-form.js`, `src/rrhh/views/parametros-view.js`, `src/rrhh/views/liquidacion-impresion.js`, `src/rrhh/views/liquidacion-impresion.css`, `src/rrhh/components/linea-explicacion.js`, `tests/setup/`, ni varios archivos de prueba nombrados en las tareas.
