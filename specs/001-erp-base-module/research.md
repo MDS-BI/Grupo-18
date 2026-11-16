@@ -17,3 +17,55 @@
 - La aplicación favorecerá la mejora progresiva y los controles de formulario nativos accesibles sobre widgets personalizados complejos.
 - El modelo de datos separa los datos maestros (Entidad) de los registros transaccionales (Documento), vinculados por un identificador público autogenerado (`entity_id`), de modo que los módulos personalizados puedan adjuntar cualquier significado de dominio a ambos lados sin cambios estructurales.
 - Las preocupaciones base (generación de identidad, marcas de tiempo, integridad referencial, eliminación en cascada) residen en la capa de almacenamiento, manteniendo los módulos personalizados limitados a campos, etiquetas y reglas de validación.
+
+## Decisiones de clarificación (2026-11-08)
+
+### Sesión simulada con selector de rol
+
+**Decisión**: La identidad se simula con un selector de rol en la interfaz (Administrador, Jefatura, Analista/Trabajador) y una sesión en memoria; no hay credenciales ni backend de autenticación.
+
+**Justificación**: Permite demostrar permisos y auditoría sin introducir seguridad de servidor fuera del alcance del MVP.
+
+**Alternativas rechazadas**: Login local con contraseñas (falsa seguridad y costo de mantenimiento); autenticación real con backend (fuera de alcance).
+
+**Consecuencias**: La auditoría registra el rol/selector activo, no una identidad verificada; debe documentarse como simulación.
+
+### Parámetros legales cargados manualmente
+
+**Decisión**: Los parámetros (UF, UTM, IMM, tasas, topes y tramos) se cargan y versionan manualmente por un administrador mediante formulario o archivo de configuración, con vigencia desde/hasta y fuente.
+
+**Justificación**: Evita dependencias externas y mantiene el cálculo reproducible y auditable; el cierre congela los valores aplicados.
+
+**Alternativas rechazadas**: Consumo automático de indicadores (requiere red, credenciales y manejo de fallos); parámetros fijos en código (impiden cambios legales).
+
+**Consecuencias**: La exactitud depende de la carga oportuna; la interfaz debe alertar parámetros faltantes o vencidos.
+
+### Retención de auditoría de 6 años
+
+**Decisión**: La bitácora de solo inserción se conserva durante la relación laboral y 6 años después del término, conforme a la Ley 21.719, sujeta a validación legal.
+
+**Justificación**: Cumple expectativas de trazabilidad y conservación documental sin almacenar datos sensibles innecesarios.
+
+**Alternativas rechazadas**: Retención indefinida (mayor exposición de datos); purga inmediata al término (pierde trazabilidad exigible).
+
+**Consecuencias**: La exportación JSON incluye la auditoría; no se ofrece borrado manual de registros de auditoría desde la interfaz. Las operaciones de exportación e importación de respaldo se registran en la bitácora y, al importar, nunca se sobrescriben ni eliminan los registros previos de auditoría (solo inserción preservada).
+
+### Respaldo y restauración completa en JSON
+
+**Decisión**: La versión inicial exporta e importa todo el espacio de trabajo (`erp:*` y `erp_rrhh:*`) en un único JSON versionado, validado antes de reemplazar datos.
+
+**Justificación**: Mitiga la pérdida de datos de localStorage y facilita mover la instancia entre navegadores.
+
+**Alternativas rechazadas**: Solo exportaciones CSV por entidad (no restaurables de forma completa); sincronización en la nube (fuera de alcance).
+
+**Consecuencias**: La restauración es destructiva y requiere confirmación; el esquema incluye versión para migraciones futuras. La exportación e importación se registran en la bitácora y la importación no sobrescribe ni elimina los registros previos de auditoría.
+
+### Entidades RR.HH. definidas en el feature 001
+
+**Decisión**: Trabajador, Contrato, Novedad y Período de Remuneración se documentan como parte del modelo de 001, remitiendo el detalle de atributos a `specs/002-rrhh-planilla/data-model.md`.
+
+**Justificación**: Evita que el plan 001 dependa de un `spec.md` inexistente en 002 y mantiene una única fuente de verdad para el MER.
+
+**Alternativas rechazadas**: Duplicar el MER en 001 (riesgo de divergencia); crear un `spec.md` nuevo en 002 (fuera del alcance de esta corrección).
+
+**Consecuencias**: Los cambios futuros al MER deben reflejarse en ambos documentos.

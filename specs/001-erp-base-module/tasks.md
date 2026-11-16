@@ -1,533 +1,521 @@
-# Tareas: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+# Tareas: Módulo Base ERP y Módulo de Recursos Humanos y Planilla
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
-**Prerrequisitos**: plan.md (obligatorio), spec.md (obligatorio para las historias de usuario), research.md, data-model.md, contracts/
-**Actualizado**: 2026-11-03 — añadidas las tareas de la Historia de Usuario 14 (Registro y Aprobación de Novedades del Mes, P1); 2026-11-01 — alineado con la Historia de Usuario 5 revisada (vista explicativa e impresión de liquidaciones, P2)
+**Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
+**Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 6 de `spec.md`, incluyendo FR-040–FR-087, la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
+**Actualizado**: 2026-11-16 (alineado con `spec.md` y `plan.md` vigentes; auditoría y parámetros legales adelantados a fase fundacional)
+**Tests**: Incluidos por mandato de la constitución (Principio II) y del plan de verificación con Vitest + jsdom.
 
-## Formato: `[ID] [P?] [Historia] Descripción`
+## Formato: `[ID] [P?] [Historia] Descripción con ruta de archivo`
+
+- **[P]**: Puede ejecutarse en paralelo (archivos distintos, sin dependencias pendientes)
+- **[US1]–[US6]**: Historia de Usuario a la que pertenece la tarea
+- Las tareas de configuración, fundacionales, módulo base y pulido no llevan etiqueta de historia
+- Todas las rutas son explícitas y relativas a la raíz del repositorio
+
+## Convenciones de Rutas
+
+- Código base del módulo: `src/`
+- Utilidades transversales: `src/utils/`
+- Extensión RR.HH./Planilla: `src/rrhh/calculo/`, `src/rrhh/components/`, `src/rrhh/seguridad/`, `src/rrhh/utils/`, `src/rrhh/views/`
+- Pruebas: `tests/unit/`, `tests/integration/`, `tests/setup/`
+- Documentación: `docs/`
+
+> **Nota de trazabilidad**: esta versión renumera todas las tareas desde T001 para alinear el orden de ejecución con `spec.md` y `plan.md` vigentes. La implementación previa debe revalidarse contra estos IDs; no se asume completada ninguna tarea por su numeración anterior. El núcleo append-only de auditoría y los esquemas/selección de parámetros legales se adelantan a la fase fundacional para que US1–US4 los consuman desde su primera operación.
+
+---
 
 ## Fase 1: Configuración (Infraestructura Compartida)
 
-**Propósito**: Inicializar la estructura del proyecto Vite y las herramientas compartidas.
+**Propósito**: Inicializar la aplicación Vite y las herramientas compartidas.
 
-- [X] T001 Crear la estructura de la aplicación Vite con src/, tests/, y archivos de configuración
-- [X] T002 Instalar las dependencias Vite y Vitest para el proyecto
-- [X] T003 [P] Configurar el linting y formateo para la aplicación JavaScript ligera
+- [ ] T001 Crear la estructura de carpetas `src/`, `src/utils/`, `src/components/`, `src/rrhh/calculo/`, `src/rrhh/components/`, `src/rrhh/seguridad/`, `src/rrhh/utils/`, `src/rrhh/views/`, `tests/unit/`, `tests/integration/` y `tests/setup/`
+- [ ] T002 [P] Configurar Vite, Vitest y jsdom con los scripts de desarrollo, prueba y compilación en `package.json` y `vitest.config.mjs`
+- [ ] T003 [P] Configurar linting y formateo para JavaScript ES2022 en `eslint.config.js`
+- [ ] T004 [P] Configurar la adaptación de RR.HH. (nombre de módulo, etiquetas de Trabajador/Contrato/Novedad/Liquidación y color de acento) en `src/module-config.js`
 
 ---
 
 ## Fase 2: Fundacional (Prerrequisitos Bloqueantes)
 
-**Propósito**: Crear la capa de almacenamiento y el esqueleto de la aplicación de los que dependen todas las historias.
+**Propósito**: Infraestructura común que debe existir antes de implementar cualquier historia, incluidos el núcleo append-only de auditoría y los parámetros legales por vigencia.
 
-- [X] T004 Crear el modelo de datos de entidad y los ayudantes de validación en src/storage.js
-- [X] T005 Implementar la persistencia en localStorage del navegador para registros de entidad en src/storage.js
-- [X] T006 Crear el esqueleto principal de la aplicación y renderizar el estado vacío inicial en src/app.js
-- [X] T007 [P] Construir una base de hoja de estilos compartida para diseño, formularios y estados de retroalimentación en src/styles.css
+**⚠️ CRÍTICO**: Ninguna historia de usuario puede comenzar hasta completar esta fase.
+
+- [ ] T005 Implementar la capa de almacenamiento base (CRUD de entidades y documentos, identidad, marcas de tiempo, integridad referencial y eliminación en cascada de documentos al eliminar una Entidad genérica) en `src/storage.js` (FR-007, FR-009, XR-004)
+- [ ] T006 [P] Crear los estilos compartidos y tokens de diseño (tipografía, formularios, estados vacíos y de error) en `src/styles.css`
+- [ ] T007 [P] Implementar el arranque de la aplicación y la navegación de vistas en `src/main.js` y `src/app.js`
+- [ ] T008 [P] Construir el marco del espacio de trabajo ERP (barra superior, logotipo derivado del nombre y barra lateral) en `src/components/shell.js` (FR-011, FR-036)
+- [ ] T009 [P] Construir el panel de inicio con acciones rápidas y estadísticas en vivo en `src/components/dashboard.js` (FR-010)
+- [ ] T010 [P] Definir los campos personalizados de RR.HH. y el ciclo de vida documental de liquidaciones en `src/module-config.js`
+- [ ] T011 [P] Configurar el entorno de pruebas Vitest + jsdom y los fixtures compartidos en `tests/setup/jsdom.js` y `tests/setup/fixtures.js`
+
+### Núcleo append-only de auditoría (bloqueante para US1–US6)
+
+> **NOTA: Escribir T012 antes de implementar T013–T014 y verificar que falle.**
+
+- [ ] T012 [P] Crear pruebas unitarias del núcleo de auditoría: solo inserción, rechazo de edición/eliminación, aborto de la operación si falla la escritura y retención de 6 años en `tests/unit/rrhh-auditoria-core.test.js` (FR-055, FR-056, FR-058)
+- [ ] T013 Implementar el núcleo de auditoría append-only: registrar entradas, rechazar edición y eliminación de registros existentes y abortar la operación sensible cuando no se pueda escribir en `src/rrhh/seguridad/auditoria.js` (FR-055, FR-056)
+- [ ] T014 Implementar la retención de la bitácora (relación laboral + 6 años), el bloqueo de purga manual y la conservación de marcas de tiempo en `src/rrhh/seguridad/auditoria.js` (FR-058)
+
+### Parámetros legales por vigencia (bloqueante para US2 y US4)
+
+> **NOTA: Escribir T015 antes de implementar T016–T017 y verificar que falle.**
+
+- [ ] T015 [P] Crear pruebas unitarias de esquemas de parámetros legales, tramos y selección por fecha de vigencia en `tests/unit/rrhh-parametros.test.js` (FR-079)
+- [ ] T016 Implementar los esquemas de parámetros legales y tramos de impuesto con vigencia (UF, UTM, IMM, tasas, topes y tramos) en `src/rrhh/calculo/parametros.js` (FR-079)
+- [ ] T017 Implementar la selección de parámetros y tramos por fecha de vigencia, incluyendo la detección de parámetros faltantes para un período, en `src/rrhh/calculo/parametros.js` (FR-079)
+
+**Punto de control**: La base, el núcleo de auditoría y los parámetros legales están listos; las historias de usuario pueden iniciarse y US2 puede validar sueldo mínimo y jornada máxima sin esperar a US4.
 
 ---
 
-## Fase 3: Historia de Usuario 1 - Crear y organizar entidades (Prioridad: P1) 🎯 MVP
+## Fase 2B: Módulo Base ERP (FR-001–FR-039, XR-001–XR-005)
 
-**Objetivo**: Permitir a los usuarios añadir entidades y verlas en la lista.
+**Propósito**: Completar las capacidades base que el `spec.md` exige y que las tareas de RR.HH. no cubren. La eliminación de FR-003 aplica solo a la Entidad genérica; los Trabajadores se desactivan en US1.
 
-**Prueba Independiente**: Un usuario puede abrir la aplicación, enviar un formulario de entidad y ver la nueva entidad aparecer.
+### Pruebas del módulo base
 
-### Pruebas para la Historia de Usuario 1
+- [ ] T018 [P] Crear pruebas unitarias de validación y CRUD de entidades y documentos en `tests/unit/base-entidades.test.js` (FR-001, FR-002, FR-008, FR-006)
+- [ ] T019 [P] Crear prueba de integración de creación, búsqueda, edición, eliminación en cascada y estados vacíos en `tests/integration/base-flow.test.js` (FR-003, FR-005, FR-007, FR-009)
+- [ ] T020 [P] Crear prueba de sanitización de contenido de usuario (XSS) en listas, formularios, búsqueda y detalle en `tests/unit/base-sanitizacion.test.js` (Suposición de sanitización XSS; FR-006)
 
-- [X] T008 [P] [US1] Añadir pruebas unitarias para la validación de entidades en tests/unit/storage.test.js
-- [X] T009 [P] [US1] Añadir pruebas de integración para crear una entidad en tests/integration/create-entity.test.js
+### Implementación del módulo base
+
+- [ ] T021 [P] Implementar el formulario de entidad con validación de nombre/código en `src/components/entity-form.js` (FR-001, FR-002, FR-006)
+- [ ] T022 [P] Implementar la lista de entidades con búsqueda, estado vacío y eliminación de la Entidad genérica en `src/components/entity-list.js` (FR-003, FR-005, FR-007)
+- [ ] T023 [P] Implementar el formulario de documentos vinculados a entidad en `src/components/document-form.js` (FR-008)
+- [ ] T024 [P] Implementar la lista de documentos y la eliminación en cascada al eliminar la entidad en `src/components/document-list.js` (FR-009)
+- [ ] T025 Implementar la pantalla de gestión consolidada sin listar entidades en `src/app.js` (FR-016, FR-017, FR-018)
+- [ ] T026 [P] Implementar la búsqueda por nombre, código, categoría, descripción y fecha objetivo en `src/components/search-bar.js` (FR-004, FR-020, FR-021)
+- [ ] T027 Implementar la navegación Panel/Entidades/Documentos/Buscar, incluida la pantalla de búsqueda dedicada al seleccionar Buscar, con módulo activo resaltado en `src/components/shell.js` (FR-012, FR-013, FR-014, FR-015, FR-019, FR-037)
+- [ ] T028 Implementar mensajes de validación base, estados vacíos y retroalimentación de error en `src/app.js` y `src/styles.css` (FR-005, FR-006)
+- [ ] T029 [P] Implementar el renderizado y la validación de campos personalizados en `src/components/entity-form.js` y `src/components/document-form.js` (FR-026, FR-027)
+- [ ] T030 Implementar campos personalizados en listas, detalle y resultados de búsqueda en `src/components/entity-list.js`, `src/components/document-list.js` y `src/components/search-bar.js` (FR-028)
+- [ ] T031 Implementar etiquetas visibles derivadas de la configuración en `src/module-config.js` y `src/components/shell.js` (FR-029, XR-002)
+- [ ] T032 Implementar transiciones de ciclo de vida y estado libre sin lifecycle en `src/module-config.js` y `src/components/document-form.js` (FR-030, FR-031)
+- [ ] T033 [P] Implementar color de acento con fallback y barra lateral responsive en `src/styles.css` (FR-038, FR-039)
+- [ ] T034 Implementar el reporte de configuración inválida/conflictiva y reglas de validación extensibles en `src/module-config.js` y `src/app.js` (FR-025, XR-003)
+- [ ] T035 Implementar acciones rápidas (nueva entidad, nuevo documento, gestión, búsqueda) y tarjetas de estadísticas en `src/components/dashboard.js` (FR-033, FR-034, FR-035)
+- [ ] T036 Verificar que entidades y documentos permanecen intactos al navegar entre panel, gestión y búsqueda en `src/app.js` (FR-022)
+- [ ] T037 Implementar la carga de configuración al arrancar y los valores predeterminados seguros en `src/module-config.js` (FR-023, FR-024)
+- [ ] T038 [P] Crear prueba de rendimiento de listas y búsqueda con 500 registros en `tests/integration/base-rendimiento.test.js` (FR-032, SC-004)
+- [ ] T039 Verificar la adaptación solo-configuración sin tocar código central en `src/module-config.js` y `tests/integration/base-adaptacion.test.js` (XR-001, XR-004, XR-005, SC-008)
+- [ ] T040 Implementar el ayudante de escape/sanitización HTML y aplicarlo en formularios, listas, búsqueda y detalle de entidades/documentos en `src/utils/sanitize.js`, `src/components/entity-form.js`, `src/components/entity-list.js`, `src/components/document-form.js`, `src/components/document-list.js` y `src/components/search-bar.js` (Suposición de sanitización XSS)
+
+**Punto de control**: El módulo base queda funcional, sanitizado y trazado a FR-001–FR-039 y XR-001–XR-005.
+
+---
+
+## Fase 3: Historia de Usuario 1 – Gestión de Fichas de Trabajadores y Catálogos Base (Prioridad: P1) 🎯 MVP
+
+**Objetivo**: Registrar, buscar y actualizar fichas de trabajadores y los catálogos base (cargos, departamentos y centros de costo), incluyendo desactivación, cascada de jefatura y auditoría de fichas y catálogos.
+
+**Prueba Independiente**: Abrir el módulo, crear un trabajador y un catálogo, verlos en la lista, buscarlos, actualizarlos, desactivar un trabajador sin novedades pendientes y comprobar que su equipo queda sin jefatura directa cuando corresponda. No requiere contratos ni liquidaciones.
+
+### Pruebas de la Historia de Usuario 1
+
+> **NOTA: Escribir estas pruebas primero y verificar que fallen antes de implementar.**
+
+- [ ] T041 [P] [US1] Crear pruebas unitarias de validación de trabajadores, RUT, correo y fecha de ingreso en `tests/unit/rrhh-trabajadores.test.js` (FR-063)
+- [ ] T042 [P] [US1] Crear pruebas unitarias de unicidad de RUT/código, código de catálogo por tipo y jefatura directa en `tests/unit/rrhh-catalogos-jefatura.test.js` (FR-061, FR-062, FR-064, FR-066)
+- [ ] T043 [P] [US1] Crear pruebas unitarias de desactivación con bloqueo por novedades Pendientes, cascada de jefatura, no reactivación y auditoría de catálogos en `tests/unit/rrhh-trabajadores-baja.test.js` (FR-065, FR-067)
+- [ ] T044 [P] [US1] Crear prueba de integración del flujo de alta, búsqueda, actualización, desactivación y auditoría de fichas/catálogos en `tests/integration/rrhh-trabajadores-flow.test.js` (FR-063, FR-065, FR-067)
 
 ### Implementación de la Historia de Usuario 1
 
-- [X] T010 [P] [US1] Crear la interfaz del formulario de entidad en src/components/entity-form.js
-- [X] T011 [US1] Conectar el envío del formulario para crear y persistir una nueva entidad en src/app.js
-- [X] T012 [US1] Renderizar la lista de entidades y mostrar retroalimentación de validación en src/components/entity-list.js
+- [ ] T045 [P] [US1] Implementar la normalización y validación del RUT chileno en `src/rrhh/calculo/rut.js` (FR-063)
+- [ ] T046 [P] [US1] Implementar el almacenamiento y CRUD de catálogos de cargos, departamentos y centros de costo, con código único dentro de su tipo, ocultar/reactivar y sin eliminación, en `src/rrhh/utils/catalogos-service.js` (FR-064)
+- [ ] T047 [P] [US1] Definir el esquema del perfil de trabajador reutilizando `Entity` (RUT en `taxId`, fecha de ingreso, estado activo/inactivo y jefatura directa) en `src/rrhh/utils/trabajadores-service.js` (FR-063, FR-066)
+- [ ] T048 [US1] Implementar el servicio de fichas de trabajadores (crear, buscar y actualizar) con validación de correo y fecha en `src/rrhh/utils/trabajadores-service.js` (FR-063)
+- [ ] T049 [US1] Implementar la unicidad normalizada de RUT y de código entre fichas en `src/rrhh/utils/trabajadores-service.js` (FR-061, FR-062)
+- [ ] T050 [US1] Implementar la desactivación de trabajadores con confirmación, bloqueo si existen novedades Pendientes (mediante el adaptador de novedades que se conecta en US3), cascada de jefatura a "sin jefatura directa", conservación histórica, prohibición de reactivación y un gancho para la terminación automática de contratos que se conecta en US2 (T068), en `src/rrhh/utils/trabajadores-service.js` (FR-065)
+- [ ] T051 [US1] Implementar la validación de jefatura directa opcional (solo activos, sin autoasignación) en `src/rrhh/utils/trabajadores-service.js` (FR-066)
+- [ ] T052 [P] [US1] Construir el formulario de trabajador con validación, selector de jefatura y retroalimentación en `src/rrhh/components/trabajador-form.js` (FR-063, FR-066)
+- [ ] T053 [P] [US1] Construir la vista de gestión de catálogos base con etiqueta "desactivado" y acciones de ocultar/reactivar en `src/rrhh/views/catalogos-view.js` (FR-064)
+- [ ] T054 [P] [US1] Construir la vista de listado y búsqueda de trabajadores con acción de desactivación en `src/rrhh/views/trabajadores-view.js` (FR-063, FR-065)
+- [ ] T055 [US1] Registrar creación, actualización y desactivación de fichas y catálogos en la bitácora (usuario, rol, fecha/hora y valores anterior/nuevo) en `src/rrhh/seguridad/auditoria.js`, `src/rrhh/utils/trabajadores-service.js` y `src/rrhh/utils/catalogos-service.js` (FR-067)
+- [ ] T056 [US1] Añadir mensajes de validación y estados vacíos de trabajadores y catálogos en `src/rrhh/components/trabajador-form.js` y `src/rrhh/views/trabajadores-view.js` (FR-006)
+- [ ] T057 [US1] Integrar las vistas de trabajadores y catálogos en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
 
-**Punto de control**: La Historia de Usuario 1 debe estar completamente funcional y ser comprobable de forma independiente.
+**Punto de control**: La Historia de Usuario 1 debe ser funcional y comprobable de forma independiente. La terminación automática de contratos al desvincular se completa en US2 (T068), reutilizando esta desactivación.
 
 ---
 
-## Fase 4: Historia de Usuario 2 - Editar y eliminar entidades (Prioridad: P1)
+## Fase 4: Historia de Usuario 2 – Gestión de Contratos y Alertas de Plazo (Prioridad: P1)
 
-**Objetivo**: Permitir a los usuarios actualizar o eliminar entidades almacenadas, manteniendo la capacidad de respuesta con conjuntos de datos grandes.
+**Objetivo**: Registrar contratos (sueldo base, jornada y tipo) con historial, estados vigente/vencido/terminado, validaciones legales y alertas de vencimiento en 30 días o menos.
 
-**Prueba Independiente**: Un usuario puede editar una entidad existente o eliminarla, y la lista se actualiza correctamente.
+**Prueba Independiente**: Asociar un contrato a un trabajador, verlo en el historial, registrar un cambio de condiciones como nuevo contrato, terminarlo estando vigente o vencido y comprobar la alerta de vencimiento. No requiere novedades ni liquidaciones.
 
-### Pruebas para la Historia de Usuario 2
+### Pruebas de la Historia de Usuario 2
 
-- [X] T013 [P] [US2] Añadir pruebas unitarias para actualizar y eliminar entidades en tests/unit/storage.test.js
-- [X] T014 [P] [US2] Añadir pruebas de integración para editar y eliminar una entidad en tests/integration/edit-delete-entity.test.js
+- [ ] T058 [P] [US2] Crear pruebas unitarias de validación de contratos, estados sin "cancelado", no superposición, sueldo mínimo, jornada máxima y renovación en `tests/unit/rrhh-contratos.test.js` (FR-068, FR-069, FR-070, FR-071)
+- [ ] T059 [P] [US2] Crear pruebas unitarias de terminación automática del contrato vigente o vencido al desvincular y su auditoría en `tests/unit/rrhh-contratos-baja.test.js` (FR-070, FR-073)
+- [ ] T060 [P] [US2] Crear prueba de integración de registro de contrato, cambio de sueldo, término, alerta de vencimiento, renovación y terminación automática al desvincular en `tests/integration/rrhh-contratos-flow.test.js` (FR-068, FR-071, FR-072, FR-073)
 
 ### Implementación de la Historia de Usuario 2
 
-- [X] T015 [P] [US2] Añadir controles de edición y eliminación a la interfaz de la lista de entidades en src/components/entity-list.js
-- [X] T016 [US2] Conectar las acciones de edición para poblar el formulario y actualizar los datos persistidos en src/app.js
-- [X] T017 [US2] Gestionar las acciones de eliminación y quitar registros del almacenamiento y la interfaz en src/app.js
+- [ ] T061 [P] [US2] Definir el esquema de contrato y su clave `erp_rrhh:contratos`, con estados vigente/vencido/terminado y sin estado "cancelado", en `src/rrhh/utils/contratos-service.js` (FR-068)
+- [ ] T062 [US2] Implementar el CRUD de contratos, el historial de vigencias sin superposición y el máximo un contrato vigente por Trabajador (permitiendo cero contratos) en `src/rrhh/utils/contratos-service.js` (FR-068, FR-069)
+- [ ] T063 [US2] Implementar las transiciones de estado: vencido por fecha; término de un contrato vigente o vencido, incluido el indefinido; prohibición de eliminar contratos y de usar el estado "cancelado" en `src/rrhh/utils/contratos-service.js` (FR-070)
+- [ ] T064 [US2] Implementar los cambios de vigencia y renovaciones mediante un nuevo registro, ajustando la fecha de fin del anterior sin solapamiento y manteniendo la continuidad en `src/rrhh/utils/contratos-service.js` (FR-071)
+- [ ] T065 [US2] Implementar `getContratoVigente(entityId, fecha)` y `getContratosEnPeriodo(entityId, periodo)` por solapamiento de vigencia en `src/rrhh/utils/contratos-service.js` (FR-072, FR-080)
+- [ ] T066 [P] [US2] Implementar el servicio de alertas de contratos próximos a vencer (≤ 30 días) y vencidos en `src/rrhh/utils/alertas-service.js` (FR-072)
+- [ ] T067 [US2] Implementar la validación de sueldo base no inferior al mínimo legal y jornada semanal no superior al máximo legal, usando los parámetros versionados, en `src/rrhh/utils/contratos-service.js` (FR-068; reglas de US2)
+- [ ] T068 [US2] Implementar la terminación automática de los contratos vigentes o vencidos al desvincular un Trabajador, conectada al gancho de desactivación de US1 en `src/rrhh/utils/trabajadores-service.js`, en `src/rrhh/utils/contratos-service.js` (FR-065, FR-070)
+- [ ] T069 [US2] Exigir un contrato cuya vigencia incluya la fecha de la novedad para registrarla y al menos un día del período para incluir al Trabajador en el cálculo, en `src/rrhh/utils/contratos-service.js` (FR-072)
+- [ ] T070 [P] [US2] Construir el formulario de contrato (sueldo base, jornada, tipo y vigencia) con validaciones en `src/rrhh/components/contrato-form.js` (FR-068)
+- [ ] T071 [P] [US2] Construir la vista de listado e historial de contratos por trabajador con acciones de término para contratos vigentes o vencidos en `src/rrhh/views/contratos-view.js` (FR-068, FR-070)
+- [ ] T072 [US2] Mostrar las alertas de vencimiento de contrato en el panel principal en `src/components/dashboard.js` (FR-072)
+- [ ] T073 [US2] Registrar creación, actualización, cambios de estado y terminación automática de contratos en la bitácora con valores anterior/nuevo en `src/rrhh/seguridad/auditoria.js` y `src/rrhh/utils/contratos-service.js` (FR-073)
+- [ ] T074 [US2] Integrar las vistas de contratos y alertas en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
 
 **Punto de control**: Las Historias de Usuario 1 y 2 deben funcionar de forma independiente.
 
 ---
 
-## Fase 5: Historia de Usuario 3 (original) - Pantalla de bienvenida con navegación (Prioridad: P1)
+## Fase 5: Historia de Usuario 3 – Registro y Aprobación de Novedades del Mes (Prioridad: P1)
 
-**Objetivo**: Proporcionar la pantalla de punto de entrada con dos botones claramente etiquetados que llevan a gestión y búsqueda. *(Sustituida por el rediseño del panel de la Fase 17; se conserva como historial del trabajo entregado.)*
+**Objetivo**: Registrar y aprobar novedades del período (horas extra, licencias médicas y ausencias) con privacidad, período activo, split por meses, validaciones de superposición/tope y segregación de funciones.
 
-**Prueba Independiente**: Un usuario abre la aplicación, ve la pantalla de bienvenida y llega a ambas pantallas desde sus botones.
+**Prueba Independiente**: Una jefatura registra novedades para su equipo, el sistema exige aprobación explícita antes del cálculo, divide rangos que cruzan meses, bloquea períodos cerrados, impide editar Aprobadas/Rechazadas y registra cada cambio. No requiere ejecutar el cálculo.
+
+### Pruebas de la Historia de Usuario 3
+
+- [ ] T075 [P] [US3] Crear pruebas unitarias de estados, privacidad de licencias y bloqueo en período cerrado en `tests/unit/rrhh-novedades.test.js` (FR-074, FR-076)
+- [ ] T076 [P] [US3] Crear pruebas unitarias de split por meses con atomicidad y período activo requerido en `tests/unit/rrhh-novedades-split.test.js` (FR-074, FR-075)
+- [ ] T077 [P] [US3] Crear pruebas unitarias de segregación de funciones, edición/anulación solo de Pendientes y motivo obligatorio de rechazo en `tests/unit/rrhh-novedades-segregacion.test.js` (FR-077)
+- [ ] T078 [P] [US3] Crear pruebas unitarias de superposición de licencias/ausencias y tope de horas extra con justificación escrita en `tests/unit/rrhh-novedades-validaciones.test.js` (FR-074; reglas de US3)
+- [ ] T079 [P] [US3] Crear prueba de integración del flujo de registro, aprobación, rechazo, anulación solo de Pendientes y bloqueo de cálculo en `tests/integration/rrhh-novedades-flow.test.js` (FR-074, FR-076, FR-077, FR-078)
 
 ### Implementación de la Historia de Usuario 3
 
-- [x] T018 [P] [US3] [SUPERSEDIDA por Fase 17] Añadir una vista de pantalla de bienvenida con dos botones de navegación claramente etiquetados en index.html
-- [x] T019 [P] [US3] [SUPERSEDIDA por Fase 17] Añadir lógica de cambio de vista para las pantallas de bienvenida, gestión y búsqueda en src/app.js
+- [ ] T080 [P] [US3] Definir el esquema de novedad, tipos permitidos, justificación de horas extra y clave `erp_rrhh:novedades` en `src/rrhh/utils/novedades-service.js` (FR-074)
+- [ ] T081 [US3] Implementar el CRUD de novedades con privacidad de licencias (solo tipo y días, sin diagnóstico) en `src/rrhh/utils/novedades-service.js` (FR-074)
+- [ ] T082 [US3] Implementar la asociación al período de la fecha y la exigencia de período activo en `src/rrhh/utils/novedades-service.js` (FR-074, FR-076)
+- [ ] T083 [US3] Implementar el split atómico por mes calendario cuando el rango cruza meses, rechazando todo si algún período no está activo en `src/rrhh/utils/novedades-service.js` (FR-075)
+- [ ] T084 [US3] Implementar la máquina de estados pendiente/aprobada/rechazada/anulada y el bloqueo de períodos cerrados en `src/rrhh/utils/novedades-service.js` (FR-076)
+- [ ] T085 [US3] Implementar la segregación de funciones: jefatura no aprueba lo que registró; administrador/a aprueba las de Trabajadores sin jefatura y las registradas por la jefatura; analista registra y ve pero no aprueba ni rechaza; solo Pendientes se editan/anulan y las Aprobadas/Rechazadas no se modifican en `src/rrhh/utils/novedades-service.js` (FR-077)
+- [ ] T086 [US3] Implementar la validación de superposición de licencias y ausencias de un mismo Trabajador en `src/rrhh/utils/novedades-service.js` (FR-074; reglas de US3)
+- [ ] T087 [US3] Implementar el tope diario de horas extra desde los parámetros legales y la exigencia de justificación escrita para superarlo en `src/rrhh/utils/novedades-service.js` (FR-074; reglas de US3)
+- [ ] T088 [US3] Implementar el motivo obligatorio al rechazar una novedad en `src/rrhh/utils/novedades-service.js` (FR-076; reglas de US3)
+- [ ] T089 [P] [US3] Construir el formulario de novedad con campos condicionados por tipo y justificación de horas extra en `src/rrhh/components/novedad-form.js` (FR-074)
+- [ ] T090 [P] [US3] Construir el listado de novedades con acciones de aprobar/rechazar/anular solo sobre Pendientes e historial de estados en `src/rrhh/views/novedades-view.js` (FR-077)
+- [ ] T091 [US3] Implementar el bloqueo del cálculo cuando existan novedades pendientes y la alerta con las no resueltas en `src/rrhh/utils/novedades-service.js` (FR-076)
+- [ ] T092 [US3] Registrar creación, actualización, aprobación, rechazo y anulación de novedades en la bitácora con valores anterior/nuevo en `src/rrhh/seguridad/auditoria.js` y `src/rrhh/utils/novedades-service.js` (FR-078)
+- [ ] T093 [US3] Integrar la vista de novedades en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
 
-**Punto de control**: La Historia de Usuario 3 debe estar completamente funcional y ser comprobable de forma independiente.
+**Punto de control**: Las Historias de Usuario 1, 2 y 3 deben funcionar de forma independiente.
 
 ---
 
-## Fase 6: Historia de Usuario 4 (pestañas originales) - Gestionar entidades y documentos en una pantalla dedicada (Prioridad: P1)
+## Fase 6: Historia de Usuario 4 – Cálculo de Planilla y Ciclo de Vida de Liquidaciones (Prioridad: P1)
 
-**Objetivo**: Proporcionar la pantalla de gestión con la pestaña de navegación horizontal Entidades/Documentos/Inicio y formularios de gestión completos, sin mostrar la lista de entidades. *(La navegación por pestañas fue sustituida por el marco de barra lateral de la Fase 16; los flujos de gestión siguen vigentes.)*
+**Objetivo**: Crear períodos con parámetros obligatorios, ejecutar el cálculo con contratos que toquen el período y parámetros versionados, informar exclusiones y gestionar el ciclo de vida hasta el cierre inmutable.
 
-**Prueba Independiente**: Desde la pantalla de bienvenida, un usuario llega a la pantalla de gestión, cambia de pestaña y añade, edita y elimina una entidad y un documento.
+**Prueba Independiente**: Crear un período, calcularlo con datos de prueba, cuadrar el caso de referencia al peso, recalcular sin duplicar tras una novedad aprobada y cerrar el período congelando UF, UTM y parámetros. Incluye un Trabajador con contrato terminado dentro del período.
+
+### Pruebas de la Historia de Usuario 4
+
+- [ ] T094 [P] [US4] Crear pruebas unitarias del motor de cálculo y del uso de parámetros legales versionados en `tests/unit/rrhh-calculo.test.js` (FR-080)
+- [ ] T095 [P] [US4] Crear pruebas unitarias de creación de período, estados y redondeo por línea en `tests/unit/rrhh-periodos.test.js` (FR-079, FR-082, FR-083)
+- [ ] T096 [P] [US4] Crear pruebas unitarias de desactualización y recálculo idempotente de liquidaciones en `tests/unit/rrhh-liquidacion-estados.test.js` (FR-080, FR-081)
+- [ ] T097 [P] [US4] Crear prueba de integración del caso de referencia, recálculo y cierre de período en `tests/integration/rrhh-calculo-periodo.test.js` (FR-080, FR-082, FR-083)
+- [ ] T098 [P] [US4] Crear prueba de integración de elegibilidad por solapamiento de vigencia y resumen de Trabajadores excluidos con motivo en `tests/integration/rrhh-calculo-elegibilidad.test.js` (FR-080)
 
 ### Implementación de la Historia de Usuario 4
 
-- [x] T020 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir una pestaña de navegación horizontal con botones Entidades, Documentos e Inicio a la vista de gestión en index.html
-- [x] T021 [P] [US4] [SUPERSEDIDA por Fase 16] Organizar la vista de gestión en paneles de entidades y documentos y eliminar la lista de entidades en index.html
-- [x] T022 [US4] [SUPERSEDIDA por Fase 16] Añadir lógica de cambio de pestaña y navegación a Inicio desde la pantalla de gestión en src/app.js
-- [x] T023 [US4] [SUPERSEDIDA por Fase 16] Añadir edición y eliminación mediante selectores para entidades y documentos en src/app.js
-- [x] T024 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir pruebas de integración para la pestaña de navegación de gestión en tests/integration/manage-tabs.test.js
-- [x] T025 [P] [US4] [SUPERSEDIDA por Fase 16] Añadir estilos para la pestaña de navegación horizontal en src/styles.css
+- [ ] T099 [P] [US4] Definir el esquema de período y su clave `erp_rrhh:periodos` con estados Abierto/Calculado/Cerrado en `src/rrhh/utils/periodos-service.js` (FR-079, FR-082)
+- [ ] T100 [US4] Implementar la creación de período por mes y año, con parámetros legales obligatorios, unicidad y validación de mes calendario en `src/rrhh/utils/periodos-service.js` (FR-079)
+- [ ] T101 [P] [US4] Implementar las funciones puras del motor (sueldo proporcional, horas extra, gratificación, AFP, salud, seguro de cesantía e impuesto único) en `src/rrhh/calculo/motor.js` (FR-080)
+- [ ] T102 [P] [US4] Implementar el redondeo por línea al peso y los totales por suma de líneas en `src/rrhh/calculo/redondeo.js` (FR-083)
+- [ ] T103 [P] [US4] Implementar la máquina de estados de liquidación y la persistencia de liquidaciones y líneas con snapshot del parámetro legal en `src/rrhh/utils/liquidaciones-service.js` (FR-080)
+- [ ] T104 [US4] Implementar el cálculo del período usando cualquier contrato cuya vigencia comprenda al menos un día del período (incluidos terminados/vencidos con vigencia en el período) y solo novedades aprobadas, en forma proporcional a los días de vigencia, dejando el período en estado Calculado en `src/rrhh/utils/periodos-service.js` (FR-080)
+- [ ] T105 [US4] Implementar el resumen del cálculo con liquidaciones generadas y Trabajadores excluidos por no tener contrato en el período, indicando el motivo en `src/rrhh/utils/periodos-service.js` (FR-080)
+- [ ] T106 [US4] Implementar el recálculo mientras el período esté Abierto o Calculado, reemplazando las liquidaciones en borrador sin duplicarlas en `src/rrhh/utils/periodos-service.js` (FR-080)
+- [ ] T107 [US4] Marcar como desactualizada la liquidación tras aprobar una novedad o cambiar un contrato posterior al último cálculo en `src/rrhh/utils/periodos-service.js` (FR-081)
+- [ ] T108 [US4] Implementar el cierre de período: bloquear con novedades pendientes o Trabajadores sin calcular, congelar UF/UTM/tasas y registrar quién y cuándo en `src/rrhh/utils/periodos-service.js` (FR-082)
+- [ ] T109 [US4] Impedir el recálculo y la edición de liquidaciones de períodos cerrados y la reapertura del período en `src/rrhh/utils/periodos-service.js` (FR-082, FR-083)
+- [ ] T110 [P] [US4] Implementar el cálculo de aportes y costo empleador en `src/rrhh/utils/costo-empleador.js` (FR-080)
+- [ ] T111 [P] [US4] Construir el formulario de carga manual y versionado de parámetros legales (UF, UTM, IMM, tasas, topes y tramos) en `src/rrhh/components/parametros-form.js` (FR-079)
+- [ ] T112 [P] [US4] Construir la vista de administración de parámetros legales y su historial de vigencias en `src/rrhh/views/parametros-view.js` (FR-079)
+- [ ] T113 [P] [US4] Construir la vista de gestión de períodos (abrir, calcular y cerrar) en `src/rrhh/views/periodos-view.js` (FR-079, FR-082)
+- [ ] T114 [P] [US4] Construir la vista de cálculo de planilla con alerta de novedades pendientes y resumen de generadas/excluidas en `src/rrhh/views/planilla-view.js` (FR-080)
+- [ ] T115 [P] [US4] Construir la vista de listado y detalle de liquidaciones en `src/rrhh/views/liquidaciones-view.js` (FR-080)
+- [ ] T116 [US4] Registrar creación, cálculo, recálculo y cierre de períodos en la bitácora en `src/rrhh/seguridad/auditoria.js` y `src/rrhh/utils/periodos-service.js` (FR-084)
+- [ ] T117 [US4] Integrar las vistas de parámetros, períodos, planilla y liquidaciones en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
 
-**Punto de control**: Las Historias de Usuario 1-4 deben estar completamente funcionales y ser comprobables de forma independiente.
-
----
-
-## Fase 7: Habilitadores de Configuración del Módulo (Transversal)
-
-**Objetivo**: Introducir `src/module-config.js` para que los desarrolladores puedan adaptar la identidad del módulo sin editar el código central, con valores predeterminados seguros e informes de error claros.
-
-**Prueba Independiente**: Un desarrollador suministra una configuración de Ventas; la aplicación carga mostrándola. Al quitar el archivo se restauran los valores predeterminados Entidad/Documento sin errores.
-
-> **Nota**: Esta fase no corresponde a una historia de usuario propia. Provee el perfil de configuración que consumen las Historias de Usuario 6, 7, 12 y 13.
-
-### Pruebas de los Habilitadores de Configuración
-
-- [X] T026 [P] Añadir pruebas unitarias para carga de configuración, retroceso a predeterminados e informes de configuración inválida en tests/unit/module-config.test.js
-
-### Implementación de los Habilitadores de Configuración
-
-- [X] T027 Crear el cargador de configuración con valores predeterminados, validación e informes de error claros en src/module-config.js
-- [X] T028 Cargar la configuración al arrancar y pasarla a todas las vistas en src/main.js y src/app.js
-
-**Punto de control**: La configuración aún no impulsa nada visible, pero carga de forma fiable y valida limpiamente.
+**Punto de control**: Las Historias de Usuario 1 a 4 deben funcionar de forma independiente, incluida la elegibilidad por solapamiento y el resumen de exclusiones.
 
 ---
 
-## Fase 8: Historia de Usuario 6 - Reetiquetar pantallas desde la configuración (Prioridad: P1)
+## Fase 7: Historia de Usuario 6 – Seguridad, Roles y Gobierno de Datos (Prioridad: P1)
 
-**Objetivo**: Derivar todas las etiquetas visibles para el usuario de la configuración para que los módulos adaptados hablen su idioma de dominio en todo momento.
+**Objetivo**: Aplicar permisos detallados por rol, visibilidad restringida (incluido el scoping de equipo de la jefatura), cambio de rol auditado, bitácora append-only con filtros y respaldo/restauración JSON sin sobrescribir la bitácora.
 
-**Prueba Independiente**: Con mapeos Entidad→Cliente y Documento→Pedido de Venta, cada pestaña, botón, etiqueta de formulario, encabezado y mensaje muestra los términos mapeados en las tres pantallas; el comportamiento no cambia.
+**Prueba Independiente**: Simular cada rol y comprobar qué ve y qué puede operar; verificar que la jefatura solo accede a los datos básicos de su equipo, que cada consulta/cambio sensible, acceso denegado, cambio de rol y operación de respaldo queda en la bitácora, que esta no puede editarse ni eliminarse y que importar un respaldo no borra registros previos.
 
-### Pruebas para la Historia de Usuario 6
+### Pruebas de la Historia de Usuario 6
 
-- [X] T029 [P] [US6] Añadir pruebas de integración que verifiquen las etiquetas configuradas en las pantallas de bienvenida, gestión y búsqueda en tests/integration/relabeling.test.js
+- [ ] T118 [P] [US6] Crear pruebas unitarias de la matriz de roles y permisos detallados (administrador/a, analista, jefatura y Trabajador) en `tests/unit/rrhh-seguridad-roles.test.js` (FR-051, FR-085)
+- [ ] T119 [P] [US6] Crear pruebas unitarias de visibilidad restringida por rol, datos básicos de la jefatura y scoping de equipo en listados, detalles, búsquedas e impresión en `tests/unit/rrhh-seguridad-visibilidad.test.js` (FR-052, FR-053, FR-054, FR-085)
+- [ ] T120 [P] [US6] Crear pruebas unitarias de inmutabilidad, retención, consulta exclusiva de la bitácora, filtros y registro de intentos denegados en `tests/unit/rrhh-auditoria.test.js` (FR-055, FR-056, FR-058, FR-087)
+- [ ] T121 [P] [US6] Crear pruebas unitarias de cambio de rol en sesión activa con registro en bitácora en `tests/unit/rrhh-sesion-rol.test.js` (FR-086)
+- [ ] T122 [P] [US6] Crear prueba de integración de acceso por rol, denegaciones auditadas y bitácora append-only en `tests/integration/rrhh-seguridad-flow.test.js` (FR-055, FR-057, FR-059)
+- [ ] T123 [P] [US6] Crear prueba de integración de respaldo/restauración JSON que preserva y fusiona la auditoría previa, respeta permisos y completa el ciclo en menos de 5 minutos en `tests/integration/backup-flow.test.js` (FR-056, FR-060, FR-085, SC-022)
+- [ ] T124 [P] [US6] Crear prueba de integración de restricciones de Trabajador desvinculado y de jefatura sobre equipos ajenos en `tests/integration/rrhh-seguridad-desvinculado.test.js` (FR-051, FR-053, FR-085)
 
 ### Implementación de la Historia de Usuario 6
 
-- [X] T030 [US6] Derivar todas las etiquetas visibles para el usuario de la configuración en lugar de texto codificado en index.html, src/app.js y los archivos de componentes
+- [ ] T125 [P] [US6] Definir los cuatro roles y sus permisos detallados en `src/rrhh/seguridad/roles.js` (FR-051, FR-085)
+- [ ] T126 [P] [US6] Implementar la sesión simulada, el selector de rol y el cambio de rol en sesión activa en `src/rrhh/seguridad/sesion.js` (FR-051, FR-086)
+- [ ] T127 [US6] Implementar la selección del Trabajador representado: jefatura solo activo; Trabajador activo o desvinculado (solo liquidaciones cerradas) en `src/rrhh/seguridad/sesion.js` (FR-051, FR-085)
+- [ ] T128 [P] [US6] Implementar la clasificación de datos sensibles y la matriz de visibilidad por rol, incluyendo nombre, código, cargo, departamento, centro de costo y estado laboral como datos básicos de la jefatura, en `src/rrhh/seguridad/permisos.js` (FR-052, FR-054, FR-085)
+- [ ] T129 [US6] Aplicar la visibilidad restringida en listados, detalles, búsquedas y vistas imprimibles en `src/rrhh/seguridad/permisos.js`, `src/components/search-bar.js` y `src/rrhh/views/liquidaciones-view.js` (FR-052, FR-054)
+- [ ] T130 [US6] Implementar la denegación de acciones/consultas sin revelar contenido protegido en `src/rrhh/seguridad/permisos.js` (FR-057, FR-059)
+- [ ] T131 [US6] Registrar en la bitácora consultas/cambios de datos sensibles, cambios de rol, accesos denegados (incluidos intentos de editar/eliminar auditoría) y operaciones de respaldo, con usuario, rol, fecha/hora, acción y registro afectado en `src/rrhh/seguridad/auditoria.js` (FR-055, FR-086)
+- [ ] T132 [US6] Aplicar las restricciones de rol y el scoping de equipo en la capa de servicios de RR.HH., incluidos parámetros y respaldo, en `src/rrhh/utils/trabajadores-service.js`, `src/rrhh/utils/contratos-service.js`, `src/rrhh/utils/novedades-service.js`, `src/rrhh/utils/periodos-service.js`, `src/rrhh/utils/liquidaciones-service.js` y `src/rrhh/calculo/parametros.js` (FR-057, FR-085)
+- [ ] T133 [US6] Implementar el ayudante de equipo de jefatura (`getEquipo`) y aplicarlo a novedades, listados y búsquedas, impidiendo operar sobre Trabajadores ajenos en `src/rrhh/seguridad/permisos.js` y `src/rrhh/utils/trabajadores-service.js` (FR-053, FR-085)
+- [ ] T134 [P] [US6] Implementar la exportación JSON registrando la operación en la bitácora, sin modificar los datos, en `src/backup.js` (FR-060, FR-055)
+- [ ] T135 [US6] Implementar la validación e importación con confirmación y restauración atómica de datos operativos, registrando la operación sin sobrescribir ni eliminar registros previos de auditoría (fusión append-only), sin datos clínicos y respetando permisos, en `src/backup.js` (FR-060, FR-056, FR-085)
+- [ ] T136 [P] [US6] Construir el selector de rol/sesión y la reselección del Trabajador representado en `src/rrhh/components/rol-switcher.js` (FR-051, FR-086)
+- [ ] T137 [P] [US6] Construir la vista de consulta de la bitácora de auditoría, accesible solo al administrador/a de RR.HH., con filtros por usuario, rol, acción y período, en `src/rrhh/views/auditoria-view.js` (FR-087)
+- [ ] T138 [P] [US6] Añadir las acciones de exportar e importar respaldo en la interfaz con confirmación y verificación de permisos en `src/components/shell.js` y `src/styles.css` (FR-060, FR-085)
+- [ ] T139 [US6] Integrar el selector de rol, la vista de auditoría y las acciones de respaldo en la navegación y el marco del espacio de trabajo en `src/rrhh/views/rrhh-router.js` y `src/components/shell.js` (FR-086, FR-087, FR-060)
+- [ ] T140 [US6] Bloquear en un Trabajador desvinculado cualquier operación distinta de consultar sus propias liquidaciones cerradas en `src/rrhh/seguridad/permisos.js` y `src/rrhh/views/liquidaciones-view.js` (FR-051, FR-085)
+- [ ] T141 [US6] Aplicar permisos de administrador/a a la carga y administración de parámetros legales en `src/rrhh/calculo/parametros.js`, `src/rrhh/components/parametros-form.js` y `src/rrhh/views/parametros-view.js` (FR-085)
+- [ ] T142 [US6] Aplicar permisos de administrador/a a la exportación, importación y restauración del respaldo en `src/backup.js` y `src/components/shell.js` (FR-085)
 
-**Punto de control**: Un módulo configurado se presenta completamente bajo su propia terminología.
-
----
-
-## Fase 9: Historia de Usuario 7 - Declarar campos personalizados para los registros (Prioridad: P1)
-
-**Objetivo**: Permitir que los campos personalizados declarados fluyan automáticamente por formularios, validación, persistencia, listas y búsqueda.
-
-**Prueba Independiente**: Declarar un campo numérico obligatorio en las entidades renderiza una entrada numérica que bloquea guardados en blanco, muestra valores en listas y coincide en búsquedas; sin declaraciones la aplicación se comporta como la base sin modificar.
-
-### Pruebas para la Historia de Usuario 7
-
-- [X] T031 [P] [US7] Añadir pruebas unitarias para validación y persistencia de campos personalizados en tests/unit/storage.test.js
-- [X] T032 [P] [US7] Añadir pruebas de integración para el renderizado de campos personalizados en formularios, listas y búsqueda en tests/integration/custom-fields.test.js
-
-### Implementación de la Historia de Usuario 7
-
-- [X] T033 [P] [US7] Renderizar dinámicamente los campos personalizados declarados en los formularios de entidad y documento en src/components/entity-form.js y src/components/document-form.js
-- [X] T034 [US7] Incluir los campos personalizados en validación, persistencia, listas y búsqueda en src/storage.js y src/app.js
-
-**Punto de control**: Los datos específicos del módulo requieren cero cambios de código de interfaz.
+**Punto de control**: US1–US4 y US6 deben funcionar de forma independiente; la seguridad, el scoping de equipo y la auditoría quedan aplicadas transversalmente.
 
 ---
 
-## Fase 10: Historia de Usuario 8 - Buscar y encontrar entidades rápidamente (Prioridad: P2)
+## Fase 8: Historia de Usuario 5 – Vista Explicativa e Impresión de Liquidaciones (Prioridad: P2)
 
-**Objetivo**: Permitir a los usuarios buscar y filtrar entidades rápidamente, manteniendo la capacidad de respuesta con conjuntos de datos grandes.
+**Objetivo**: Explicar cada línea de la liquidación con su base, tasa o fórmula y parámetro legal, y ofrecer una vista limpia para imprimir o guardar en PDF, respetando permisos y el máximo de dos páginas.
 
-**Prueba Independiente**: Un usuario puede introducir un término de búsqueda y ver solo las entidades coincidentes.
+**Prueba Independiente**: Seleccionar una línea y ver su desglose con el parámetro legal y su vigencia en menos de 1 segundo; imprimir y obtener un comprobante sin controles de navegación que coincide con los montos de la liquidación y se ajusta a dos páginas como máximo.
 
-### Pruebas para la Historia de Usuario 8
+### Pruebas de la Historia de Usuario 5
 
-- [X] T035 [P] [US8] Añadir pruebas unitarias para la lógica de filtrado de búsqueda en tests/unit/storage.test.js
-- [X] T036 [P] [US8] Añadir pruebas de integración para el comportamiento de búsqueda en tests/integration/search-entities.test.js
-
-### Implementación de la Historia de Usuario 8
-
-- [X] T037 [P] [US8] Crear la interfaz de la barra de búsqueda en src/components/search-bar.js
-- [X] T038 [US8] Conectar la entrada de búsqueda al filtrado y al comportamiento de estado vacío en src/app.js
-- [X] T039 [US8] Asegurar que los resultados de búsqueda permanecen sincronizados con las acciones de crear, editar y eliminar en src/app.js
-
-**Punto de control**: Las historias centrales de datos y la búsqueda deben estar ahora funcionalmente independientes.
-
----
-
-## Fase 11: Historia de Usuario 9 - Registrar una fecha objetivo (Prioridad: P2)
-
-**Objetivo**: Permitir a los usuarios adjuntar una fecha objetivo opcional a una entidad.
-
-**Prueba Independiente**: Un usuario puede fijar una fecha en una entidad y verla mostrada en la lista.
-
-### Pruebas para la Historia de Usuario 9
-
-- [X] T040 [P] [US9] Añadir pruebas unitarias para validación y persistencia de la fecha objetivo en tests/unit/storage.test.js
-
-### Implementación de la Historia de Usuario 9
-
-- [X] T041 [P] [US9] Añadir la entrada de fecha objetivo al formulario de entidad en index.html
-- [X] T042 [US9] Incluir targetDate en la lógica de validación, creación, actualización y búsqueda en src/storage.js
-- [X] T043 [US9] Conectar targetDate al envío del formulario, poblado de edición y visualización de errores en src/app.js
-- [X] T044 [US9] Mostrar la fecha objetivo en la lista de entidades en src/app.js
-
-**Punto de control**: La Historia de Usuario 9 debe estar completamente funcional y ser comprobable de forma independiente.
-
----
-
-## Fase 12: Historia de Usuario 10 - Registrar los detalles de documentos de una entidad (Prioridad: P2)
-
-**Objetivo**: Permitir a los usuarios registrar detalles de documentos para una entidad y verlos juntos, con la eliminación en cascada protegiendo la integridad referencial.
-
-**Prueba Independiente**: Un usuario puede añadir un documento a una entidad y ver los detalles mostrados con esa entidad; eliminar la entidad elimina sus documentos.
-
-### Pruebas para la Historia de Usuario 10
-
-- [X] T045 [P] [US10] Añadir pruebas unitarias para generación de entity_id y validación de documentos en tests/unit/storage.test.js
-- [X] T046 [P] [US10] Añadir pruebas de integración para añadir un documento a una entidad en tests/integration/add-document.test.js
-- [X] T047 [P] [US10] Añadir pruebas de integración para edición, eliminación y eliminación en cascada de documentos en tests/integration/manage-document.test.js
-
-### Implementación de la Historia de Usuario 10
-
-- [X] T048 [P] [US10] Crear la interfaz del formulario de documento en src/components/document-form.js
-- [X] T049 [P] [US10] Crear la interfaz de la lista de documentos en src/components/document-list.js
-- [X] T050 [US10] Conectar las acciones de crear, editar y eliminar documentos para persistirlos en src/app.js
-- [X] T051 [US10] Añadir entity_id a la creación de entidades y mostrar los documentos con su entidad en src/app.js
-- [X] T052 [US10] Eliminar en cascada los documentos cuando se elimina una entidad en src/storage.js
-
-**Punto de control**: Los datos maestros y los documentos transaccionales deben estar completamente vinculados.
-
----
-
-## Fase 13: Historia de Usuario 11 - Buscar entidades en una pantalla dedicada (Prioridad: P2)
-
-**Objetivo**: Proporcionar la pantalla de búsqueda dedicada accesible desde la pantalla de bienvenida, manteniendo la edición en la pantalla de gestión.
-
-**Prueba Independiente**: Un usuario navega desde la pantalla de bienvenida a la pantalla de búsqueda, busca, ve resultados o un estado vacío, y vuelve a Inicio.
-
-### Implementación de la Historia de Usuario 11
-
-- [x] T053 [P] [US11] Añadir la entrada de búsqueda y la lista de resultados a la vista de búsqueda dedicada en index.html
-- [x] T054 [US11] Conectar la entrada de búsqueda al filtrado de resultados y mostrar un estado vacío en la pantalla de búsqueda en src/app.js
-- [x] T055 [US11] Añadir navegación al Panel desde la pantalla de búsqueda en index.html
-
-**Punto de control**: Todas las historias del usuario de negocio deben estar completamente funcionales y ser comprobables de forma independiente.
-
----
-
-## Fase 14: Historia de Usuario 12 - Configurar el ciclo de vida de estados de documentos (Prioridad: P2)
-
-**Objetivo**: Aplicar los estados y transiciones configurados en los documentos manteniendo el estado de texto libre cuando no hay configuración.
-
-**Prueba Independiente**: Con cotización→pedido→facturado configurado, solo se ofrecen los estados siguientes válidos, los inválidos se rechazan con explicaciones, y el estado es visible de un vistazo; sin configuración, el estado permanece como texto libre.
-
-### Pruebas para la Historia de Usuario 12
-
-- [X] T056 [P] [US12] Añadir pruebas unitarias para la aplicación de transiciones de estado en tests/unit/storage.test.js
-
-### Implementación de la Historia de Usuario 12
-
-- [X] T057 [US12] Restringir las opciones de estado de documento a las transiciones permitidas y aplicarlas al guardar en src/components/document-form.js y src/storage.js
-
-**Punto de control**: La cadena de personalización (habilitadores de configuración → HU6/HU7/HU12) está completa de extremo a extremo.
-
----
-
-## Fase 15: Pulido y Preocupaciones Transversales
-
-**Propósito**: Mejorar la calidad, accesibilidad, fiabilidad y el comportamiento con conjuntos de datos grandes en todas las historias.
-
-- [X] T058 [P] Añadir refinamientos de accesibilidad para etiquetas, foco de teclado y estructura semántica
-- [X] T059 [P] Añadir pulido final de UX para estados vacíos, mensajes de validación y diseño responsivo
-- [X] T060 Verificar que el renderizado de listas y la búsqueda permanecen responsivos y correctos con 500 registros (FR-032, SC-004)
-- [X] T061 Ejecutar la suite completa de pruebas y probar manualmente los flujos principales de usuario
-- [X] T062 [P] Añadir estilos para la pantalla de bienvenida y la navegación de vistas en src/styles.css
-- [X] T063 Ejecutar la suite completa de pruebas y la compilación de producción para verificar que no hay regresiones
-
----
-
-## Fase 16: Historia de Usuario 13 - Marco de espacio de trabajo ERP con marca (Prioridad: P1)
-
-**Objetivo**: Envolver cada pantalla en un marco ERP persistente: una barra superior con logotipo derivado y nombre del módulo, más una barra lateral de botones de módulo con resaltado de módulo activo y contracción responsiva.
-
-**Prueba Independiente**: En cada pantalla la barra superior y la barra lateral son visibles, el módulo activo está resaltado, la navegación entre módulos preserva los datos, y la barra lateral se contrae a una columna de iconos en ventanas gráficas estrechas.
-
-### Pruebas para la Historia de Usuario 13
-
-- [X] T064 [P] [US13] Añadir pruebas unitarias para validación del color de acento en tests/unit/module-config.test.js
-- [X] T065 [P] [US13] Añadir pruebas de integración que afirmen que el marco (logotipo, nombre del módulo, botones de barra lateral, resaltado activo) aparece en todas las pantallas en tests/integration/workspace-shell.test.js
-
-### Implementación de la Historia de Usuario 13
-
-- [X] T066 [P] [US13] Añadir el marcado del marco del espacio de trabajo (barra superior, montaje de logotipo SVG en línea, botones de módulo en barra lateral, región de contenido principal) a index.html
-- [X] T067 [P] [US13] Crear src/components/shell.js para renderizar el logotipo monograma SVG a partir del nombre del módulo, aplicar las etiquetas configuradas a los botones de módulo, gestionar el resaltado de módulo activo y exponer eventos de navegación
-- [X] T068 [US13] Reemplazar las pestañas horizontales de gestión y la navegación independiente hacia atrás por enrutamiento de módulos mediante la barra lateral en src/app.js
-- [X] T069 [P] [US13] Construir la hoja de estilos de tokens de diseño ERP (variables de color, escala de espaciado, tipografía) más estilos de barra superior, barra lateral y tarjetas en src/styles.css
-- [X] T070 [US13] Soportar un theme.accentColor opcional en la validación de src/module-config.js y aplicarlo como propiedad personalizada de CSS en src/app.js
-- [X] T071 [US13] Contraer la barra lateral a una columna de iconos en ventanas gráficas estrechas en src/styles.css
-- [X] T072 [P] [US13] Actualizar las pruebas de integración existentes (manage-tabs.test.js, relabeling.test.js) para apuntar al marco de barra lateral en lugar de los botones de pestañas/bienvenida
-
-**Punto de control**: Todas las pantallas se renderizan dentro del marco con marca con navegación por barra lateral funcional y sin pérdida de datos.
-
----
-
-## Fase 17: Historia de Usuario 3 (revisada) - Panel de inicio con acciones rápidas y estadísticas (Prioridad: P1)
-
-**Objetivo**: Reemplazar la vista de bienvenida de dos botones por un panel ERP que ofrece múltiples botones de acción rápida y estadísticas de registros en vivo.
-
-**Prueba Independiente**: La aplicación abre en un panel con acciones rápidas para nueva entidad, nuevo documento, gestión de entidades y buscar registros; activarlas aterriza en el lugar correcto listo para introducir datos, y las tarjetas de estadísticas coinciden con los registros almacenados.
-
-### Pruebas para la Historia de Usuario 3
-
-- [X] T073 [P] [US3] Añadir pruebas de integración para las acciones rápidas del panel y las estadísticas en vivo en tests/integration/dashboard.test.js
-
-### Implementación de la Historia de Usuario 3
-
-- [X] T074 [P] [US3] Añadir el marcado del panel (encabezado, cuadrícula de acciones rápidas, tarjetas de estadísticas) a index.html reemplazando la vista de bienvenida de dos botones
-- [X] T075 [US3] Conectar los botones de acción rápida para abrir la gestión de entidades, la gestión de documentos (formularios limpiados) y la búsqueda (entrada enfocada) en src/app.js
-- [X] T076 [US3] Renderizar y refrescar los recuentos de entidades/documentos desde el almacenamiento cada vez que se muestra el panel en src/components/dashboard.js
-- [X] T077 [P] [US3] Dar estilo al encabezado del panel, las tarjetas de acción rápida y los mosaicos de estadísticas en src/styles.css
-
-**Punto de control**: La aplicación abre en un panel funcional; cada tarea ERP clave está a un clic.
-
----
-
-## Fase 18: Pulido y Regresión (Aspecto ERP)
-
-**Propósito**: Unificar el estilo visual en toda la aplicación rediseñada y protegerse contra regresiones.
-
-- [X] T078 [P] Rediseñar formularios, listas, insignias, mensajes de error y estados vacíos según el sistema de tokens de diseño en src/styles.css
-- [X] T079 [P] Verificar el orden de foco del teclado y aria-current en los botones de módulo de la barra lateral (pase de accesibilidad del nuevo marco)
-- [X] T080 Actualizar README.md con las secciones del marco del espacio de trabajo, panel y tematización
-- [X] T081 Ejecutar la suite completa de pruebas y la compilación de producción para verificar que no hay regresiones (FR-032, SC-004)
-
----
-
-## Fase 19: Historia de Usuario 5 - Vista Explicativa e Impresión de Liquidaciones (Prioridad: P2)
-
-**Objetivo**: Mostrar cada liquidación línea por línea con su base de cálculo, tasa o factor, fórmula y parámetro legal vigente, y ofrecer una vista limpia lista para imprimir o guardar en PDF.
-
-**Prueba Independiente**: Al seleccionar una línea de haber, descuento o impuesto se despliega su desglose (base, tasa, fórmula y parámetro legal con vigencia) y el monto coincide con el de la línea; al pulsar imprimir se obtiene un comprobante sin barras laterales, menús ni botones, apto para papel o PDF.
-
-### Pruebas para la Historia de Usuario 5
-
-- [ ] T082 [P] [US5] Añadir pruebas unitarias para derivación y formato de la explicación (base, tasa o factor, fórmula, parámetro legal con fecha de vigencia y motivo de líneas manuales) en tests/unit/rrhh-liquidacion.test.js
-- [ ] T083 [P] [US5] Añadir pruebas de integración para la vista src/rrhh/views/liquidacion.js (renderizado línea por línea, panel explicativo al seleccionar, totales) en tests/integration/rrhh-liquidacion-view.test.js
-- [ ] T084 [P] [US5] Añadir pruebas de integración para el modo de impresión limpia, las reglas @media print, los eventos beforeprint/afterprint y la restauración del estado tras cancelar o finalizar la impresión en tests/integration/rrhh-liquidacion-print.test.js
-- [ ] T085 [P] [US5] Añadir pruebas de integración para casos límite (línea manual sin fórmula, parámetro no vigente, liquidación en borrador o cerrada, uso obligatorio del snapshot congelado frente a parámetros vigentes actuales, datos faltantes del emisor, cancelación de impresión con restauración correcta) en tests/integration/rrhh-liquidacion-edge-cases.test.js
+- [ ] T143 [P] [US5] Crear prueba de integración del desglose por línea, snapshot congelado y marca de borrador en `tests/integration/rrhh-liquidacion-explicacion.test.js` (FR-040, FR-041, FR-043)
+- [ ] T144 [P] [US5] Crear prueba de integración de la vista imprimible, contenido del comprobante (incluida empresa emisora), guardado en PDF, máximo de dos páginas y obtención del comprobante en menos de 30 segundos en `tests/integration/rrhh-liquidacion-print.test.js` (FR-044, FR-045, FR-046, FR-047, SC-015, SC-012)
+- [ ] T145 [P] [US5] Crear prueba de integración de permisos y auditoría al explicar, imprimir o guardar en PDF una liquidación en `tests/integration/rrhh-liquidacion-permisos.test.js` (FR-048, FR-049, FR-050)
+- [ ] T146 [P] [US5] Crear prueba de rendimiento de la explicación de línea en menos de 1 segundo en `tests/integration/rrhh-liquidacion-rendimiento.test.js` (SC-011)
 
 ### Implementación de la Historia de Usuario 5
 
-#### Estructura y datos
+- [ ] T147 [P] [US5] Construir el panel de explicación por línea (base, tasa o factor, fórmula y parámetro legal con vigencia) en `src/rrhh/components/linea-explicacion.js` (FR-040, FR-041)
+- [ ] T148 [US5] Indicar claramente cuando una línea no dispone de fórmula o parámetro legal y registrar el motivo de las líneas manuales, sin omitirla del comprobante, en `src/rrhh/components/linea-explicacion.js` (FR-042)
+- [ ] T149 [US5] Implementar la explicación con valores congelados en períodos cerrados y la marca de "borrador" en abiertos/calculados en `src/rrhh/views/liquidacion.js` (FR-043)
+- [ ] T150 [P] [US5] Construir la vista imprimible sin menús, botones de edición ni controles de navegación en `src/rrhh/views/liquidacion-impresion.js` (FR-044)
+- [ ] T151 [US5] Incluir en el comprobante la identificación del Trabajador, período, empresa emisora, líneas con montos, totales, líquido a pagar y marca de borrador en `src/rrhh/views/liquidacion-impresion.js` (FR-045)
+- [ ] T152 [US5] Garantizar que los montos del comprobante coincidan exactamente con la liquidación en `src/rrhh/views/liquidacion-impresion.js` (FR-046)
+- [ ] T153 [P] [US5] Implementar los estilos de impresión en tamaño carta/A4 vertical y el control de salto para un máximo de dos páginas en `src/rrhh/views/liquidacion-impresion.css` (FR-047, SC-015)
+- [ ] T154 [US5] Aplicar los permisos de acceso a la consulta, explicación, impresión y guardado en PDF (analista y administrador/a: cualquier Trabajador; Trabajador: solo sus liquidaciones cerradas; jefatura: sin acceso) en `src/rrhh/views/liquidacion.js` y `src/rrhh/seguridad/permisos.js` (FR-048)
+- [ ] T155 [US5] Impedir el acceso a liquidaciones ajenas, no cerradas o de equipos ajenos e informar la denegación sin revelar contenido en `src/rrhh/views/liquidacion.js` (FR-049)
+- [ ] T156 [US5] Registrar en la bitácora la consulta, explicación, impresión o guardado en PDF de liquidaciones en `src/rrhh/views/liquidacion.js` y `src/rrhh/seguridad/auditoria.js` (FR-050)
+- [ ] T157 [US5] Integrar las acciones de explicar, imprimir y guardar en PDF en el detalle de liquidación en `src/rrhh/views/liquidaciones-view.js` (FR-040, FR-044)
+- [ ] T158 [US5] Verificar que consultar, explicar o imprimir una liquidación no modifica su contenido en `src/rrhh/views/liquidacion.js` (FR-044)
+- [ ] T159 [US5] Cargar los datos de identificación de la empresa emisora desde la configuración del módulo para el comprobante en `src/module-config.js` y `src/rrhh/views/liquidacion-impresion.js` (FR-045; suposición de datos del emisor)
+- [ ] T160 [US5] Medir y optimizar la generación de la explicación por línea para cumplir menos de 1 segundo en `src/rrhh/components/linea-explicacion.js` (SC-011)
 
-- [ ] T086 [P] [US5] Crear la estructura de carpetas src/rrhh/, src/rrhh/views/, src/rrhh/components/ y src/rrhh/utils/ si no existen
-- [ ] T087 [US5] Definir y validar el modelo de lectura de LIQUIDACION y LINEA_LIQUIDACION en src/rrhh/utils/liquidacion-data.js (encabezado: trabajador, período, fecha de emisión, emisor/empresa; líneas: concepto, tipo, monto, base, tasa, fórmula y snapshot inmutable del parámetro legal: codigo, descripcion, fechaVigencia, valorAplicado, fuente, congeladoEnPeriodo; marcar líneas manuales con motivo)
-- [ ] T087a [US5] Generar y persistir el snapshot inmutable de parámetros legales al momento de calcular la liquidación en src/rrhh/utils/liquidacion-calculo.js o src/rrhh/utils/liquidacion-service.js. La vista NUNCA debe leer parámetros vigentes actuales; las líneas deben conservar base, tasa/factor, fórmula o motivo y el snapshot congelado por período.
-- [ ] T088 [US5] Implementar el servicio de carga de la cabecera y las líneas por identificador de liquidación, con datos de demostración cuando no existan, en src/rrhh/utils/liquidacion-service.js
-
-#### Vista explicativa
-
-- [ ] T089 [P] [US5] Crear la vista src/rrhh/views/liquidacion.js con encabezado (trabajador, período, fecha de emisión), listado de haberes y descuentos, totales y panel de "Vista Explicativa"
-- [ ] T090 [US5] Renderizar cada línea con concepto, tipo (haber, descuento o impuesto), monto y estado seleccionable por clic y teclado (aria-selected) en src/rrhh/views/liquidacion.js
-- [ ] T091 [US5] Mostrar al seleccionar una línea la base de cálculo, la tasa o factor aplicado, la fórmula con valores formateados y el monto resultante en src/rrhh/views/liquidacion.js
-- [ ] T092 [US5] Identificar en el desglose el parámetro legal aplicado, su fecha de vigencia y fuente usando ÚNICAMENTE el snapshot congelado de la línea (guardado al calcular). Mostrar advertencia si falta el snapshot (caso legacy), no resolver con parámetros vigentes actuales. Usar los valores congelados del período en src/rrhh/utils/liquidacion-data.js y src/rrhh/views/liquidacion.js
-- [ ] T093 [US5] Mostrar el motivo registrado en las líneas manuales en lugar de una fórmula, y un mensaje claro cuando no exista fórmula o parámetro legal, sin omitir la línea en src/rrhh/views/liquidacion.js
-
-#### Impresión y PDF
-
-- [ ] T094 [P] [US5] Añadir la acción "Imprimir / Guardar en PDF" que active el modo de impresión limpia usando window.print() (el navegador permite "Guardar como PDF"). Garantizar que solo se muestre en vista de liquidación calculada en src/rrhh/views/liquidacion.js
-- [ ] T095 [US5] Implementar el modo de impresión: aplicar la clase print-clean, ocultar barra superior, barra lateral, navegación y botones. Gestionar con eventos beforeprint/afterprint (y fallback window.matchMedia("print")) para asegurar restauración incluso si el usuario cancela el diálogo. Limpiar estilos/flags al recibir afterprint en src/rrhh/views/liquidacion.js
-- [ ] T096 [US5] Añadir estilos @media print en src/styles.css para .rrhh-liquidacion y .print-clean: ocultar .topbar, .sidebar, .app-nav y controles, una sola columna, colores legibles, tamaño carta/A4 vertical y page-break-inside: avoid en encabezado, filas y totales
-- [ ] T097 [US5] Incluir en el comprobante imprimible la identificación del emisor (razón social/nombre, identificador fiscal/RUT) obtenida desde configuración, del trabajador y del período, el detalle de haberes, descuentos e impuestos, los totales, el líquido a pagar y la fecha de emisión, garantizando que los montos impresos coincidan con la liquidación en src/rrhh/views/liquidacion.js
-- [ ] T097a [US5] Centralizar datos del emisor en src/module-config.js con valores por defecto y crear helper src/rrhh/utils/empresa.js (o src/rrhh/config/empresa.js) para obtenerlos de forma reutilizable.
-
-#### Integración, permisos y accesibilidad
-
-- [ ] T098 [US5] Integrar la vista en la navegación de RRHH/Planilla dentro del marco ERP existente en src/app.js y src/module-config.js
-- [ ] T099 [US5] Respetar los permisos de acceso vigentes: ocultar las líneas y explicaciones no autorizadas tanto en pantalla como en el comprobante, usando la matriz de roles de src/rrhh/seguridad/roles.js (crear la verificación mínima si el módulo aún no la expone)
-- [ ] T100 [US5] Garantizar accesibilidad: foco visible en la línea seleccionada, aria-selected, etiquetas descriptivas del panel explicativo y botón de impresión accesible en src/rrhh/views/liquidacion.js
-
-#### Verificación
-
-- [ ] T101 [US5] Ejecutar las pruebas unitarias y de integración de la vista explicativa e impresión, y corregir los fallos
-- [ ] T102 [US5] Verificar manualmente los escenarios de aceptación y casos límite (desglose, parámetro legal, línea manual, período cerrado, borrador, cancelación de impresión) y registrar el resultado
-- [ ] T103 [US5] Comprobar los criterios de éxito SC-011 a SC-016: tiempo de despliegue del desglose, tiempo para obtener el comprobante, comprensión de los montos, coincidencia de montos impresos y ausencia de controles de edición en la vista imprimible
-
-**Punto de control**: La vista explicativa de liquidaciones muestra base, tasa, fórmula y parámetro legal línea por línea, y permite obtener un comprobante imprimible o PDF limpio y consistente con los montos calculados.
+**Punto de control**: Las Historias de Usuario 1 a 6 deben funcionar de forma independiente.
 
 ---
 
-## Fase 20: Historia de Usuario 14 - Registro y Aprobación de Novedades del Mes (Prioridad: P1)
+## Fase 9: Pulido y Preocupaciones Transversales
 
-**Objetivo**: Permitir que analistas de remuneraciones y jefaturas registren las novedades del período (horas extra, licencias médicas y ausencias), las sometan a aprobación y garanticen que el cálculo masivo de la planilla consuma únicamente novedades aprobadas de un período abierto, sin almacenar diagnósticos ni datos clínicos.
+**Propósito**: Mejoras que afectan a varias historias y cierre de la entrega.
 
-**Prueba Independiente**: Una jefatura registra horas extra, una licencia médica y una ausencia para un trabajador de su equipo; la licencia solo conserva tipo y días (sin diagnóstico), las novedades quedan pendientes y el cálculo masivo se bloquea con un mensaje claro hasta su aprobación; tras aprobarlas, solo esas novedades alimentan el cálculo; en un período cerrado no se permite registrar, editar ni aprobar.
+- [ ] T161 [P] Actualizar la documentación del módulo de RR.HH./Planilla en `docs/rrhh.md` (bloqueante de release)
+- [ ] T162 Ejecutar la suite completa de Vitest (`tests/unit/` y `tests/integration/`) y corregir regresiones
+- [ ] T163 [P] Verificar el rendimiento de cálculo de 500 trabajadores en 10 segundos o menos en `src/rrhh/calculo/motor.js` y `tests/integration/rrhh-rendimiento.test.js` (SC-023)
+- [ ] T164 [P] Validar el flujo de RR.HH. descrito en `specs/001-erp-base-module/quickstart.md`, incluidas las reglas corregidas de desvinculación, contratos, novedades, elegibilidad y auditoría
+- [ ] T165 Revisar el endurecimiento de seguridad de datos sensibles, scoping de equipo, permisos de parámetros/respaldo, sanitización XSS en módulo base y vistas de RR.HH., y bitácora en `src/utils/sanitize.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/seguridad/auditoria.js`, `src/backup.js`, `src/rrhh/calculo/parametros.js` y `src/rrhh/views/`
+- [ ] T166 Limpiar y refactorizar ayudantes compartidos en `src/rrhh/utils/common.js`
+- [ ] T167 [P] Revisar accesibilidad y consistencia visual en `src/rrhh/views/liquidaciones-view.js`, `src/rrhh/views/novedades-view.js`, `src/rrhh/views/auditoria-view.js` y `src/rrhh/components/trabajador-form.js`
+- [ ] T168 [P] Verificar la cobertura FR-001–FR-087, XR-001–XR-005 y SC-011/SC-015/SC-022/SC-023 con la matriz de trazabilidad de este archivo, y registrar brechas restantes en `docs/rrhh.md` (cierre de G18 y K1)
 
-### Pruebas para la Historia de Usuario 14
+---
 
-- [ ] T104 [P] [US14] Añadir pruebas unitarias para la validación del modelo de novedad, los campos obligatorios por tipo (horas extra, licencia médica y ausencia), la cantidad/días positivos, las fechas coherentes y la prohibición de campos de diagnóstico en src/rrhh/utils/novedades-data.js en tests/unit/rrhh-novedades.test.js
-- [ ] T105 [P] [US14] Añadir pruebas unitarias para la máquina de estados de aprobación (pendiente, aprobada, rechazada), los permisos por rol, el bloqueo por período cerrado, la aprobación masiva y el rechazo con motivo en tests/unit/rrhh-novedades-aprobacion.test.js
-- [ ] T106 [P] [US14] Añadir pruebas de integración para el registro de novedades desde el formulario, la retroalimentación de validación y la garantía de que una licencia médica solo persiste tipo y días sin diagnósticos ni texto clínico en tests/integration/rrhh-novedades-registro.test.js
-- [ ] T107 [P] [US14] Añadir pruebas de integración para la aprobación individual y masiva, la actualización visible del estado, el bloqueo del cálculo masivo mientras existan novedades pendientes y el consumo exclusivo de novedades aprobadas en tests/integration/rrhh-novedades-aprobacion.test.js
-- [ ] T108 [P] [US14] Añadir pruebas de integración para casos límite: período cerrado, rol sin permiso de aprobación, rechazo con motivo, novedad duplicada, fechas fuera del período, ausencia sin justificación clínica y restauración del estado tras errores en tests/integration/rrhh-novedades-edge-cases.test.js
-- [ ] T109 [P] [US14] Añadir pruebas de integración para la navegación al módulo Novedades, las etiquetas configuradas y el resumen de pendientes por período en el marco ERP en tests/integration/rrhh-novedades-view.test.js
+## Trazabilidad FR → Tareas
 
-### Implementación de la Historia de Usuario 14
+> Cada requisito funcional tiene al menos una tarea asociada. Las tareas marcadas con [P] pueden ejecutarse en paralelo según las reglas de dependencia.
 
-#### Estructura, modelo y persistencia
+| Requisitos | Tareas |
+|---|---|
+| FR-001–FR-009 | T005, T018–T024, T028, T036 |
+| FR-010–FR-022, FR-033–FR-039 | T006–T009, T025–T028, T035–T037, T040 |
+| FR-023–FR-032 | T004, T010, T029–T034, T037–T040 |
+| FR-040–FR-042 | T143, T147, T148 |
+| FR-043 | T143, T149 |
+| FR-044–FR-047 | T144, T150–T153, T157–T159 |
+| FR-048–FR-050 | T145, T154–T156 |
+| FR-051–FR-054 | T118, T119, T122, T124–T130, T132, T133, T140 |
+| FR-055–FR-059 | T012–T014, T120, T122, T123, T130–T135, T138, T156 |
+| FR-060 | T123, T134, T135, T138, T139, T142 |
+| FR-061–FR-063 | T041, T042, T044, T045, T047–T049, T052, T054 |
+| FR-064 | T042, T046, T053 |
+| FR-065–FR-067 | T043, T044, T050, T054, T055, T068 |
+| FR-068–FR-072 | T058, T061–T069, T070–T072 |
+| FR-073 | T059, T060, T073 |
+| FR-074–FR-075 | T075, T076, T078–T083, T086–T089 |
+| FR-076–FR-078 | T075, T077–T080, T084, T085, T088, T090–T092 |
+| FR-079 | T015–T017, T095, T099, T100, T111–T113 |
+| FR-080 | T094, T096–T098, T101, T103–T107, T110, T114, T115 |
+| FR-081 | T096, T107 |
+| FR-082 | T095, T097, T099, T108, T109, T113 |
+| FR-083 | T095, T097, T102, T109 |
+| FR-084 | T116 |
+| FR-085 | T118, T119, T123–T128, T132, T133, T135, T140–T142 |
+| FR-086 | T121, T126, T131, T136, T139 |
+| FR-087 | T120, T137, T139 |
+| XR-001–XR-005 | T005, T031, T034, T039 |
 
-- [ ] T110 [P] [US14] Crear la estructura de carpetas src/rrhh/utils/, src/rrhh/components/, src/rrhh/views/ y src/rrhh/seguridad/ si no existen
-- [ ] T111 [US14] Definir el modelo y la validación de NOVEDAD en src/rrhh/utils/novedades-data.js con id, trabajadorId, período (YYYY-MM), tipo (horas_extra, licencia_medica o ausencia), cantidad de horas o días, fechaInicio, fechaFin, observación no clínica, estado, registradoPor, aprobadoPor, fechaAprobacion, motivoRechazo, createdAt y updatedAt
-- [ ] T112 [US14] Implementar la lista blanca de campos persistidos y el guardia de privacidad de la Ley 21.719 en src/rrhh/utils/novedades-privacidad.js para rechazar o descartar diagnósticos, códigos CIE, detalles clínicos y texto libre sensible, conservando solo tipo y días en licencias médicas
-- [ ] T113 [US14] Implementar la persistencia y el CRUD de novedades en localStorage en src/rrhh/utils/novedades-service.js, incluyendo identificadores únicos, marcas de tiempo, filtros por período y trabajador, y actualización de una novedad existente
-- [ ] T114 [US14] Implementar la verificación de período abierto o cerrado en src/rrhh/utils/periodos.js y usarla para impedir registrar, editar, rechazar o aprobar novedades cuando el período no esté abierto en src/rrhh/utils/novedades-service.js
-- [ ] T115 [US14] Implementar la máquina de estados y las reglas de aprobación en src/rrhh/utils/novedades-aprobacion.js: transiciones pendiente→aprobada y pendiente→rechazada, aprobación masiva, motivo de rechazo obligatorio y verificación de permisos con src/rrhh/seguridad/roles.js
-- [ ] T116 [US14] Implementar el selector de novedades aprobadas por período y trabajador, el resumen de totales (horas extra, días de licencia y días de ausencia) y el bloqueo del cálculo masivo cuando existan novedades pendientes o rechazadas en src/rrhh/utils/novedades-service.js
-- [ ] T117 [US14] Integrar las novedades aprobadas en el motor de cálculo de planilla para que solo los montos validados afecten el sueldo proporcional, las horas extra y los descuentos por ausencias en src/rrhh/utils/liquidacion-calculo.js
+---
 
-#### Formulario, listado y aprobación
+## Cierre de Brechas de la Auditoría
 
-- [ ] T118 [P] [US14] Crear el formulario de registro de novedades en src/rrhh/components/novedad-form.js con campos específicos por tipo, validación en línea, aviso de privacidad y ausencia total de campos de diagnóstico o detalle clínico
-- [ ] T119 [P] [US14] Crear el listado y panel de aprobación de novedades en src/rrhh/components/novedad-list.js con período, trabajador, tipo, cantidad, estado, pendientes por período, acciones de aprobar/rechazar para roles autorizados y controles deshabilitados en períodos cerrados
-- [ ] T120 [US14] Crear la vista de novedades en src/rrhh/views/novedades.js que orqueste el filtro por período, el formulario, el listado, la aprobación individual y masiva, el estado vacío y el mensaje de bloqueo antes del cálculo masivo
-- [ ] T121 [US14] Integrar la vista de novedades en la navegación de RRHH/Planilla y en las etiquetas de tipos y estados en src/app.js y src/module-config.js
-- [ ] T122 [P] [US14] Añadir estilos para el formulario, el listado, las insignias de estado, el aviso de privacidad y la aprobación masiva, con comportamiento responsivo, en src/styles.css
-- [ ] T123 [US14] Garantizar accesibilidad en la vista de novedades: etiquetas descriptivas, foco visible, navegación por teclado en acciones de aprobación, aria-live para resultados y mensajes de error claros en src/rrhh/views/novedades.js
+> Las brechas G1–G18 y K1 quedan cubiertas por tareas y pruebas explícitas. La numeración de brechas se conserva para trazabilidad con el reporte de auditoría.
 
-#### Verificación
-
-- [ ] T124 [US14] Ejecutar las pruebas unitarias y de integración de novedades, aprobación y privacidad en tests/unit/rrhh-novedades.test.js, tests/unit/rrhh-novedades-aprobacion.test.js, tests/integration/rrhh-novedades-registro.test.js, tests/integration/rrhh-novedades-aprobacion.test.js, tests/integration/rrhh-novedades-edge-cases.test.js y tests/integration/rrhh-novedades-view.test.js, y corregir los fallos
-- [ ] T125 [US14] Verificar manualmente los escenarios de aceptación de HU14 (licencia médica sin diagnóstico, aprobación obligatoria antes del cálculo masivo) siguiendo specs/001-erp-base-module/quickstart.md y registrar el resultado
-- [ ] T126 [US14] Comprobar que el cálculo masivo solo consume novedades aprobadas, que un período cerrado es de solo lectura y que no se persiste ningún dato clínico ni diagnóstico en src/rrhh/utils/novedades-service.js y src/rrhh/utils/liquidacion-calculo.js
-
-**Punto de control**: Las novedades del mes se registran con validación por tipo y privacidad garantizada, requieren aprobación antes del cálculo masivo, solo las aprobadas alimentan la planilla y los períodos cerrados permanecen inmutables.
+| Brecha | Cobertura |
+|---|---|
+| G1 — Scoping de equipo en Jefatura | T119, T124, T132, T133, T140 |
+| G2 — Auditoría de catálogos | T043, T055 |
+| G3 — Permisos en parámetros y respaldo | T123, T132, T138, T141, T142 |
+| G4 — Parámetros legales disponibles antes de US2 | T015–T017, T067 |
+| G5 — Superposición de licencias/ausencias y tope de horas extra | T078, T086, T087 |
+| G6 — Sanitización XSS en módulo base y RR.HH. | T020, T040, T165 |
+| G7 — Filtros de auditoría y registro de intentos denegados | T120, T131, T137 |
+| G8 — Prohibición de reactivar Trabajadores | T043, T050 |
+| G9 — Recálculo idempotente sin duplicar liquidaciones | T096, T106 |
+| G10 — Comprobante de máximo dos páginas y empresa emisora | T144, T153, T159 |
+| G11 — Tiempos de explicación e impresión | T144, T146, T160 |
+| G12 — Restricciones del Trabajador desvinculado | T124, T140 |
+| G13 — Validaciones de contratos alineadas a US2 | T058, T061–T063, T067, T068 |
+| G14 — Motivo obligatorio de rechazo y estados de novedad | T077, T084, T088 |
+| G15 — Resumen de cálculo con exclusiones y motivo | T098, T105, T114 |
+| G16 — Entidad Catálogo explícita en el modelo | T046, T053 |
+| G17 — Árbol de archivos actualizado en el plan | T001, T040 |
+| G18 — Trazabilidad completa de tareas en la matriz | T168 |
+| K1 — Cobertura de pruebas de las correcciones y criterios de éxito | T041–T098, T118–T146, T163, T168 |
 
 ---
 
 ## Dependencias y Orden de Ejecución
 
-### Dependencias entre Fases
+### Dependencias por Fase
 
-- Configuración (Fase 1): Sin dependencias
-- Fundacional (Fase 2): Depende de completar Configuración
-- Historia de Usuario 1 (Fase 3): Depende de completar Fundacional
-- Historia de Usuario 2 (Fase 4): Depende de completar la implementación de la Historia de Usuario 1
-- Historia de Usuario 3 (Fase 5): Depende de completar Fundacional
-- Historia de Usuario 4 (Fase 6): Depende de completar la Historia de Usuario 3 y se beneficia de que los formularios de las Historias de Usuario 1-2 estén disponibles
-- Habilitadores de configuración (Fase 7): Depende de completar Fundacional; desbloquea HU6, HU7, HU12 y HU13
-- Historia de Usuario 6 (Fase 8): Depende de completar los habilitadores de configuración (Fase 7)
-- Historia de Usuario 7 (Fase 9): Depende de completar los habilitadores de configuración (Fase 7)
-- Historia de Usuario 8 (Fase 10): Depende de completar Fundacional y puede proceder después de la Historia de Usuario 1
-- Historia de Usuario 9 (Fase 11): Depende de completar Fundacional y puede proceder después de la Historia de Usuario 1
-- Historia de Usuario 10 (Fase 12): Depende de completar la implementación de la Historia de Usuario 1 y del campo entity_id
-- Historia de Usuario 11 (Fase 13): Depende de la Historia de Usuario 8 (lógica de búsqueda) y la Historia de Usuario 3 (navegación)
-- Historia de Usuario 12 (Fase 14): Depende de los habilitadores de configuración (Fase 7) y la Historia de Usuario 10 (documentos)
-- Pulido (Fase 15): Depende de que todas las historias de usuario deseadas estén completas
-- Historia de Usuario 13 (Fase 16): Depende de que las Fases 1-15 estén completas; reestructura la navegación entregada por HU3/HU4 dentro del marco
-- Historia de Usuario 3 revisada (Fase 17): Depende de la Fase 16 (el enrutamiento por barra lateral debe existir antes de que las acciones del panel lo usen)
-- Pulido Aspecto ERP (Fase 18): Depende de que las Fases 16 y 17 estén completas
-- Historia de Usuario 5 (Fase 19): Depende del marco ERP (Fase 16) y de que existan liquidaciones y líneas calculadas; al ser P2 se aborda después de las historias P1
-- Historia de Usuario 14 (Fase 20): Depende del marco ERP (Fase 16) y de la estructura base de RRHH/Planilla con su motor de cálculo (Fase 19, tareas T086-T088); el registro y la aprobación (T110-T123) pueden avanzar en paralelo con la vista explicativa e impresión de HU5, pero la integración con el cálculo (T117) requiere el motor de liquidaciones disponible
+- **Configuración (Fase 1)**: Sin dependencias; puede iniciar de inmediato.
+- **Fundacional (Fase 2)**: Depende de la Fase 1 y BLOQUEA todas las historias. Incluye el núcleo append-only de auditoría y los parámetros legales por vigencia.
+- **Módulo base (Fase 2B)**: Depende de la Fase 2; puede ejecutarse en paralelo con US1 si hay capacidad.
+- **Historias de Usuario (Fases 3–8)**: Dependen de la Fase 2 (y del módulo base para vistas que reutilizan el marco).
+- **Pulido (Fase 9)**: Depende de que las historias deseadas estén completas.
 
-### Oportunidades Paralelas
+### Dependencias entre Historias
 
-- T003 puede ejecutarse en paralelo con las tareas de configuración
-- T007 puede completarse junto al trabajo de almacenamiento y esqueleto de la aplicación
-- Las pruebas de cada historia pueden crearse en paralelo con las tareas de implementación de la misma historia
-- Después de la Fase 7 (perfil de configuración), HU6 (Fase 8) y HU7 (Fase 9) pueden proceder en paralelo
-- HU8 (Fase 10) y HU9 (Fase 11) son independientes y pueden proceder en paralelo después de la Historia de Usuario 1
-- En la Fase 15, T058-T060 pueden ejecutarse en paralelo antes de las tareas finales de verificación T061-T063
-- En la Fase 16, T064-T067 y T069 pueden ejecutarse en paralelo; T072 aterriza junto al cambio de enrutamiento T068
-- En la Fase 17, T073/T074/T077 pueden ejecutarse en paralelo con T075/T076
-- En la Fase 18, T078 y T079 pueden ejecutarse en paralelo antes de la verificación final T080-T081
-- En la Fase 19, las pruebas T082-T085 son paralelas entre sí; T086/T087 y T089/T094 pueden iniciarse en paralelo; T091-T093 comparten archivo y avanzan en secuencia
-- En la Fase 20, las pruebas T104-T109 son paralelas entre sí; T110, T118, T119 y T122 pueden iniciarse en paralelo; T111-T117 comparten la capa de datos/servicio y avanzan en secuencia; T120 depende de T118-T119 y T121 depende de T120; T124-T126 son la verificación final
+- **US1 (P1)**: Sin dependencias tras la Fase 2. La terminación automática de contratos se completa en US2 (T068) sin romper la independencia de la desactivación de US1.
+- **US2 (P1)**: Depende de US1 para asociar contratos a trabajadores y de los parámetros legales fundacionales (T015–T017) para validar sueldo mínimo y jornada máxima.
+- **US3 (P1)**: Depende de US1 y US2 (trabajador con contrato cuya vigencia incluya la fecha y período activo). Usa los parámetros legales fundacionales para el tope de horas extra.
+- **US4 (P1)**: Integra US1, US2, US3 y los parámetros legales fundacionales; es la historia de mayor acoplamiento.
+- **US6 (P1)**: El núcleo de auditoría ya existe desde la Fase 2; la implementación de roles, scoping de equipo y permisos se aplica después de US1–US4 para restringir servicios y vistas existentes, y antes de US5 para que la explicación/impresión respete permisos desde el inicio.
+- **US5 (P2)**: Depende de las liquidaciones de US4 y de los permisos/auditoría de US6.
 
-### Ejemplo Paralelo: Historia de Usuario 5
+### Dentro de Cada Historia
 
-```text
-# Lanzar en paralelo las pruebas de la Historia de Usuario 5:
-Tarea: "Pruebas unitarias de la explicación (base, tasa, fórmula, parámetro legal) en tests/unit/rrhh-liquidacion.test.js"
-Tarea: "Pruebas de integración de la vista en tests/integration/rrhh-liquidacion-view.test.js"
-Tarea: "Pruebas de integración de impresión limpia en tests/integration/rrhh-liquidacion-print.test.js"
-Tarea: "Pruebas de integración de casos límite en tests/integration/rrhh-liquidacion-edge-cases.test.js"
+- Las pruebas se escriben primero y deben fallar antes de la implementación.
+- Esquemas/modelos antes que servicios; servicios antes que vistas; vistas antes de la integración en el enrutador.
+- Completar y validar una historia antes de avanzar a la siguiente prioridad.
 
-# Iniciar en paralelo la base de datos y la estructura de la vista:
-Tarea: "Crear carpetas src/rrhh/ y src/rrhh/views/"
-Tarea: "Definir el modelo de lectura de LIQUIDACION y LINEA_LIQUIDACION en src/rrhh/utils/liquidacion-data.js"
-Tarea: "Crear el layout de la vista en src/rrhh/views/liquidacion.js"
-Tarea: "Añadir la acción Imprimir / Guardar en PDF en src/rrhh/views/liquidacion.js"
+### Oportunidades de Paralelismo
+
+- Todas las tareas de Configuración marcadas `[P]` pueden ejecutarse en paralelo.
+- Las tareas Fundacionales marcadas `[P]` pueden ejecutarse en paralelo dentro de la Fase 2; la implementación de auditoría y parámetros debe completarse antes de las historias.
+- Una vez completada la Fase 2, las historias pueden abordarse en paralelo según la capacidad del equipo, respetando las dependencias indicadas.
+- Las pruebas de una historia marcadas `[P]` pueden ejecutarse en paralelo.
+- Componentes, vistas y servicios de archivos distintos dentro de una historia pueden desarrollarse en paralelo.
+
+---
+
+## Ejemplo Paralelo: Historia de Usuario 1
+
+```bash
+Task: "Pruebas unitarias de validación de trabajadores y RUT en tests/unit/rrhh-trabajadores.test.js"
+Task: "Pruebas unitarias de unicidad, catálogos y jefatura en tests/unit/rrhh-catalogos-jefatura.test.js"
+Task: "Pruebas de desactivación, cascada de jefatura y auditoría de catálogos en tests/unit/rrhh-trabajadores-baja.test.js"
+Task: "Prueba de integración del flujo de trabajadores en tests/integration/rrhh-trabajadores-flow.test.js"
+
+Task: "Implementar validación de RUT en src/rrhh/calculo/rut.js"
+Task: "Implementar CRUD de catálogos en src/rrhh/utils/catalogos-service.js"
+Task: "Construir formulario de trabajador en src/rrhh/components/trabajador-form.js"
+Task: "Construir vista de trabajadores en src/rrhh/views/trabajadores-view.js"
 ```
 
-### Ejemplo Paralelo: Historia de Usuario 14
+---
 
-```text
-# Lanzar en paralelo las pruebas de la Historia de Usuario 14:
-Tarea: "Pruebas unitarias del modelo, validación y privacidad en tests/unit/rrhh-novedades.test.js"
-Tarea: "Pruebas unitarias de aprobación, roles y período en tests/unit/rrhh-novedades-aprobacion.test.js"
-Tarea: "Pruebas de integración del registro de novedades en tests/integration/rrhh-novedades-registro.test.js"
-Tarea: "Pruebas de integración de aprobación y bloqueo del cálculo en tests/integration/rrhh-novedades-aprobacion.test.js"
-Tarea: "Pruebas de integración de casos límite en tests/integration/rrhh-novedades-edge-cases.test.js"
-Tarea: "Pruebas de integración de navegación y etiquetas en tests/integration/rrhh-novedades-view.test.js"
+## Ejemplo Paralelo: Historia de Usuario 6
 
-# Iniciar en paralelo la estructura y los componentes visuales:
-Tarea: "Crear las carpetas src/rrhh/utils/, src/rrhh/components/, src/rrhh/views/ y src/rrhh/seguridad/"
-Tarea: "Crear el formulario de novedades en src/rrhh/components/novedad-form.js"
-Tarea: "Crear el listado y panel de aprobación en src/rrhh/components/novedad-list.js"
-Tarea: "Añadir estilos de novedades en src/styles.css"
+```bash
+Task: "Pruebas unitarias de matriz de roles en tests/unit/rrhh-seguridad-roles.test.js"
+Task: "Pruebas unitarias de visibilidad y scoping de equipo en tests/unit/rrhh-seguridad-visibilidad.test.js"
+Task: "Pruebas unitarias de auditoría, filtros y retención en tests/unit/rrhh-auditoria.test.js"
+Task: "Prueba de integración de respaldo que preserva auditoría en tests/integration/backup-flow.test.js"
+
+Task: "Definir roles y permisos en src/rrhh/seguridad/roles.js"
+Task: "Aplicar scoping de equipo en src/rrhh/seguridad/permisos.js"
+Task: "Implementar exportación JSON auditada en src/backup.js"
+Task: "Construir vista de auditoría exclusiva del administrador en src/rrhh/views/auditoria-view.js"
 ```
 
 ---
 
 ## Estrategia de Implementación
 
-### Primero el MVP (solo Historia de Usuario 1)
+### MVP Primero (Solo Historia de Usuario 1)
 
-1. Completar la Fase 1: Configuración
-2. Completar la Fase 2: Fundacional (CRÍTICO: bloquea todas las historias)
-3. Completar la Fase 3: Historia de Usuario 1
-4. **DETENERSE Y VALIDAR**: probar la Historia de Usuario 1 de forma independiente
-5. Desplegar o demostrar si está lista
+1. Completar la Fase 1: Configuración.
+2. Completar la Fase 2: Fundacional (CRÍTICO, bloquea todas las historias), incluidos auditoría append-only y parámetros legales.
+3. Completar la Fase 3: Historia de Usuario 1.
+4. **DETENERSE y VALIDAR**: probar la Historia de Usuario 1 de forma independiente.
+5. Desplegar o demostrar si está lista.
 
 ### Entrega Incremental
 
-1. Completar Configuración + Fundacional → base lista
-2. Añadir Historia de Usuario 1 → probar y demostrar (MVP)
-3. Añadir el resto de historias P1 (HU2, HU3, HU4, HU6, HU7, HU13, HU14) en orden de dependencias
-4. Añadir las historias P2 (HU8, HU9, HU10, HU11, HU12) y finalmente HU5 (Fase 19)
-5. Cada historia añade valor sin romper las anteriores
+1. Configuración + Fundacional (auditoría y parámetros) → base lista.
+2. Módulo base → probar → desplegar.
+3. US1 → probar → desplegar (MVP).
+4. US2 → probar → desplegar.
+5. US3 → probar → desplegar.
+6. US4 → probar → desplegar.
+7. US6 → probar → desplegar (seguridad, scoping de equipo, auditoría y respaldo).
+8. US5 → probar → desplegar (explicación e impresión con permisos).
+9. Cada historia añade valor sin romper las anteriores.
 
 ### Estrategia de Equipo en Paralelo
 
-1. El equipo completa Configuración + Fundacional en conjunto
-2. Con la base lista, repartir historias independientes por desarrollador
-3. Las historias se completan e integran de forma independiente; HU5 se integra al final por depender de liquidaciones calculadas, y HU14 requiere ese motor para integrar las novedades aprobadas con el cálculo masivo
+Con varios desarrolladores:
+
+1. El equipo completa Configuración + Fundacional en conjunto, incluidos auditoría y parámetros.
+2. Una vez lista la base:
+   - Desarrollador A: módulo base y US1.
+   - Desarrollador B: US2 y US3.
+   - Desarrollador C: US4.
+   - Desarrollador D: US6 y, al estabilizarse las liquidaciones, US5.
+3. Las historias se completan e integran de forma independiente.
+
+---
+
+## Notas
+
+- `[P]` indica tareas sobre archivos distintos y sin dependencias pendientes.
+- La etiqueta `[USn]` permite la trazabilidad directa con `spec.md`.
+- Cada historia debe ser completable y comprobable de forma independiente.
+- Verificar que las pruebas fallen antes de implementar.
+- Confirmar tras cada tarea o grupo lógico.
+- Detenerse en cada punto de control para validar la historia de forma independiente.
+- La bitácora es de solo inserción: nunca se sobrescribe ni elimina, tampoco al importar un respaldo; la importación fusiona los registros previos.
+- El estado "cancelado" no existe en los contratos: los únicos estados son vigente, vencido y terminado.
+- La elegibilidad para el cálculo se determina por cualquier contrato cuya vigencia comprenda al menos un día del período, con cálculo proporcional.
+- Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias entre historias que rompan la independencia.
