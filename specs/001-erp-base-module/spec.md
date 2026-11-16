@@ -158,32 +158,59 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 8. **Dado** una novedad "Pendiente", **cuando** intenta aprobarla o rechazarla el mismo usuario que la registró, un analista, o una jefatura de otro equipo, **entonces** el sistema lo impide e indica que no tiene autorización.
 9. **Dado** un Trabajador que no pertenece al equipo de una jefatura, **cuando** esa jefatura intenta registrar, aprobar o rechazar una novedad para dicho Trabajador, **entonces** el sistema lo impide e indica que no tiene autorización.
 10. **Dado** una novedad "Aprobada" o "Rechazada", **cuando** el usuario intenta editarla o anularla, **entonces** el sistema lo impide e indica que debe registrar una novedad nueva.
-11. **Dado** que existen novedades "Pendientes" en un período activo, **cuando** el analista intenta iniciar el cálculo del período, **entonces** el sistema lo bloquea y muestra la lista de novedades pendientes.
-12. **Dado** un período activo sin novedades "Pendientes", **cuando** el analista inicia el cálculo, **entonces** el sistema lo permite y considera solo las novedades "Aprobadas".
+11. **Dado** que existen novedades "Pendientes" en un período activo, **cuando** el analista o el administrador/a de RR.HH. intenta iniciar el cálculo del período, **entonces** el sistema lo bloquea y muestra la lista de novedades pendientes.
+12. **Dado** un período activo sin novedades "Pendientes", **cuando** el analista o el administrador/a de RR.HH. inicia el cálculo, **entonces** el sistema lo permite y considera solo las novedades "Aprobadas".
 13. **Dado** un período cerrado, **cuando** un usuario intenta crear, editar, anular o cambiar el estado de una novedad de ese período, **entonces** el sistema rechaza el cambio y muestra las novedades en solo lectura.
-14. **Dado** que un usuario con sesión identificada registra, edita, anula, aprueba o rechaza una novedad, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados (regla transversal provista por la US6).
+14. **Dado** una novedad "Pendiente", **cuando** quien corresponde intenta rechazarla sin indicar un motivo, **entonces** el sistema impide el rechazo y señala que el motivo es obligatorio.
+15. **Dado** que un usuario con sesión identificada registra, edita, anula, aprueba o rechaza una novedad, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados (regla transversal provista por la US6).
 
 ---
 
 ### Historia de Usuario 4 - Cálculo de Planilla y Ciclo de Vida de Liquidaciones (Prioridad: P1)
 
-Como analista de remuneraciones, quiero ejecutar el motor de cálculo masivo para generar todas las liquidaciones del mes aplicando la ley chilena (imponibles, AFP, salud, seguro de cesantía e impuesto único) y cerrar el período para congelar los valores, para poder pagar sueldos correctos sin depender de planillas Excel propensas a errores.
+**Como** analista de remuneraciones o administrador/a de RR.HH.,
+**quiero** ejecutar el motor de cálculo masivo para generar todas las liquidaciones del mes aplicando la ley chilena (imponibles, AFP, salud, seguro de cesantía e impuesto único) y cerrar el período para congelar los valores,
+**para** poder pagar sueldos correctos sin depender de planillas Excel propensas a errores.
 
 **Por qué esta prioridad**: El motor de cálculo es el núcleo del valor del módulo. Automatiza el proceso más complejo y propenso a errores de la gestión de remuneraciones, y sin él las historias de carga de contratos y novedades no generan ningún resultado utilizable.
 
-**Prueba Independiente**: Un analista ejecuta el cálculo sobre un período con datos de prueba, obtiene liquidaciones idénticas al caso de referencia oficial (cuadradas al peso), cierra el período y verifica que la UF y la UTM quedan congeladas y que ninguna liquidación o novedad puede modificarse.
+**Alcance**: incluye el cálculo masivo del período, el ciclo de vida de las liquidaciones y el cierre del período. No incluye fichas (US1), contratos (US2), el registro y aprobación de novedades (US3), el control de acceso a los datos sensibles (US6), que esta historia solo aplica, ni la corrección de un período cerrado, que queda fuera del alcance de esta versión.
+
+**Reglas de negocio**:
+
+- El analista de remuneraciones y el administrador/a de RR.HH. pueden ejecutar el cálculo; solo el administrador/a de RR.HH. puede cerrar el período. La jefatura no accede a liquidaciones.
+- Un período tiene los estados "abierto", "calculado" y "cerrado"; las liquidaciones de un período abierto o calculado están en estado "borrador" y las de un período cerrado quedan "cerradas". Un período "activo" (término usado en la US3) es un período en estado "abierto" o "calculado".
+- El cálculo incluye a los Trabajadores con un contrato cuya vigencia incluya algún día del período, calculado por los días de vigencia dentro del período; un Trabajador sin contrato en el período no genera liquidación y se informa en el resultado del cálculo.
+- Al terminar el cálculo, el sistema entrega un resumen con las liquidaciones generadas y los Trabajadores excluidos por no tener contrato en el período, indicando el motivo.
+- El cálculo considera únicamente las novedades "Aprobadas" del período (US3): las horas extra se valoran con el recargo legal, y las ausencias y licencias descuentan días, según los parámetros legales versionados.
+- El cálculo no puede iniciarse mientras existan novedades "Pendientes" en el período (US3).
+- La UF, la UTM, las tasas, los topes imponibles y los tramos del impuesto único se toman de los parámetros legales versionados del período; si falta alguno, el sistema no ejecuta el cálculo e indica cuáles faltan.
+- Las cotizaciones de AFP y salud, y el seguro de cesantía, se calculan sobre la remuneración imponible con los topes vigentes del período, expresados en UF; el impuesto único se determina restando las cotizaciones obligatorias de la renta tributable y aplicando la tabla mensual en UTM del período.
+- Recalcular un período no cerrado reemplaza las liquidaciones en borrador sin duplicarlas.
+- Cerrar un período congela la UF, la UTM y las tasas utilizadas, registra quién y cuándo lo cerró, y cambia el estado a "cerrado"; no se permite cerrar con novedades "Pendientes" ni con Trabajadores sin calcular. Se consideran "Trabajadores sin calcular" los Trabajadores con contrato en el período que no tienen liquidación, o cuya liquidación quedó desactualizada por una novedad aprobada o un cambio de contrato posterior al último cálculo; un Trabajador sin contrato en el período no impide el cierre.
+- Un período cerrado no se reabre: sus liquidaciones no pueden modificarse, y la corrección de un período cerrado queda fuera del alcance de esta versión.
+- La consulta, la impresión y la exportación de liquidaciones se limitan a los roles autorizados por la US6.
+
+**Prueba Independiente**: Un analista ejecuta el cálculo sobre un período con datos de prueba, obtiene liquidaciones idénticas al caso de referencia oficial (cuadradas al peso), el administrador/a cierra el período y verifica que la UF y la UTM quedan congeladas y que ninguna liquidación puede modificarse.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** un período abierto con contratos vigentes y novedades aprobadas, **cuando** el usuario ejecuta el cálculo, **entonces** el sistema genera una liquidación por cada trabajador detallando haberes imponibles y no imponibles, descuentos legales (AFP, salud, seguro de cesantía), impuesto único, líquido a pagar y aportes del empleador en menos de 1 segundo.
-2. **Dado** un trabajador cuya remuneración supera el tope imponible vigente, **cuando** se ejecuta el cálculo, **entonces** las cotizaciones de AFP y salud se calculan sobre el tope de 90 UF y el seguro de cesantía sobre el tope de 135,2 UF, usando la UF del período.
-3. **Dado** un trabajador con base tributable dentro de un tramo del impuesto único, **cuando** se ejecuta el cálculo, **entonces** el impuesto se determina restando las cotizaciones obligatorias de la renta tributable y aplicando la tabla mensual en UTM vigente para el período.
+1. **Dado** un período abierto con contratos vigentes y novedades aprobadas, **cuando** el usuario ejecuta el cálculo, **entonces** el sistema genera una liquidación por cada Trabajador con contrato cuya vigencia toque el período detallando haberes imponibles y no imponibles, descuentos legales (AFP, salud, seguro de cesantía), impuesto único, líquido a pagar y aportes del empleador.
+2. **Dado** un Trabajador cuya remuneración supera el tope imponible vigente, **cuando** se ejecuta el cálculo, **entonces** las cotizaciones se calculan sobre los topes vigentes del período, usando la UF del período.
+3. **Dado** un Trabajador con base tributable dentro de un tramo del impuesto único, **cuando** se ejecuta el cálculo, **entonces** el impuesto se determina restando las cotizaciones obligatorias de la renta tributable y aplicando la tabla mensual en UTM vigente para el período.
 4. **Dado** el caso de referencia oficial cargado como datos de prueba, **cuando** se ejecuta el cálculo, **entonces** cada línea de cada liquidación coincide al peso con el valor esperado.
-5. **Dado** un período ya calculado, **cuando** el usuario corrige una novedad y vuelve a ejecutar el cálculo, **entonces** el sistema reemplaza las liquidaciones en borrador sin duplicarlas y refleja la corrección.
-6. **Dado** un período calculado sin errores ni novedades pendientes, **cuando** el usuario cierra el período, **entonces** el sistema congela la UF, la UTM y las tasas utilizadas, registra quién y cuándo lo cerró, y cambia el estado del período a cerrado.
-7. **Dado** un período con trabajadores sin calcular o con novedades pendientes de aprobación, **cuando** el usuario intenta cerrarlo, **entonces** el sistema rechaza el cierre e indica qué registros lo impiden.
-8. **Dado** un período cerrado, **cuando** cualquier usuario o proceso intenta modificar una liquidación o novedad de ese período, **entonces** el sistema bloquea la operación y muestra un mensaje indicando que el período está cerrado, garantizando la inmutabilidad de los pagos.
-9. **Dado** un período cerrado, **cuando** se actualizan los indicadores (UF, UTM o tasas) para un período posterior, **entonces** las liquidaciones del período cerrado conservan exactamente los valores con que fueron calculadas.
+5. **Dado** un Trabajador con novedades aprobadas de horas extra, ausencias o licencias, **cuando** se ejecuta el cálculo, **entonces** la liquidación refleja el recargo de las horas extra y el descuento proporcional de las ausencias y licencias, y no considera las novedades "Rechazadas" ni anuladas.
+6. **Dado** un Trabajador con un contrato que comienza o termina dentro del período, **cuando** se ejecuta el cálculo, **entonces** su liquidación se calcula por los días de vigencia dentro del período.
+7. **Dado** un Trabajador sin contrato cuya vigencia toque el período, **cuando** se ejecuta el cálculo, **entonces** no se genera su liquidación y el resumen del cálculo lo incluye entre los Trabajadores excluidos, indicando el motivo.
+8. **Dado** un período al que le faltan la UF, la UTM, las tasas o los tramos, **cuando** el usuario ejecuta el cálculo, **entonces** el sistema lo bloquea e indica qué parámetros faltan.
+9. **Dado** un período ya calculado, **cuando** se aprueba una novedad nueva o cambia un contrato y el usuario vuelve a ejecutar el cálculo, **entonces** el sistema reemplaza las liquidaciones en borrador sin duplicarlas y refleja el cambio.
+10. **Dado** un período calculado sin errores ni novedades pendientes, **cuando** el administrador/a de RR.HH. cierra el período, **entonces** el sistema congela la UF, la UTM y las tasas utilizadas, registra quién y cuándo lo cerró, y cambia el estado del período a "cerrado".
+11. **Dado** un período con novedades pendientes de aprobación, **cuando** el usuario intenta cerrarlo, **entonces** el sistema rechaza el cierre e indica qué novedades pendientes lo impiden.
+12. **Dado** un período sin novedades pendientes y con Trabajadores sin calcular (con contrato en el período y sin liquidación, o con liquidación desactualizada por una novedad aprobada o un cambio de contrato posterior al último cálculo), **cuando** el usuario intenta cerrarlo, **entonces** el sistema rechaza el cierre e indica qué Trabajadores lo impiden; un Trabajador sin contrato en el período no impide el cierre.
+13. **Dado** un período cerrado, **cuando** cualquier usuario o proceso intenta modificar o recalcular una liquidación de ese período, **entonces** el sistema bloquea la operación e indica que el período está cerrado.
+14. **Dado** un período cerrado, **cuando** se actualizan los indicadores (UF, UTM o tasas) para un período posterior, **entonces** las liquidaciones del período cerrado conservan exactamente los valores con que fueron calculadas.
+15. **Dado** un usuario sin autorización (por ejemplo, un analista que intenta cerrar, o una jefatura que intenta consultar liquidaciones), **cuando** realiza esa operación, **entonces** el sistema la impide e indica que no tiene autorización.
+16. **Dado** que un usuario con sesión identificada ejecuta el cálculo, cierra un período o consulta una liquidación, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada y el registro afectado (regla transversal provista por la US6).
 
 ---
 
@@ -382,6 +409,7 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-020**: La bitácora permite reconstruir la trazabilidad completa de accesos y modificaciones a datos sensibles de un usuario o período en menos de 5 minutos.
 - **SC-021**: Al menos el 95% de las pruebas de acceso con distintos roles confirma que los datos ocultos no pueden recuperarse desde la interfaz ni mediante enlaces directos.
 - **SC-022**: Un usuario puede exportar un respaldo completo y restaurarlo sin pérdida de entidades, documentos, novedades, períodos ni liquidaciones en menos de 5 minutos.
+- **SC-023**: El cálculo masivo de un período con hasta 500 Trabajadores y sus novedades aprobadas genera todas las liquidaciones en 10 segundos o menos en el entorno de uso previsto.
 
 ## Suposiciones
 
