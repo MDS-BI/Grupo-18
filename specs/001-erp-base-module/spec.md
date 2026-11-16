@@ -25,8 +25,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ### Historia de Usuario 1 - Gestión de Fichas de Trabajadores y Catálogos Base (Prioridad: P1)
 
-**Como** administrador/a de RR.HH.,  
-**quiero** registrar, buscar y actualizar la ficha de cada trabajador (nombre, código, RUT, datos de contacto, cargo, departamento y centro de costo) y mantener los catálogos base,  
+**Como** administrador/a de RR.HH. o analista de remuneraciones,  
+**quiero** registrar, buscar, actualizar y desactivar la ficha de cada trabajador (nombre, código, RUT, datos de contacto, fecha de ingreso, cargo, departamento y centro de costo) y mantener los catálogos base,  
 **para** que las contrataciones y liquidaciones posteriores se calculen sobre datos completos, válidos y sin duplicados.
 
 **Por qué esta prioridad**: Es el valor central del producto y el prerrequisito de datos de las Historias de Usuario 2 a 4: sin fichas válidas no hay a quién asignar un contrato, una novedad o una liquidación.
@@ -35,34 +35,76 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 **Reglas de negocio**:
 
+- El administrador/a de RR.HH. y el analista de remuneraciones pueden crear, editar y desactivar fichas de trabajadores y catálogos base.
 - El nombre y el código son obligatorios; el RUT es obligatorio y se valida con módulo 11.
-- El RUT identifica a una persona: dos fichas no pueden compartir el mismo RUT.
+- La fecha de ingreso, si se informa, debe ser una fecha de calendario válida.
+- El RUT identifica a una persona: dos fichas no pueden compartir el mismo RUT, comparado sin puntos, guiones ni espacios y sin distinguir mayúsculas.
+- El código del trabajador es único: no pueden existir dos fichas con el mismo código, comparado sin distinguir mayúsculas ni acentos e ignorando espacios al inicio y al final.
 - Cada ficha conserva un identificador interno que no cambia al actualizarla, de modo que contratos, novedades y liquidaciones sigan apuntando a la misma persona.
+- Desactivar una ficha no la elimina ni borra su historia: la ficha pasa a estado laboral "Desvinculado" y conserva sus datos y sus referencias para liquidaciones anteriores.
 - Un catálogo tiene tipo (cargo, departamento o centro de costo), código y nombre; el código es único dentro de su tipo.
 - Desactivar un catálogo no borra historia: deja de ofrecerse en fichas nuevas pero se sigue mostrando en las fichas que ya lo usaban.
 
-**Prueba Independiente**: Con catálogos precargados como datos semilla, un usuario crea un trabajador, lo encuentra buscando por nombre, código y RUT, lo actualiza y comprueba que el cambio persiste; además crea, edita y desactiva un catálogo. No requiere recorrer las pantallas de contratos, novedades ni liquidaciones.
+**Prueba Independiente**: Con catálogos precargados como datos semilla, un usuario crea un trabajador, lo encuentra buscando por nombre, código y RUT, lo actualiza, lo desactiva y comprueba que conserva su historia; además crea, edita y desactiva un catálogo. No requiere recorrer las pantallas de contratos, novedades ni liquidaciones.
 
 **Escenarios de Aceptación**:
 
 1. **Dado** que un usuario está creando una ficha de trabajador, **cuando** ingresa nombre, código y un RUT con dígito verificador válido, y opcionalmente selecciona cargo, departamento y centro de costo, **entonces** la ficha se guarda y aparece en el listado con las etiquetas de los catálogos seleccionados.
 2. **Dado** que un usuario está creando o editando una ficha, **cuando** deja el nombre, el código o el RUT en blanco, o ingresa un RUT con dígito verificador inválido, un correo mal formado o una fecha de ingreso que no es una fecha de calendario, **entonces** el sistema impide guardar y señala el campo específico que debe corregirse.
 3. **Dado** que ya existe una ficha con un RUT registrado, **cuando** un usuario intenta crear u actualizar otra ficha con ese mismo RUT, **entonces** el sistema rechaza la operación e indica que el RUT ya está asociado a otro trabajador.
-4. **Dado** que existen fichas registradas, **cuando** el usuario busca por nombre, código o RUT (con o sin puntos y guion), **entonces** obtiene las fichas que coinciden; **y cuando** la búsqueda no arroja coincidencias, **entonces** el listado muestra un estado vacío explicativo en lugar de una tabla en blanco.
-5. **Dado** un trabajador existente, **cuando** el usuario actualiza sus datos o su cargo, departamento o centro de costo, **entonces** los cambios se guardan sobre la misma ficha y se reflejan de inmediato en el listado y en la búsqueda.
-6. **Dado** que un usuario gestiona catálogos base, **cuando** crea un cargo, departamento o centro de costo con código y nombre, **entonces** queda disponible para asignarlo a fichas; **y cuando** intenta repetir un código dentro del mismo tipo, **entonces** el sistema lo rechaza; **y cuando** desactiva un catálogo, **entonces** deja de ofrecerse para fichas nuevas pero se conserva en las fichas que ya lo usaban.
+4. **Dado** que ya existe una ficha con un código registrado, **cuando** un usuario intenta crear u actualizar otra ficha con ese mismo código, **entonces** el sistema rechaza la operación e indica que el código ya está asociado a otro trabajador.
+5. **Dado** que existen fichas registradas, **cuando** el usuario busca por nombre, código o RUT (con o sin puntos y guion), **entonces** obtiene las fichas que coinciden; **y cuando** la búsqueda no arroja coincidencias, **entonces** el listado muestra un estado vacío explicativo en lugar de una tabla en blanco.
+6. **Dado** un trabajador existente, **cuando** el usuario actualiza sus datos o su cargo, departamento o centro de costo, **entonces** los cambios se guardan sobre la misma ficha y se reflejan de inmediato en el listado y en la búsqueda.
+7. **Dado** un trabajador activo, **cuando** el usuario desactiva su ficha, **entonces** la ficha queda con estado laboral "Desvinculado" y conserva sus datos e historia, sin eliminarse del sistema.
+8. **Dado** que un usuario gestiona catálogos base, **cuando** crea un cargo, departamento o centro de costo con código y nombre, **entonces** queda disponible para asignarlo a fichas.
+9. **Dado** que ya existe un catálogo activo con un código, **cuando** el usuario intenta crear o editar otro catálogo del mismo tipo con ese código, **entonces** el sistema lo rechaza e indica que el código ya está en uso.
+10. **Dado** un catálogo en uso por fichas existentes, **cuando** el usuario lo desactiva, **entonces** deja de ofrecerse para fichas nuevas pero se sigue mostrando en las fichas que ya lo usaban.
+11. **Dado** que un usuario con sesión identificada crea, actualiza o desactiva una ficha de trabajador o un catálogo, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados, en una entrada de solo inserción (regla transversal provista por la US6).
 
 ---
 
 ### Historia de Usuario 2 - Gestión de Contratos y Alertas de Plazo (Prioridad: P1)
 
-Como analista de remuneraciones, quiero registrar los contratos de trabajo (sueldo base, jornada y tipo de contrato) y recibir alertas de vencimiento para controlar las condiciones vigentes del personal.
+**Como** analista de remuneraciones o administrador/a de RR.HH.,
+**quiero** registrar los contratos de trabajo de cada trabajador (tipo de contrato, fecha de inicio, fecha de término si es a plazo fijo, sueldo base y jornada), registrar cambios de condiciones y renovaciones sobre ese contrato, y ver alertas de vencimiento,
+**para** controlar las condiciones vigentes del personal y evitar contratos vencidos sin regularizar.
 
-- **Por qué esta prioridad**: El contrato define los parámetros fundamentales del cálculo de sueldos y previene riesgos laborales por contratos vencidos.
-- **Prueba Independiente**: Se asocia un contrato a un trabajador y el panel advierte sobre contratos próximos a vencer en 30 días.
-- **Escenarios de Aceptación**:
-  1. **Dado** un contrato a plazo fijo próximo a vencer, **cuando** faltan 30 días o menos, **entonces** el panel principal muestra una alerta visual.
-  2. **Dado** que se modifica el sueldo base, **cuando** se registra un nuevo contrato o anexo, **entonces** el sistema lo asocia al período correspondiente de forma histórica.
+**Por qué esta prioridad**: El contrato define los parámetros fundamentales del cálculo de sueldos y previene riesgos laborales por contratos vencidos.
+
+**Alcance**: incluye contratos, cambios de condiciones y renovaciones, expresados como contratos con su propia vigencia que conservan el historial del Trabajador, además de alertas de vencimiento. No incluye fichas de trabajadores (US1), novedades (US3) ni liquidaciones (US4).
+
+**Reglas de negocio**:
+
+- Solo se puede registrar un contrato para un Trabajador existente y no desvinculado.
+- El tipo de contrato, la fecha de inicio, el sueldo base y la jornada son obligatorios; la fecha de término es obligatoria en contratos a plazo fijo y no aplica a los indefinidos.
+- Un contrato indefinido no lleva fecha de término y el sistema no la admite.
+- La fecha de término no puede ser anterior a la de inicio.
+- El sueldo base debe ser mayor que cero y no inferior al mínimo legal vigente del período, tomado de los parámetros legales versionados.
+- La jornada semanal no puede superar el máximo legal vigente del período, tomado de los parámetros legales versionados.
+- Un Trabajador tiene como máximo un contrato vigente a la vez: el sistema rechaza un contrato nuevo cuyas fechas se superpongan con otro contrato vigente del mismo Trabajador.
+- Un cambio de condiciones se registra como un contrato nuevo: el sistema cierra el contrato anterior el día previo a la fecha de vigencia y conserva ambos en el historial. No existe una entidad separada de anexo.
+- Una renovación se registra como un contrato nuevo que continúa desde el día siguiente al término del contrato anterior; el contrato anterior queda en el historial y su alerta deja de mostrarse. No existe una entidad separada de renovación.
+- Un cambio de condiciones con nuevo sueldo base tiene fecha de vigencia: los Períodos anteriores conservan el sueldo anterior y los posteriores usan el nuevo.
+- Un contrato a plazo fijo se considera "por vencer" cuando faltan 30 días o menos para su fecha de término, y "vencido" cuando esa fecha ya pasó.
+- La alerta de un contrato a plazo fijo aparece desde 30 días antes de su fecha de término y se mantiene mientras el contrato no sea renovado ni terminado.
+- Los contratos reemplazados o terminados no se borran: quedan en el historial del Trabajador.
+
+**Prueba Independiente**: Con fichas de trabajadores precargadas como datos semilla, el usuario registra un contrato a plazo fijo para un Trabajador y comprueba que aparece en su historial y que el panel principal lo muestra como "por vencer" cuando faltan 30 días o menos para su término. No requiere recorrer novedades ni liquidaciones.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un Trabajador activo sin contrato vigente, **cuando** el usuario registra un contrato con todos los campos obligatorios, **entonces** el contrato queda asociado al Trabajador con estado "vigente" y aparece en su historial.
+2. **Dado** un formulario de contrato, **cuando** falta un campo obligatorio, la fecha de término es anterior a la de inicio, el sueldo base es cero o menor al mínimo legal vigente, o la jornada semanal supera el máximo legal vigente, **entonces** el sistema rechaza el registro y señala el campo que debe corregirse.
+3. **Dado** un contrato a plazo fijo sin fecha de término, **cuando** el usuario intenta guardarlo, **entonces** el sistema lo rechaza e indica que la fecha de término es obligatoria.
+4. **Dado** un contrato indefinido con fecha de término, **cuando** el usuario intenta guardarlo, **entonces** el sistema lo rechaza e indica que un contrato indefinido no lleva fecha de término.
+5. **Dado** un Trabajador que ya tiene un contrato vigente, **cuando** el usuario intenta registrar otro contrato vigente que se superpone, **entonces** el sistema lo rechaza e indica que debe registrar un cambio de condiciones o una renovación.
+6. **Dado** un contrato a plazo fijo, **cuando** faltan 30 días o menos para su fecha de término, **entonces** el panel principal muestra una alerta con el nombre del Trabajador, la fecha de término y los días restantes.
+7. **Dado** un contrato a plazo fijo cuya fecha de término ya pasó, **cuando** el usuario abre el panel principal, **entonces** el contrato se muestra con una etiqueta visible "vencido", diferenciado de los "por vencer".
+8. **Dado** un contrato indefinido, **cuando** el usuario abre el panel principal, **entonces** no se genera ninguna alerta de vencimiento.
+9. **Dado** un contrato con alerta activa, **cuando** el usuario registra una renovación como un contrato nuevo que continúa desde el día siguiente al término del contrato anterior, **entonces** la alerta desaparece y el contrato anterior queda en el historial.
+10. **Dado** un contrato vigente, **cuando** se registra un cambio de condiciones con nuevo sueldo base y fecha de vigencia, **entonces** el sistema cierra el contrato anterior el día previo y crea un contrato nuevo; los Períodos anteriores a esa fecha conservan el sueldo anterior y los posteriores usan el nuevo.
+11. **Dado** un Trabajador desvinculado, **cuando** el usuario intenta registrarle un contrato nuevo, **entonces** el sistema lo rechaza; y sus contratos anteriores siguen visibles en su historial.
+12. **Dado** que un usuario con sesión identificada registra o modifica un contrato o un cambio de condiciones, **cuando** la operación se completa, **entonces** la bitácora de auditoría registra al menos el usuario y su rol, la fecha y hora, la acción realizada, el registro afectado y los campos modificados (regla transversal provista por la US6).
 
 ---
 
@@ -257,6 +299,8 @@ Como administrador, quiero restringir el acceso a datos sensibles (sueldos, cuen
 - **FR-058**: El sistema DEBE conservar la bitácora de auditoría mientras dure la relación laboral y durante 6 años posteriores al término de esta, conforme a la Ley 21.719.
 - **FR-059**: El sistema DEBE informar de forma clara al usuario cuando una acción o consulta es denegada por falta de permisos, sin revelar el contenido protegido.
 - **FR-060**: El sistema DEBE permitir exportar e importar un respaldo completo de los datos en formato JSON para respaldo y restauración.
+- **FR-061**: El sistema DEBE impedir que dos fichas de trabajador compartan el mismo RUT, comparándolo normalizado (sin puntos, guiones ni espacios) y sin distinguir mayúsculas.
+- **FR-062**: El sistema DEBE impedir que dos fichas de trabajador compartan el mismo código, comparándolo sin distinguir mayúsculas ni acentos e ignorando espacios al inicio y al final.
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 

@@ -33,7 +33,7 @@
 ## Notas
 
 - La especificación está lista para la planificación y la implementación.
-- Inventario validado: 6 historias de usuario, 59 requisitos funcionales (FR-001 a FR-059), 5 requisitos de extensibilidad (XR-001 a XR-005) y 21 criterios de éxito (SC-001 a SC-021). No quedan marcadores [NEEDS CLARIFICATION].
+- Inventario validado: 6 historias de usuario, 62 requisitos funcionales (FR-001 a FR-062), 5 requisitos de extensibilidad (XR-001 a XR-005) y 22 criterios de éxito (SC-001 a SC-022). No quedan marcadores [NEEDS CLARIFICATION].
 - Alcance validado: el módulo base (Entidad/Documento, navegación, configuración, campos personalizados y ciclo de vida) más el módulo de Recursos Humanos y Planilla (US1–US6). El propósito y las suposiciones ahora describen explícitamente la relación Entidad→Trabajador y Documento→Liquidación.
 - 2026-11-08: se corrigieron las suposiciones contradictorias sobre flujos de aprobación y períodos (ahora dentro del alcance de US3/US4) y sobre las reglas de cálculo (US4, no US5).
 - 2026-11-08: se retiraron detalles de implementación de las suposiciones (monograma sin referencia a SVG; persistencia local sin nombrar la API del navegador; sanitización de contenido sin referencias al DOM/HTML).
