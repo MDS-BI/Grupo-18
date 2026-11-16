@@ -1,4 +1,4 @@
-# Tareas: Módulo Base ERP y Módulo de Recursos Humanos y Planilla
+﻿# Tareas: Módulo Base ERP y Módulo de Recursos Humanos y Planilla
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
@@ -270,21 +270,21 @@
 
 - [ ] T125 [P] [US6] Definir los cuatro roles y sus permisos detallados en `src/rrhh/seguridad/roles.js` (FR-051, FR-085)
 - [ ] T126 [P] [US6] Implementar la sesión simulada, el selector de rol y el cambio de rol en sesión activa en `src/rrhh/seguridad/sesion.js` (FR-051, FR-086)
-- [ ] T127 [US6] Implementar la selección del Trabajador representado: jefatura solo activo; Trabajador activo o desvinculado (solo liquidaciones cerradas) en `src/rrhh/seguridad/sesion.js` (FR-051, FR-085)
-- [ ] T128 [P] [US6] Implementar la clasificación de datos sensibles y la matriz de visibilidad por rol, incluyendo nombre, código, cargo, departamento, centro de costo y estado laboral como datos básicos de la jefatura, en `src/rrhh/seguridad/permisos.js` (FR-052, FR-054, FR-085)
-- [ ] T129 [US6] Aplicar la visibilidad restringida en listados, detalles, búsquedas y vistas imprimibles en `src/rrhh/seguridad/permisos.js`, `src/components/search-bar.js` y `src/rrhh/views/liquidaciones-view.js` (FR-052, FR-054)
-- [ ] T130 [US6] Implementar la denegación de acciones/consultas sin revelar contenido protegido en `src/rrhh/seguridad/permisos.js` (FR-057, FR-059)
-- [ ] T131 [US6] Registrar en la bitácora consultas/cambios de datos sensibles, cambios de rol, accesos denegados (incluidos intentos de editar/eliminar auditoría) y operaciones de respaldo, con usuario, rol, fecha/hora, acción y registro afectado en `src/rrhh/seguridad/auditoria.js` (FR-055, FR-086)
-- [ ] T132 [US6] Aplicar las restricciones de rol y el scoping de equipo en la capa de servicios de RR.HH., incluidos parámetros y respaldo, en `src/rrhh/utils/trabajadores-service.js`, `src/rrhh/utils/contratos-service.js`, `src/rrhh/utils/novedades-service.js`, `src/rrhh/utils/periodos-service.js`, `src/rrhh/utils/liquidaciones-service.js` y `src/rrhh/calculo/parametros.js` (FR-057, FR-085)
-- [ ] T133 [US6] Implementar el ayudante de equipo de jefatura (`getEquipo`) y aplicarlo a novedades, listados y búsquedas, impidiendo operar sobre Trabajadores ajenos en `src/rrhh/seguridad/permisos.js` y `src/rrhh/utils/trabajadores-service.js` (FR-053, FR-085)
-- [ ] T134 [P] [US6] Implementar la exportación JSON registrando la operación en la bitácora, sin modificar los datos, en `src/backup.js` (FR-060, FR-055)
-- [ ] T135 [US6] Implementar la validación e importación con confirmación y restauración atómica de datos operativos, registrando la operación sin sobrescribir ni eliminar registros previos de auditoría (fusión append-only), sin datos clínicos y respetando permisos, en `src/backup.js` (FR-060, FR-056, FR-085)
-- [ ] T136 [P] [US6] Construir el selector de rol/sesión y la reselección del Trabajador representado en `src/rrhh/components/rol-switcher.js` (FR-051, FR-086)
-- [ ] T137 [P] [US6] Construir la vista de consulta de la bitácora de auditoría, accesible solo al administrador/a de RR.HH., con filtros por usuario, rol, acción y período, en `src/rrhh/views/auditoria-view.js` (FR-087)
-- [ ] T138 [P] [US6] Añadir las acciones de exportar e importar respaldo en la interfaz con confirmación y verificación de permisos en `src/components/shell.js` y `src/styles.css` (FR-060, FR-085)
-- [ ] T139 [US6] Integrar el selector de rol, la vista de auditoría y las acciones de respaldo en la navegación y el marco del espacio de trabajo en `src/rrhh/views/rrhh-router.js` y `src/components/shell.js` (FR-086, FR-087, FR-060)
-- [ ] T140 [US6] Bloquear en un Trabajador desvinculado cualquier operación distinta de consultar sus propias liquidaciones cerradas en `src/rrhh/seguridad/permisos.js` y `src/rrhh/views/liquidaciones-view.js` (FR-051, FR-085)
-- [ ] T141 [US6] Aplicar permisos de administrador/a a la carga y administración de parámetros legales en `src/rrhh/calculo/parametros.js`, `src/rrhh/components/parametros-form.js` y `src/rrhh/views/parametros-view.js` (FR-085)
+- [ ] T127 [US15] Implementar la selección del Trabajador representado: jefatura solo activo; Trabajador activo o desvinculado (solo liquidaciones cerradas) en `src/rrhh/seguridad/sesion.js` (FR-051, FR-085)
+- [ ] T128 [P] [US15] Implementar la clasificación de datos sensibles y la matriz de visibilidad por rol, incluyendo nombre, código, cargo, departamento, centro de costo y estado laboral como datos básicos de la jefatura, en `src/rrhh/seguridad/permisos.js` (FR-052, FR-054, FR-085)
+- [ ] T129 [US15] Aplicar la visibilidad restringida en listados, detalles, búsquedas y vistas imprimibles en `src/rrhh/seguridad/permisos.js`, `src/components/search-bar.js` y `src/rrhh/views/liquidaciones-view.js` (FR-052, FR-054)
+- [ ] T130 [US15] Implementar la denegación de acciones/consultas sin revelar contenido protegido en `src/rrhh/seguridad/permisos.js` (FR-057, FR-059)
+- [ ] T131 [US15] Registrar en la bitácora consultas/cambios de datos sensibles, cambios de rol, accesos denegados (incluidos intentos de editar/eliminar auditoría) y operaciones de respaldo, con usuario, rol, fecha/hora, acción y registro afectado en `src/rrhh/seguridad/auditoria.js` (FR-055, FR-086)
+- [ ] T132 [US15] Aplicar las restricciones de rol y el scoping de equipo en la capa de servicios de RR.HH., incluidos parámetros y respaldo, en `src/rrhh/utils/trabajadores-service.js`, `src/rrhh/utils/contratos-service.js`, `src/rrhh/utils/novedades-service.js`, `src/rrhh/utils/periodos-service.js`, `src/rrhh/utils/liquidaciones-service.js` y `src/rrhh/calculo/parametros.js` (FR-057, FR-085)
+- [ ] T133 [US15] Implementar el ayudante de equipo de jefatura (`getEquipo`) y aplicarlo a novedades, listados y búsquedas, impidiendo operar sobre Trabajadores ajenos en `src/rrhh/seguridad/permisos.js` y `src/rrhh/utils/trabajadores-service.js` (FR-053, FR-085)
+- [ ] T134 [P] [US15] Implementar la exportación JSON registrando la operación en la bitácora, sin modificar los datos, en `src/backup.js` (FR-060, FR-055)
+- [ ] T135 [US15] Implementar la validación e importación con confirmación y restauración atómica de datos operativos, registrando la operación sin sobrescribir ni eliminar registros previos de auditoría (fusión append-only), sin datos clínicos y respetando permisos, en `src/backup.js` (FR-060, FR-056, FR-085)
+- [ ] T136 [P] [US15] Construir el selector de rol/sesión y la reselección del Trabajador representado en `src/rrhh/components/rol-switcher.js` (FR-051, FR-086)
+- [ ] T137 [P] [US15] Construir la vista de consulta de la bitácora de auditoría, accesible solo al administrador/a de RR.HH., con filtros por usuario, rol, acción y período, en `src/rrhh/views/auditoria-view.js` (FR-087)
+- [ ] T138 [P] [US15] Añadir las acciones de exportar e importar respaldo en la interfaz con confirmación y verificación de permisos en `src/components/shell.js` y `src/styles.css` (FR-060, FR-085)
+- [ ] T139 [US15] Integrar el selector de rol, la vista de auditoría y las acciones de respaldo en la navegación y el marco del espacio de trabajo en `src/rrhh/views/rrhh-router.js` y `src/components/shell.js` (FR-086, FR-087, FR-060)
+- [ ] T140 [US15] Bloquear en un Trabajador desvinculado cualquier operación distinta de consultar sus propias liquidaciones cerradas en `src/rrhh/seguridad/permisos.js` y `src/rrhh/views/liquidaciones-view.js` (FR-051, FR-085)
+- [ ] T141 [US15] Aplicar permisos de administrador/a a la carga y administración de parámetros legales en `src/rrhh/calculo/parametros.js`, `src/rrhh/components/parametros-form.js` y `src/rrhh/views/parametros-view.js` (FR-085)
 - [ ] T142 [US6] Aplicar permisos de administrador/a a la exportación, importación y restauración del respaldo en `src/backup.js` y `src/components/shell.js` (FR-085)
 
 **Punto de control**: US1–US4 y US6 deben funcionar de forma independiente; la seguridad, el scoping de equipo y la auditoría quedan aplicadas transversalmente.

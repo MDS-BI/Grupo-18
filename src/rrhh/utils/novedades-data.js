@@ -15,12 +15,13 @@ export const UNIDAD_POR_TIPO = {
   ausencia: 'dias'
 };
 
-export const ESTADOS_NOVEDAD = ['pendiente', 'aprobada', 'rechazada'];
+export const ESTADOS_NOVEDAD = ['pendiente', 'aprobada', 'rechazada', 'anulada'];
 
 export const ESTADO_NOVEDAD_LABELS = {
   pendiente: 'Pendiente',
   aprobada: 'Aprobada',
-  rechazada: 'Rechazada'
+  rechazada: 'Rechazada',
+  anulada: 'Anulada'
 };
 
 /** Normalize legacy type names used by previous drafts. */
@@ -77,7 +78,7 @@ export function validarNovedad(novedad, context = {}) {
     errors.push('La novedad requiere fecha de inicio y fecha de fin.');
   } else if (novedad.fechaFin < novedad.fechaInicio) {
     errors.push('La fecha de fin no puede ser anterior a la fecha de inicio.');
-  } else if (parsePeriodo(novedad.periodo)) {
+  } else if (parsePeriodo(novedad.periodo) && !context.permitirMultiPeriodo) {
     const { fechaInicio, fechaFin } = rangoPeriodo(novedad.periodo);
     if (novedad.fechaInicio < fechaInicio || novedad.fechaFin > fechaFin) {
       errors.push('Las fechas de la novedad deben estar dentro del período.');
@@ -93,8 +94,12 @@ export function validarNovedad(novedad, context = {}) {
           86400000
       ) + 1
     );
-    if (cantidad > dias * 2) {
-      errors.push('Las horas extra no pueden superar 2 horas por día (art. 31 CT).');
+    const maximo = Number(context.maxHorasExtraDia ?? 2);
+    const limite = (Number.isFinite(maximo) && maximo > 0 ? maximo : 2) * dias;
+    if (cantidad > limite && !String(novedad.justificacion || '').trim()) {
+      errors.push(
+        `Las horas extra superan el máximo de ${maximo || 2} horas por día (art. 31 CT) y requieren justificación.`
+      );
     }
   }
 
@@ -131,11 +136,17 @@ export function crearNovedad(input = {}) {
     fechaInicio: input.fechaInicio,
     fechaFin: input.fechaFin,
     observacion: tipo === 'licencia_medica' ? '' : input.observacion || '',
+    justificacion: String(input.justificacion || '').trim(),
     estado: input.estado || 'pendiente',
     registradoPor: input.registradoPor || null,
+    registradoPorRol: input.registradoPorRol || null,
+    registradoPorId: input.registradoPorId || null,
     aprobadoPor: input.aprobadoPor || null,
     fechaAprobacion: input.fechaAprobacion || null,
     motivoRechazo: input.motivoRechazo || '',
+    anuladoPor: input.anuladoPor || null,
+    fechaAnulacion: input.fechaAnulacion || null,
+    motivoAnulacion: input.motivoAnulacion || '',
     createdAt: input.createdAt,
     updatedAt: input.updatedAt
   };

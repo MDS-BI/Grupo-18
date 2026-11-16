@@ -5,6 +5,7 @@ import {
   aprobarNovedad,
   crearNovedad
 } from '../../src/rrhh/utils/novedades-service.js';
+import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 import {
   aprobarLiquidacion,
   calcularPeriodo,
@@ -64,6 +65,17 @@ beforeEach(() => {
     code: 'AUD-001',
     rut: '12.345.678-5'
   });
+  crearContrato(
+    {
+      entityId: worker.entity_id,
+      tipoContrato: 'indefinido',
+      sueldoBase: 1000000,
+      jornadaHorasSemanales: 42,
+      fechaInicio: '2026-01-01',
+      modalidadGratificacion: 'art50'
+    },
+    analista
+  );
   root = document.getElementById('root');
 });
 
@@ -129,7 +141,7 @@ describe('US6 - automatic audit of sensitive consultations and changes', () => {
       expect(row).toHaveProperty('camposModificados');
     }
 
-    const creation = rows.find((row) => row.accion === 'crear');
+    const creation = rows.find((row) => row.accion === 'crear' && row.tabla === 'novedades');
     expect(creation.usuario).toBe('Analista RRHH');
     expect(creation.rol).toBe('analista');
     expect(creation.registroId).toBe(created.id);

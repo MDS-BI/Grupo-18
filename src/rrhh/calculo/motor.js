@@ -213,7 +213,9 @@ export function calcularLiquidacionTrabajador({
     .filter((novedad) => normalizarTipo(novedad.tipo) === 'horas_extra')
     .reduce((total, novedad) => total + (Number(novedad.cantidad) || 0), 0);
   const descansos = diasNoTrabajados(aprobadas);
-  const days = diasTrabajados === undefined ? Math.max(0, 30 - descansos) : Number(diasTrabajados);
+  const baseDays = diasTrabajados === undefined ? 30 : Number(diasTrabajados);
+  const contractDays = Number.isFinite(baseDays) ? Math.max(0, Math.min(30, baseDays)) : 0;
+  const days = Math.max(0, Math.min(30, contractDays - descansos));
 
   const sueldo = calcularSueldoProporcional(sueldoBase, days);
   const valorHora = calcularValorHoraExtra({

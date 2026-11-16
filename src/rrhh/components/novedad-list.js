@@ -28,6 +28,7 @@ function workerName(entityId, entities) {
  * @param {Function} options.onApprove (id) => void
  * @param {Function} options.onReject (id, motivo) => void
  * @param {Function} options.onCorrect (novedad) => void
+ * @param {Function} options.onAnnul (novedad) => void
  */
 export function renderNovedadList(
   container,
@@ -39,7 +40,8 @@ export function renderNovedadList(
     periodoAbierto = true,
     onApprove = () => {},
     onReject = () => {},
-    onCorrect = () => {}
+    onCorrect = () => {},
+    onAnnul = () => {}
   } = {}
 ) {
   container.textContent = '';
@@ -88,14 +90,33 @@ export function renderNovedadList(
       const observation = el(doc, 'p', 'rrhh-list-observation', novedad.observacion);
       item.appendChild(observation);
     }
+    if (novedad.justificacion) {
+      item.appendChild(
+        el(doc, 'p', 'rrhh-list-observation', `Justificación: ${novedad.justificacion}`)
+      );
+    }
     if (novedad.estado === 'rechazada' && novedad.motivoRechazo) {
       const reason = el(doc, 'p', 'rrhh-rejection-reason', `Motivo del rechazo: ${novedad.motivoRechazo}`);
       item.appendChild(reason);
     }
+    if (novedad.estado === 'anulada') {
+      const reason = el(
+        doc,
+        'p',
+        'rrhh-list-meta',
+        `Anulada${novedad.anuladoPor ? ` por ${novedad.anuladoPor}` : ''}${
+          novedad.motivoAnulacion ? ` · ${novedad.motivoAnulacion}` : ''
+        }`
+      );
+      item.appendChild(reason);
+    }
 
     const actions = el(doc, 'div', 'rrhh-row-actions');
+    const ownNovedad =
+      String(viewer?.usuario || '').trim().toLowerCase() ===
+      String(novedad.registradoPor || '').trim().toLowerCase();
 
-    if (novedad.estado === 'pendiente' && canApprove) {
+    if (novedad.estado === 'pendiente' && canApprove && !ownNovedad) {
       const reasonInput = el(doc, 'input', 'rrhh-reject-reason');
       reasonInput.type = 'text';
       reasonInput.id = `motivo-rechazo-${novedad.id}`;
@@ -122,16 +143,29 @@ export function renderNovedadList(
           onClick: () => onReject(novedad.id, reasonInput.value)
         })
       );
+    } else if (novedad.estado === 'pendiente' && canApprove && ownNovedad) {
+      actions.appendChild(
+        el(doc, 'span', 'panel-copy', 'No puedes aprobar ni rechazar una novedad propia.')
+      );
     }
 
-    if (novedad.estado === 'rechazada' && canEdit) {
+    if (novedad.estado === 'pendiente' && canEdit) {
       actions.appendChild(
         button(doc, {
-          label: 'Corregir y reenviar',
-          className: 'button button-secondary button-small rrhh-resubmit',
-          ariaLabel: `Corregir y reenviar la novedad de ${workerName(novedad.trabajadorEntityId, entities)}`,
+          label: 'Editar',
+          className: 'button button-secondary button-small rrhh-edit',
+          ariaLabel: `Editar la novedad pendiente de ${workerName(novedad.trabajadorEntityId, entities)}`,
           disabled: !periodoAbierto,
           onClick: () => onCorrect(novedad)
+        })
+      );
+      actions.appendChild(
+        button(doc, {
+          label: 'Anular',
+          className: 'button button-danger button-small rrhh-annul',
+          ariaLabel: `Anular la novedad de ${workerName(novedad.trabajadorEntityId, entities)}`,
+          disabled: !periodoAbierto,
+          onClick: () => onAnnul(novedad)
         })
       );
     }

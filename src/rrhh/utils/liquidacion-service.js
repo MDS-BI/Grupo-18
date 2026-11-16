@@ -18,6 +18,7 @@ import {
   PeriodoCerradoError
 } from './periodos-service.js';
 import { estadoElegibilidad, novedadesAprobadas } from './novedades-service.js';
+import { contratosEnPeriodo, diasContratoEnPeriodo } from './contratos-service.js';
 import { etiquetaPeriodo, parsePeriodo, rangoPeriodo } from './periodos.js';
 import { parametrosVigentes } from './parametros-service.js';
 import { resumenCostoEmpleador } from './costo-empleador.js';
@@ -170,14 +171,29 @@ function trabajadorDesdeEntidad(entity = {}) {
   };
 }
 
-function contratoDe(trabajador, contratos) {
+function contratosDelTrabajador(trabajador, contratos) {
   const entityId = trabajador.entityId || trabajador.id;
-  const found = entityId
-    ? contratos.find(
-        (row) => row.entity_id === entityId || row.trabajadorEntityId === entityId
-      )
-    : null;
-  return found || trabajador.contrato || null;
+  return (Array.isArray(contratos) ? contratos : []).filter(
+    (row) =>
+      String(row.entity_id || row.entityId || row.trabajadorEntityId || '') ===
+      String(entityId)
+  );
+}
+
+function contratoYdias(trabajador, contratos, periodo) {
+  const entityId = trabajador.entityId || trabajador.id;
+  const propios = contratosDelTrabajador(trabajador, contratos);
+  const candidatos = entityId
+    ? contratosEnPeriodo(periodo, { entityId, contratos: propios })
+    : [];
+  const provided = Array.isArray(contratos) && contratos.length > 0;
+  const contrato = candidatos[0] || (!provided ? trabajador.contrato || null : null);
+  if (!contrato) return { contrato: null, diasTrabajados: 0 };
+  const source = propios.length > 0 ? propios : [contrato];
+  return {
+    contrato,
+    diasTrabajados: diasContratoEnPeriodo(periodo, source)
+  };
 }
 
 function numeroLiquidacion(periodo, entityId) {
@@ -223,11 +239,10 @@ function construyeLiquidacion(resultado, trabajador, contrato, periodo, viewer) 
 }
 
 /**
- * Calculate every worker with an active contract for a period.
- *
- * Only approved novedades feed the engine. Pending/rejected novedades produce
- * warnings but are never exposed to the calculation. Workers without a
- * contract are excluded and reported.
+ * Calculate every worker whose contract overlaps the period, including
+ * contracts that are already terminated or expired. Only approved novedades
+ * feed the engine; any pending novedad blocks the start of the calculation.
+ * Workers without a contract overlapping the period are excluded and reported.
  */
 export function calcularPeriodo({
   periodo,
@@ -249,6 +264,14 @@ export function calcularPeriodo({
   const fechaFin = normalized.fechaFin || rangoPeriodo(normalized.id).fechaFin;
   const legalParams = parametros || parametrosVigentes(fechaFin);
   const eligibility = estadoElegibilidad(normalized.id);
+  if (eligibility.pendientes > 0) {
+    const error = new Error(
+      `No se puede calcular la planilla: ${eligibility.pendientes} novedad(es) pendiente(s) sin resolver.`
+    );
+    error.code = 'NOVEDADES_PENDIENTES';
+    error.errors = eligibility.advertencias;
+    throw error;
+  }
   const advertencias = [...eligibility.advertencias];
   const trabajadoresExcluidos = [];
   const liquidaciones = [];
@@ -266,8 +289,12 @@ export function calcularPeriodo({
       error.code = 'RUT_INVALIDO';
       throw error;
     }
-    const contrato = contratoDe(trabajador, contratos);
-    if (!contrato || (contrato.estado && contrato.estado !== 'vigente')) {
+    const { contrato, diasTrabajados } = contratoYdias(
+      trabajador,
+      contratos,
+      normalized
+    );
+    if (!contrato || ['anulada', 'cancelado'].includes(contrato.estado)) {
       trabajadoresExcluidos.push({
         entityId: trabajador.entityId,
         nombre: trabajador.nombre,
@@ -295,7 +322,7 @@ export function calcularPeriodo({
         ? novedades.filter(
             (row) =>
               row.trabajadorEntityId === trabajador.entityId &&
-              (!row.estado || row.estado === 'aprobada')
+              row.estado === 'aprobada'
           )
         : novedadesDelPeriodo.filter(
             (row) => row.trabajadorEntityId === trabajador.entityId
@@ -306,7 +333,8 @@ export function calcularPeriodo({
       contrato,
       novedades: workerNovedades,
       parametros: legalParams,
-      periodo: normalized
+      periodo: normalized,
+      diasTrabajados
     });
     const liquidacion = construyeLiquidacion(resultado, trabajador, contrato, normalized, viewer);
     liquidacion.advertencias = [...new Set([...advertencias, ...resultado.advertencias])];

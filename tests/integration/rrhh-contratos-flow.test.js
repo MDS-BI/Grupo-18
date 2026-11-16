@@ -62,7 +62,10 @@ afterEach(() => {
 
 describe('US2 - contracts flow inside the ERP shell', () => {
   it('registers a contract, records a salary change and keeps history', async () => {
-    const worker = crearTrabajador({ name: 'Ana Pérez', code: 'TRAB-001' }, viewer);
+    const worker = crearTrabajador(
+      { name: 'Ana Pérez', code: 'TRAB-001', rut: '12.345.678-5' },
+      viewer
+    );
 
     await bootRrhh();
     click('nav-rrhh');
@@ -72,7 +75,7 @@ describe('US2 - contracts flow inside the ERP shell', () => {
     setValue('contrato-entityId', worker.entityId);
     setValue('contrato-tipoContrato', 'indefinido');
     setValue('contrato-sueldoBase', '1000000');
-    setValue('contrato-jornadaHorasSemanales', '45');
+    setValue('contrato-jornadaHorasSemanales', '42');
     setValue('contrato-fechaInicio', '2024-01-01');
     setValue('contrato-asignacionColacion', '50000');
     setValue('contrato-asignacionMovilizacion', '30000');
@@ -98,13 +101,16 @@ describe('US2 - contracts flow inside the ERP shell', () => {
   });
 
   it('shows expiring contracts on the dashboard', async () => {
-    const worker = crearTrabajador({ name: 'Bruno Soto', code: 'TRAB-002' }, viewer);
+    const worker = crearTrabajador(
+      { name: 'Bruno Soto', code: 'TRAB-002', rut: '11.111.111-1' },
+      viewer
+    );
     crearContrato(
       {
         entityId: worker.entityId,
         tipoContrato: 'plazo_fijo',
         sueldoBase: 900000,
-        jornadaHorasSemanales: 45,
+        jornadaHorasSemanales: 42,
         fechaInicio: isoDaysFromToday(-10),
         fechaTermino: isoDaysFromToday(12),
         modalidadGratificacion: 'art50'

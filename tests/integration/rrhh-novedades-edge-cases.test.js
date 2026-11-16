@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { addEntity, deleteEntity, loadEntities } from '../../src/storage.js';
+import { addEntity, loadEntities } from '../../src/storage.js';
 import {
   actualizarNovedad,
+  anularNovedad,
   aprobarNovedad,
   crearNovedad,
   listNovedades,
-  rechazarNovedad,
-  reenviarNovedad
+  rechazarNovedad
 } from '../../src/rrhh/utils/novedades-service.js';
 import {
   PeriodoCerradoError,
@@ -15,6 +15,7 @@ import {
   cerrarPeriodo
 } from '../../src/rrhh/utils/periodos-service.js';
 import { validarNovedad } from '../../src/rrhh/utils/novedades-data.js';
+import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 
 const analista = { role: 'analista', usuario: 'Analista RRHH' };
 const jefatura = { role: 'jefatura', usuario: 'Jefatura RRHH' };
@@ -43,6 +44,17 @@ beforeEach(() => {
   localStorage.clear();
   entity = addEntity({ name: 'Carla Soto', code: 'TRAB-003', rut: '12.345.678-5' });
   abrirPeriodo('2026-09', admin);
+  crearContrato(
+    {
+      entityId: entity.entity_id,
+      tipoContrato: 'indefinido',
+      sueldoBase: 1000000,
+      jornadaHorasSemanales: 42,
+      fechaInicio: '2026-01-01',
+      modalidadGratificacion: 'art50'
+    },
+    analista
+  );
 });
 
 afterEach(() => {
@@ -56,12 +68,13 @@ describe('US14 - novedades edge cases', () => {
     expect(listNovedades()).toHaveLength(0);
   });
 
-  it('blocks approval, rejection and resubmission in a closed period', () => {
+  it('blocks approval, rejection and annulment in a closed period', () => {
     const novedad = crearNovedad(input(), analista);
     cerrarPeriodo('2026-09', jefatura);
 
     expect(() => aprobarNovedad(novedad.id, jefatura)).toThrow(PeriodoCerradoError);
     expect(() => rechazarNovedad(novedad.id, jefatura, 'Motivo')).toThrow(PeriodoCerradoError);
+    expect(() => anularNovedad(novedad.id, analista, 'Motivo')).toThrow(PeriodoCerradoError);
     expect(listNovedades()[0].estado).toBe('pendiente');
   });
 
@@ -72,15 +85,17 @@ describe('US14 - novedades edge cases', () => {
     expect(listNovedades()[0].estado).toBe('pendiente');
   });
 
-  it('requires a rejection motive and allows only rejected records to be resubmitted', () => {
+  it('requires a rejection motive and keeps rejected records immutable', () => {
     const novedad = crearNovedad(input(), analista);
     expect(() => rechazarNovedad(novedad.id, jefatura, '')).toThrow(/motivo/i);
-    expect(() => reenviarNovedad(novedad.id, {}, analista)).toThrow(/reenviar|pendiente/i);
 
     rechazarNovedad(novedad.id, jefatura, 'Documentacion incompleta');
-    const resubmitted = reenviarNovedad(novedad.id, {}, analista);
-    expect(resubmitted.estado).toBe('pendiente');
-    expect(resubmitted.motivoRechazo).toBe('');
+    expect(() => actualizarNovedad(novedad.id, { cantidad: 2 }, analista)).toThrow(
+      /pendientes/i
+    );
+    expect(() => anularNovedad(novedad.id, analista, 'Duplicada')).toThrow(/rechazada/i);
+    expect(listNovedades()[0].estado).toBe('rechazada');
+    expect(listNovedades()[0].motivoRechazo).toBe('Documentacion incompleta');
   });
 
   it('detects duplicate novedades for the same worker, period and range', () => {
@@ -150,35 +165,14 @@ describe('US14 - novedades edge cases', () => {
     expect(stored.fechaInicio).toBe('2026-09-01');
   });
 
-  it('deletes novedades in cascade and applies logical deletion with closed liquidations', () => {
-    crearNovedad(input(), analista);
-    expect(deleteEntity(entity.id)).toBe(true);
-    expect(loadEntities()).toHaveLength(0);
-    expect(listNovedades()).toHaveLength(0);
+  it('keeps annulled novedades instead of deleting them', () => {
+    const novedad = crearNovedad(input(), analista);
+    anularNovedad(novedad.id, analista, 'Registro duplicado');
 
-    const worker = addEntity({ name: 'Diego Rojas', code: 'TRAB-004', rut: '12.345.678-5' });
-    crearNovedad(
-      {
-        ...input(),
-        trabajadorEntityId: worker.entity_id
-      },
-      analista
-    );
-    localStorage.setItem(
-      'erp_rrhh:liquidaciones',
-      JSON.stringify([
-        {
-          id: 'liq-cerrada',
-          estado: 'aprobada',
-          trabajador: { id: worker.entity_id, entityId: worker.entity_id, nombre: 'Diego Rojas' }
-        }
-      ])
-    );
-
-    expect(deleteEntity(worker.id)).toBe(true);
-    const after = loadEntities().find((row) => row.id === worker.id);
-    expect(after.bajaLogica).toBe(true);
-    expect(after.activo).toBe(false);
-    expect(listNovedades({ trabajadorEntityId: worker.entity_id })).toHaveLength(1);
+    const [stored] = listNovedades();
+    expect(stored.id).toBe(novedad.id);
+    expect(stored.estado).toBe('anulada');
+    expect(stored.motivoAnulacion).toBe('Registro duplicado');
+    expect(loadEntities()).toHaveLength(1);
   });
 });

@@ -2,11 +2,13 @@
 
 import { loadEntities } from '../../storage.js';
 import {
+  anularNovedad,
   aprobarNovedad,
   listNovedades,
   rechazarNovedad,
   resumenPeriodo
 } from '../utils/novedades-service.js';
+import { equipoDeJefatura } from '../utils/jefatura.js';
 import { TIPO_NOVEDAD_LABELS } from '../utils/novedades-data.js';
 import { getPeriodo, isPeriodoCerrado, listPeriodos } from '../utils/periodos-service.js';
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
@@ -49,12 +51,13 @@ function isJefatura(viewer) {
 function visibleNovedades(viewer, periodo) {
   const rows = listNovedades({ periodo });
   if (!isJefatura(viewer)) return rows;
-  const team = new Set(Array.isArray(viewer.equipo) ? viewer.equipo : []);
-  return rows.filter((row) => team.has(row.trabajadorEntityId));
+  const team = equipoDeJefatura(viewer) || [];
+  const allowed = new Set(team.map(String));
+  return rows.filter((row) => allowed.has(String(row.trabajadorEntityId)));
 }
 
 function summarizeRows(rows) {
-  const porEstado = { pendiente: 0, aprobada: 0, rechazada: 0 };
+  const porEstado = { pendiente: 0, aprobada: 0, rechazada: 0, anulada: 0 };
   for (const row of rows) {
     if (porEstado[row.estado] !== undefined) porEstado[row.estado] += 1;
   }
@@ -63,6 +66,7 @@ function summarizeRows(rows) {
     pendientes: porEstado.pendiente,
     aprobadas: porEstado.aprobada,
     rechazadas: porEstado.rechazada,
+    anuladas: porEstado.anulada,
     porEstado
   };
 }
@@ -181,7 +185,8 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
     const cards = [
       ['Pendientes', totals.pendientes],
       ['Aprobadas', totals.aprobadas],
-      ['Rechazadas', totals.rechazadas]
+      ['Rechazadas', totals.rechazadas],
+      ['Anuladas', totals.anuladas]
     ];
     for (const [label, value] of cards) {
       const card = el(documentRef, 'div', 'rrhh-summary-card');
@@ -207,14 +212,14 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
   function renderEligibility(rows) {
     const totals = summarizeRows(rows);
     eligibility.textContent = '';
-    if (totals.pendientes > 0 || totals.rechazadas > 0) {
+    if (totals.pendientes > 0) {
       eligibility.classList.add('rrhh-eligibility-blocked');
       eligibility.appendChild(
         el(
           documentRef,
           'p',
           null,
-          `Procesamiento posterior bloqueado: ${totals.pendientes} pendiente(s) y ${totals.rechazadas} rechazada(s). Resuelve las novedades antes de calcular la planilla.`
+          `Procesamiento posterior bloqueado: ${totals.pendientes} novedad(es) pendiente(s). Resuelve o anula las novedades antes de calcular la planilla.`
         )
       );
     } else {
@@ -224,7 +229,7 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
           documentRef,
           'p',
           null,
-          'Todas las novedades del período están aprobadas: son elegibles para el cálculo.'
+          'No hay novedades pendientes: el período está habilitado para el cálculo.'
         )
       );
     }
@@ -258,7 +263,10 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
           return;
         }
         form.edit(novedad);
-        showFeedback(messages, 'Corrige los datos y guarda para reenviar la novedad.', 'info');
+        showFeedback(messages, 'Corrige los datos de la novedad pendiente y guarda los cambios.', 'info');
+      },
+      onAnnul: (novedad) => {
+        act(() => anularNovedad(novedad.id, viewer, ''), 'Novedad anulada.');
       }
     });
     form?.setPeriodo(periodo);

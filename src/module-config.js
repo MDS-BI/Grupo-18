@@ -22,8 +22,23 @@
  *   theme: { accentColor: '#2563eb' }
  * };
  */
-export const userConfig = null;
-
+export const userConfig = {
+  moduleName: 'Recursos Humanos y Planilla',
+  labels: {
+    entity: 'Trabajador',
+    entities: 'Trabajadores',
+    document: 'Liquidación de Sueldo',
+    documents: 'Liquidaciones de Sueldo'
+  },
+  theme: { accentColor: '#0f766e' },
+  rrhh: { enabled: true, label: 'RRHH / Planilla', roleSelector: true },
+  empresa: {
+    razonSocial: 'Empresa Demo SpA (ficticia)',
+    rut: '11.111.111-1',
+    direccion: 'Calle Ficticia 123, Concepción',
+    giro: 'Servicios'
+  }
+};
 export const FIELD_TYPES = ['text', 'number', 'date', 'select'];
 
 export const BASE_FIELDS = {

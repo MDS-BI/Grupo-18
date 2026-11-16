@@ -3,7 +3,7 @@
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
 **Actualizada**: 2026-11-16  
-**Estado**: Borrador  
+**Estado**: Borrador  A
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
 **Última incorporación**: Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2), con FR-001–FR-087 y las reglas transversales de seguridad, auditoría y respaldo.
 
@@ -20,6 +20,10 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - Q: ¿Cómo se cargan y actualizan los parámetros legales (UF, UTM, tasas y tramos) para cada período? → A: Opción A — carga manual versionada por un administrador mediante formulario o archivo de configuración, sin integración con servicios externos.
 - Q: ¿Durante cuánto tiempo debe conservarse la bitácora de auditoría exigida por la Ley 21.719? → A: Opción A — mientras dure la relación laboral y 6 años después del término (validar con asesoría legal).
 - Q: ¿La versión inicial debe incluir exportación e importación de datos para respaldo y restauración? → A: Opción A — exportación e importación completa en JSON para respaldo y restauración.
+
+### Session 2026-11-16
+
+- Q: ¿La pantalla de Entidades genéricas debe excluir a los Trabajadores (y la de Documentos a las Liquidaciones), o debe mostrar todos los registros y solo bloquear su eliminación? → A: Opción A — excluir a Trabajadores y Liquidaciones de las pantallas genéricas y gestionarlos solo en las vistas de RR.HH.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
@@ -347,7 +351,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 - **FR-001**: El sistema DEBE permitir a los usuarios crear un registro de entidad con al menos un nombre y un código.
 - **FR-002**: El sistema DEBE permitir a los usuarios editar los detalles de un registro de entidad existente.
-- **FR-003**: El sistema DEBE permitir a los usuarios eliminar un registro de entidad existente. Esta eliminación aplica a la Entidad genérica; los Trabajadores no se eliminan, se desactivan según la Historia de Usuario 1.
+- **FR-003**: El sistema DEBE permitir a los usuarios eliminar un registro de entidad existente. Esta eliminación aplica a la Entidad genérica; los Trabajadores no se eliminan, se desactivan según la Historia de Usuario 1. Las pantallas de Entidades y Documentos genéricas NO DEBEN listar Trabajadores ni Liquidaciones; estos registros se gestionan exclusivamente en las vistas de RR.HH.
 - **FR-004**: El sistema DEBE permitir a los usuarios buscar registros de entidad por nombre, código, categoría u otras palabras clave descriptivas.
 - **FR-005**: El sistema DEBE mostrar una lista clara de entidades e indicar cuándo ningún resultado coincide con una búsqueda.
 - **FR-006**: El sistema DEBE presentar retroalimentación clara cuando falta información obligatoria o no se puede completar una acción.

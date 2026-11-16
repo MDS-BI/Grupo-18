@@ -5,6 +5,7 @@ import { JSDOM } from 'jsdom';
 import { addEntity } from '../../src/storage.js';
 import { crearNovedad } from '../../src/rrhh/utils/novedades-service.js';
 import { asegurarPeriodo } from '../../src/rrhh/utils/periodos-service.js';
+import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 import { rangoPeriodo } from '../../src/rrhh/utils/periodos.js';
 
 const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8');
@@ -71,6 +72,17 @@ describe('US14 - novedades view inside the ERP shell', () => {
       code: 'TRAB-005',
       rut: '12.345.678-5'
     });
+    crearContrato(
+      {
+        entityId: entity.entity_id,
+        tipoContrato: 'indefinido',
+        sueldoBase: 1000000,
+        jornadaHorasSemanales: 42,
+        fechaInicio: '2024-01-01',
+        modalidadGratificacion: 'art50'
+      },
+      { role: 'analista', usuario: 'Analista RRHH' }
+    );
     crearNovedad(
       {
         trabajadorEntityId: entity.entity_id,

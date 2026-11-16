@@ -1,7 +1,11 @@
-import { insert, list, readTable, remove, update, writeTable } from '../storage-rrhh.js';
-import { loadEntities } from '../../storage.js';
+import { insert, list, readTable, update } from '../storage-rrhh.js';
+import { isValidDate, loadEntities } from '../../storage.js';
 import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { assertPeriodoAbierto, getPeriodo } from './periodos-service.js';
+import { getContratoVigente } from './contratos-service.js';
+import { equipoDeJefatura } from './jefatura.js';
+import { obtenerParametro } from './parametros-service.js';
+import { rangoPeriodo } from './periodos.js';
 import {
   ESTADOS_NOVEDAD,
   TIPO_NOVEDAD_LABELS,
@@ -29,17 +33,57 @@ function fail(errors, code = 'NOVEDAD_INVALIDA') {
   throw error;
 }
 
-function contextoValidacion(periodoIdValue) {
+function profileFor(entityId) {
+  return list('trabajadores').find((row) => String(row.entityId) === String(entityId)) || null;
+}
+
+function contextoValidacion(periodoIdValue, extra = {}) {
+  const fecha = extra.fechaReferencia || rangoPeriodo(periodoIdValue).fechaInicio;
+  const maximo = Number(obtenerParametro('MAX_HORAS_EXTRA', fecha)?.valor);
   return {
     entities: loadEntities(),
-    periodo: getPeriodo(periodoIdValue)
+    periodo: getPeriodo(periodoIdValue),
+    maxHorasExtraDia: Number.isFinite(maximo) && maximo > 0 ? maximo : 2,
+    ...extra
   };
 }
 
+function assertPeriodoParaNovedad(periodoIdValue) {
+  const periodo = getPeriodo(periodoIdValue);
+  if (!periodo) {
+    fail(
+      'El período no existe. Créalo antes de registrar novedades.',
+      'PERIODO_NO_ENCONTRADO'
+    );
+  }
+  assertPeriodoAbierto(periodo);
+}
+
+function assertTrabajadorActivo(entityId) {
+  const profile = profileFor(entityId);
+  if (profile && (profile.activo === false || profile.estadoLaboral === 'Desvinculado')) {
+    fail(
+      'El trabajador está desvinculado y no admite novedades.',
+      'TRABAJADOR_DESVINCULADO'
+    );
+  }
+}
+
+function assertContratoEnFechas(record) {
+  const inicio = getContratoVigente(record.trabajadorEntityId, record.fechaInicio);
+  const fin = getContratoVigente(record.trabajadorEntityId, record.fechaFin);
+  if (!inicio || !fin) {
+    fail(
+      'El trabajador no tiene contrato vigente en las fechas de la novedad.',
+      'SIN_CONTRATO_VIGENTE'
+    );
+  }
+}
+
 function assertAlcanceJefatura(viewer, entityId) {
-  if (viewer?.role !== 'jefatura' || !Array.isArray(viewer.equipo)) return;
-  const team = new Set(viewer.equipo.map((value) => String(value)));
-  if (!team.has(String(entityId))) {
+  const team = equipoDeJefatura(viewer);
+  if (!team) return;
+  if (!team.map(String).includes(String(entityId))) {
     fail(
       'La novedad no pertenece a un trabajador de tu equipo.',
       'PERMISO_DENEGADO'
@@ -47,11 +91,97 @@ function assertAlcanceJefatura(viewer, entityId) {
   }
 }
 
+function sumarDia(iso) {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function diasEntre(inicio, fin) {
+  const start = new Date(`${inicio}T00:00:00Z`);
+  const end = new Date(`${fin}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return 0;
+  return Math.floor((end - start) / 86400000) + 1;
+}
+
+function redondearCantidad(value) {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+/**
+ * Split a novedad date range into one record per calendar month.
+ *
+ * Day-based novedades (medical leave and absence) get the number of calendar
+ * days in each part. Hours are distributed proportionally to the days covered
+ * by each month, with the remainder assigned to the last part so the total is
+ * preserved exactly.
+ */
+function dividirPorMes(record) {
+  const { fechaInicio, fechaFin } = record;
+  if (!isValidDate(fechaInicio) || !isValidDate(fechaFin) || fechaFin < fechaInicio) {
+    return [{ ...record }];
+  }
+
+  const totalDias = diasEntre(fechaInicio, fechaFin);
+  const cantidadTotal = Number(record.cantidad) || 0;
+  const porDias = record.unidad === 'dias';
+  const parts = [];
+  let cursor = fechaInicio;
+  let assigned = 0;
+
+  while (cursor <= fechaFin) {
+    const periodo = cursor.slice(0, 7);
+    const { fechaFin: finMes } = rangoPeriodo(periodo);
+    const parteFin = fechaFin <= finMes ? fechaFin : finMes;
+    const dias = diasEntre(cursor, parteFin);
+    const isLast = parteFin === fechaFin;
+    let cantidad;
+    if (porDias) {
+      cantidad = dias;
+    } else if (isLast) {
+      cantidad = redondearCantidad(cantidadTotal - assigned);
+    } else {
+      cantidad = redondearCantidad((cantidadTotal * dias) / totalDias);
+      assigned = redondearCantidad(assigned + cantidad);
+    }
+    parts.push({
+      ...record,
+      periodo,
+      fechaInicio: cursor,
+      fechaFin: parteFin,
+      cantidad
+    });
+    if (isLast) break;
+    cursor = sumarDia(parteFin);
+  }
+
+  return parts;
+}
+
+function assertPeriodosDeNovedad(parts) {
+  const missing = [
+    ...new Set(parts.map((part) => part.periodo).filter((periodo) => !getPeriodo(periodo)))
+  ];
+  if (missing.length > 0) {
+    fail(
+      `No existe un período activo para ${missing.join(', ')}. Créalo antes de registrar la novedad.`,
+      'PERIODO_NO_ENCONTRADO'
+    );
+  }
+  for (const part of parts) {
+    assertPeriodoAbierto(part.periodo);
+  }
+}
+
 export function listNovedades(filters = {}) {
   let rows = list(NOVEDADES_TABLE);
   if (filters.periodo) rows = rows.filter((row) => row.periodo === filters.periodo);
   if (filters.trabajadorEntityId) {
-    rows = rows.filter((row) => row.trabajadorEntityId === filters.trabajadorEntityId);
+    rows = rows.filter(
+      (row) =>
+        String(row.trabajadorEntityId || row.entity_id) ===
+        String(filters.trabajadorEntityId)
+    );
   }
   if (filters.estado) rows = rows.filter((row) => row.estado === filters.estado);
   if (filters.tipo) rows = rows.filter((row) => row.tipo === filters.tipo);
@@ -69,6 +199,7 @@ function esDuplicada(candidate, existing, ignoreId) {
       row.id !== ignoreId &&
       !row.bajaLogica &&
       row.estado !== 'rechazada' &&
+      row.estado !== 'anulada' &&
       row.trabajadorEntityId === candidate.trabajadorEntityId &&
       row.periodo === candidate.periodo &&
       row.tipo === candidate.tipo &&
@@ -78,51 +209,137 @@ function esDuplicada(candidate, existing, ignoreId) {
   );
 }
 
-/** Register a novedad. Only Analista/Administrador/Jefatura may do it. */
+function esTipoConFechas(tipo) {
+  return tipo === 'licencia_medica' || tipo === 'ausencia';
+}
+
+function esSolapamiento(candidate, existing, ignoreId) {
+  if (!esTipoConFechas(candidate.tipo)) return null;
+  return (
+    existing.find(
+      (row) =>
+        row.id !== ignoreId &&
+        !row.bajaLogica &&
+        row.estado !== 'anulada' &&
+        row.estado !== 'rechazada' &&
+        row.trabajadorEntityId === candidate.trabajadorEntityId &&
+        esTipoConFechas(row.tipo) &&
+        row.fechaInicio <= candidate.fechaFin &&
+        candidate.fechaInicio <= row.fechaFin
+    ) || null
+  );
+}
+
+/**
+ * Register a novedad. Only Analista/Administrador/Jefatura may do it.
+ *
+ * A range crossing calendar months is split into one record per month. Every
+ * target period is validated before the first insert, so a missing or closed
+ * period rejects the whole operation without partial records.
+ */
 export function crearNovedad(input, viewer) {
   if (viewer && !puedeRegistrarNovedades(viewer)) {
     fail('Tu rol no puede registrar novedades.', 'PERMISO_DENEGADO');
   }
-  const record = crearNovedadBase({
+  const base = crearNovedadBase({
     ...input,
     estado: 'pendiente',
-    registradoPor: viewer?.usuario || viewer?.role || 'Sistema'
+    registradoPor: viewer?.usuario || viewer?.role || 'Sistema',
+    registradoPorRol: viewer?.role || null,
+    registradoPorId: viewer?.trabajadorId || null
   });
-  assertPeriodoAbierto(record.periodo);
-  const validation = validarNovedad(record, contextoValidacion(record.periodo));
-  if (!validation.valid) fail(validation.errors);
-  assertAlcanceJefatura(viewer, record.trabajadorEntityId);
-  if (esDuplicada(record, list(NOVEDADES_TABLE))) {
-    fail('Ya existe una novedad idéntica para el mismo trabajador y período.', 'NOVEDAD_DUPLICADA');
+  const parts = dividirPorMes(base);
+  assertPeriodosDeNovedad(parts);
+  assertAlcanceJefatura(viewer, base.trabajadorEntityId);
+  assertTrabajadorActivo(base.trabajadorEntityId);
+
+  const existing = list(NOVEDADES_TABLE);
+  const pending = [];
+  for (const part of parts) {
+    const record = crearNovedadBase({ ...part, periodo: part.periodo, estado: 'pendiente' });
+    const validation = validarNovedad(
+      record,
+      contextoValidacion(record.periodo, { fechaReferencia: record.fechaInicio })
+    );
+    if (!validation.valid) fail(validation.errors);
+    assertContratoEnFechas(record);
+    const overlap = esSolapamiento(record, [...existing, ...pending]);
+    if (overlap) {
+      fail(
+        `La licencia o ausencia se superpone con una novedad existente (${overlap.id}).`,
+        'NOVEDAD_SUPERPUESTA'
+      );
+    }
+    if (esDuplicada(record, [...existing, ...pending])) {
+      fail(
+        'Ya existe una novedad idéntica para el mismo trabajador y período.',
+        'NOVEDAD_DUPLICADA'
+      );
+    }
+    pending.push(record);
   }
-  const stored = insert(NOVEDADES_TABLE, sanitizarNovedad(record), { prefix: 'nov' });
-  registrarAuditoria({
-    accion: 'crear',
-    tabla: NOVEDADES_TABLE,
-    registroId: stored.id,
-    camposModificados: ['tipo', 'cantidad', 'fechaInicio', 'fechaFin'],
-    motivo: `Registro de ${TIPO_NOVEDAD_LABELS[stored.tipo] || stored.tipo}`,
-    actor: viewer?.usuario || viewer?.role,
-    rol: viewer?.role
-  });
-  return stored;
+
+  const stored = [];
+  for (const record of pending) {
+    const row = insert(NOVEDADES_TABLE, sanitizarNovedad(record), { prefix: 'nov' });
+    stored.push(row);
+    registrarAuditoria({
+      accion: 'crear',
+      tabla: NOVEDADES_TABLE,
+      registroId: row.id,
+      camposModificados: ['tipo', 'cantidad', 'fechaInicio', 'fechaFin'],
+      motivo: `Registro de ${TIPO_NOVEDAD_LABELS[row.tipo] || row.tipo}`,
+      actor: viewer?.usuario || viewer?.role,
+      rol: viewer?.role
+    });
+  }
+  return stored.length === 1 ? stored[0] : stored;
 }
 
-/** Correct a pending or rejected novedad. Approved records are immutable. */
+/** Correct a pending novedad. Approved, rejected and annulled records are immutable. */
 export function actualizarNovedad(id, changes, viewer) {
   const current = getNovedad(id);
   if (!current) fail('La novedad no existe.', 'NOVEDAD_NO_ENCONTRADA');
   if (viewer && !puedeEditarNovedades(viewer)) {
     fail('Tu rol no puede editar novedades.', 'PERMISO_DENEGADO');
   }
-  if (current.estado === 'aprobada') {
-    fail('Una novedad aprobada no se puede editar; anúlala o registra otra.', 'NOVEDAD_INMUTABLE');
+  if (current.estado !== 'pendiente') {
+    fail(
+      'Solo las novedades pendientes se pueden editar; registra una novedad nueva.',
+      'NOVEDAD_INMUTABLE'
+    );
   }
-  assertPeriodoAbierto(current.periodo);
-  const merged = crearNovedadBase({ ...current, ...changes, id: current.id });
-  const validation = validarNovedad(merged, contextoValidacion(merged.periodo));
+  assertPeriodoParaNovedad(current.periodo);
+  const merged = crearNovedadBase({
+    ...current,
+    ...changes,
+    id: current.id,
+    estado: 'pendiente'
+  });
+  if (dividirPorMes(merged).length > 1) {
+    fail(
+      'Para corregir un rango que cruza meses, anula esta novedad y registra una por cada período.',
+      'NOVEDAD_MULTIPERIODO'
+    );
+  }
+  if (merged.periodo !== current.periodo) {
+    assertPeriodoParaNovedad(merged.periodo);
+  }
+  const validation = validarNovedad(
+    merged,
+    contextoValidacion(merged.periodo, { fechaReferencia: merged.fechaInicio })
+  );
   if (!validation.valid) fail(validation.errors);
   assertAlcanceJefatura(viewer, merged.trabajadorEntityId);
+  assertTrabajadorActivo(merged.trabajadorEntityId);
+  assertContratoEnFechas(merged);
+  const overlap = esSolapamiento(merged, list(NOVEDADES_TABLE), id);
+  if (overlap) {
+    fail(
+      `La licencia o ausencia se superpone con una novedad existente (${overlap.id}).`,
+      'NOVEDAD_SUPERPUESTA'
+    );
+  }
   if (esDuplicada(merged, list(NOVEDADES_TABLE), id)) {
     fail('Ya existe una novedad idéntica para el mismo trabajador y período.', 'NOVEDAD_DUPLICADA');
   }
@@ -136,7 +353,7 @@ export function actualizarNovedad(id, changes, viewer) {
     tabla: NOVEDADES_TABLE,
     registroId: id,
     camposModificados: Object.keys(changes || {}),
-    motivo: 'Corrección de novedad',
+    motivo: 'Corrección de novedad pendiente',
     actor: viewer?.usuario || viewer?.role,
     rol: viewer?.role
   });
@@ -147,12 +364,15 @@ function aplicarAccion(id, accion, viewer, context = {}) {
   const current = getNovedad(id);
   if (!current) fail('La novedad no existe.', 'NOVEDAD_NO_ENCONTRADA');
   assertAlcanceJefatura(viewer, current.trabajadorEntityId);
-  assertPeriodoAbierto(current.periodo);
+  assertPeriodoParaNovedad(current.periodo);
   const periodo = getPeriodo(current.periodo);
+  const profile = profileFor(current.trabajadorEntityId);
   const changes = aplicarAccionNovedad(current, accion, {
     ...context,
     viewer,
-    periodo
+    periodo,
+    equipo: equipoDeJefatura(viewer),
+    jefeId: profile?.jefeId || ''
   });
   const stored = update(NOVEDADES_TABLE, id, changes);
   registrarAuditoria({
@@ -175,36 +395,24 @@ export function rechazarNovedad(id, viewer, motivo) {
   return aplicarAccion(id, 'rechazar', viewer, { motivo });
 }
 
-/** Correct and resubmit a rejected novedad. */
-export function reenviarNovedad(id, changes, viewer) {
-  if (changes && Object.keys(changes).length > 0) {
-    actualizarNovedad(id, changes, viewer);
-  }
-  return aplicarAccion(id, 'reenviar', viewer);
-}
-
-export function eliminarNovedad(id, viewer) {
-  const current = getNovedad(id);
-  if (!current) return false;
-  assertAlcanceJefatura(viewer, current.trabajadorEntityId);
-  assertPeriodoAbierto(current.periodo);
-  const deleted = remove(NOVEDADES_TABLE, id);
-  if (deleted) {
-    registrarAuditoria({
-      accion: 'eliminar',
-      tabla: NOVEDADES_TABLE,
-      registroId: id,
-      motivo: 'Eliminación de novedad',
-      actor: viewer?.usuario || viewer?.role,
-      rol: viewer?.role
-    });
-  }
-  return deleted;
+export function anularNovedad(id, viewer, motivo = '') {
+  return aplicarAccion(id, 'anular', viewer, { motivo });
 }
 
 /**
- * Approved novedades are the only ones exposed to the payroll engine. Pending
- * and rejected records are never returned, not even as metadata.
+ * Novedades are never deleted. Kept as a compatibility alias for callers that
+ * still use the old name.
+ */
+export function eliminarNovedad(id, viewer) {
+  const current = getNovedad(id);
+  if (!current) return false;
+  anularNovedad(id, viewer, 'Anulación de novedad');
+  return true;
+}
+
+/**
+ * Approved novedades are the only ones exposed to the payroll engine. Pending,
+ * rejected and annulled records are never returned, not even as metadata.
  */
 export function novedadesAprobadas(periodo, trabajadorEntityId) {
   return listNovedades({ periodo, estado: 'aprobada', trabajadorEntityId });
@@ -213,7 +421,7 @@ export function novedadesAprobadas(periodo, trabajadorEntityId) {
 /** Counts and approved totals for a period. */
 export function resumenPeriodo(periodo) {
   const rows = listNovedades({ periodo });
-  const byEstado = { pendiente: 0, aprobada: 0, rechazada: 0 };
+  const byEstado = { pendiente: 0, aprobada: 0, rechazada: 0, anulada: 0 };
   for (const row of rows) {
     if (byEstado[row.estado] !== undefined) byEstado[row.estado] += 1;
   }
@@ -224,31 +432,24 @@ export function resumenPeriodo(periodo) {
     pendientes: byEstado.pendiente,
     aprobadas: byEstado.aprobada,
     rechazadas: byEstado.rechazada,
+    anuladas: byEstado.anulada,
     porEstado: byEstado,
     totalesAprobados: resumenNovedades(aprobadas)
   };
 }
 
-/**
- * Eligibility guard for later processing. Pending or rejected novedades block
- * the period until they are resolved.
- */
+/** Only pending novedades block the payroll calculation. */
 export function estadoElegibilidad(periodo) {
   const resumen = resumenPeriodo(periodo);
   const advertencias = [];
   if (resumen.pendientes > 0) {
     advertencias.push(
-      `Hay ${resumen.pendientes} novedad(es) pendiente(s) sin aprobar; no son elegibles para el cálculo.`
-    );
-  }
-  if (resumen.rechazadas > 0) {
-    advertencias.push(
-      `Hay ${resumen.rechazadas} novedad(es) rechazada(s); corrígelas y reenvíalas antes de procesar.`
+      `Hay ${resumen.pendientes} novedad(es) pendiente(s) sin resolver; el cálculo no puede iniciarse.`
     );
   }
   return {
     ...resumen,
-    elegible: resumen.pendientes === 0 && resumen.rechazadas === 0,
+    elegible: resumen.pendientes === 0,
     advertencias
   };
 }
@@ -265,34 +466,29 @@ export function tieneLiquidacionesCerradas(entityId) {
 }
 
 /**
- * Cascade behaviour when a worker entity is deleted.
+ * Cascade behaviour when a worker is removed from the base module.
  *
- * Without closed liquidations the novedades are deleted. Otherwise the worker
- * must be logically deactivated and novedades are retained for the legal
- * payroll record.
+ * Novedades are kept as historical records; pending ones must be resolved by
+ * the desvinculación flow before the worker leaves the company.
  */
 export function eliminarNovedadesDeTrabajador(entityId) {
-  if (tieneLiquidacionesCerradas(entityId)) {
-    return {
-      accion: 'baja_logica',
-      eliminadas: 0,
-      motivo:
-        'El trabajador tiene liquidaciones aprobadas o pagadas; aplica baja lógica y conserva sus novedades.'
-    };
-  }
-  const rows = readTable(NOVEDADES_TABLE);
-  const kept = rows.filter((row) => row.trabajadorEntityId !== entityId);
-  const eliminadas = rows.length - kept.length;
-  if (eliminadas > 0) {
-    writeTable(NOVEDADES_TABLE, kept);
+  const rows = readTable(NOVEDADES_TABLE).filter(
+    (row) => String(row.trabajadorEntityId || row.entity_id) === String(entityId)
+  );
+  if (rows.length > 0) {
     registrarAuditoria({
-      accion: 'eliminar',
+      accion: 'conservar',
       tabla: NOVEDADES_TABLE,
       registroId: entityId,
-      motivo: 'Eliminación en cascada de novedades del trabajador'
+      motivo: 'Las novedades se conservan como registro histórico del trabajador'
     });
   }
-  return { accion: 'eliminar', eliminadas, motivo: '' };
+  return {
+    accion: 'conservar',
+    eliminadas: 0,
+    motivo:
+      'Las novedades no se eliminan; se conservan para reproducir las liquidaciones históricas.'
+  };
 }
 
 export function estadosDisponibles() {

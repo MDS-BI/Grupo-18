@@ -8,7 +8,7 @@ import {
 } from '../utils/trabajadores-service.js';
 import { listCatalogos } from '../utils/catalogos-service.js';
 import { renderTrabajadorForm } from '../components/trabajador-form.js';
-import { badge, button, el, input } from '../components/dom.js';
+import { badge, button, el, feedback, hideFeedback, input, showFeedback } from '../components/dom.js';
 
 function accessDenied(documentRef, root) {
   const denied = el(documentRef, 'div', 'rrhh-access-denied panel');
@@ -101,6 +101,7 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
         doc: documentRef,
         viewer,
         catalogos: listCatalogos(),
+        trabajadores: listTrabajadores({ incluirBaja: true }),
         onSaved: () => refresh()
       })
     : null;
@@ -115,6 +116,73 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
       )
     );
   }
+
+  const desvPanel = el(documentRef, 'div', 'panel rrhh-desvinculacion-panel');
+  desvPanel.id = 'trabajador-desvinculacion-panel';
+  desvPanel.setAttribute('role', 'dialog');
+  desvPanel.setAttribute('aria-modal', 'true');
+  desvPanel.hidden = true;
+  const desvTitle = el(documentRef, 'h4', null, 'Desvincular trabajador');
+  desvPanel.appendChild(desvTitle);
+  desvPanel.appendChild(
+    el(
+      documentRef,
+      'p',
+      'panel-copy',
+      'La desvinculación requiere fecha efectiva y no puede revertirse. Si hay novedades pendientes, deben resolverse antes.'
+    )
+  );
+  const desvDate = input(documentRef, {
+    id: 'desvinculacion-fecha',
+    type: 'date',
+    value: new Date().toISOString().slice(0, 10)
+  });
+  desvPanel.appendChild(desvDate);
+  const desvFeedback = feedback(documentRef, 'desvinculacion-feedback');
+  desvPanel.appendChild(desvFeedback);
+  const desvActions = el(documentRef, 'div', 'form-actions');
+  const desvConfirm = button(documentRef, {
+    id: 'desvinculacion-confirmar',
+    label: 'Confirmar desvinculación',
+    className: 'button button-danger'
+  });
+  const desvCancel = button(documentRef, {
+    id: 'desvinculacion-cancelar',
+    label: 'Cancelar',
+    className: 'button button-secondary'
+  });
+  desvActions.appendChild(desvConfirm);
+  desvActions.appendChild(desvCancel);
+  desvPanel.appendChild(desvActions);
+  formPanel.appendChild(desvPanel);
+  let desvRow = null;
+
+  function closeDesv() {
+    desvRow = null;
+    desvPanel.hidden = true;
+    hideFeedback(desvFeedback);
+  }
+
+  function openDesv(row) {
+    desvRow = row;
+    desvTitle.textContent = `Desvincular a ${row.name}`;
+    desvDate.value = new Date().toISOString().slice(0, 10);
+    hideFeedback(desvFeedback);
+    desvPanel.hidden = false;
+    desvDate.focus?.();
+  }
+
+  desvCancel.addEventListener('click', closeDesv);
+  desvConfirm.addEventListener('click', () => {
+    if (!desvRow) return;
+    try {
+      desactivarTrabajador(desvRow.entityId, desvDate.value, viewer);
+      closeDesv();
+      refresh();
+    } catch (error) {
+      showFeedback(desvFeedback, (error.errors || [error.message]).join(' '), 'error');
+    }
+  });
 
   function refresh() {
     const rows = listTrabajadores({
@@ -151,10 +219,7 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
               label: 'Desvincular',
               className: 'button button-ghost button-small',
               ariaLabel: `Desvincular ${row.name}`,
-              onClick: () => {
-                desactivarTrabajador(row.entityId, viewer);
-                refresh();
-              }
+              onClick: () => openDesv(row)
             })
           );
         }

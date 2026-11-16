@@ -182,10 +182,10 @@ describe('US1 - fichas de trabajadores', () => {
     const ids = seedCatalogos();
     const trabajador = crearTrabajador(workerPayload(ids), viewer);
 
-    desactivarTrabajador(trabajador.entityId, viewer);
-
-    const stored = getTrabajador(trabajador.entityId);
+    const stored = desactivarTrabajador(trabajador.entityId, '2024-06-30', viewer);
     expect(stored.estadoLaboral).toBe('Desvinculado');
+    expect(stored.fechaDesvinculacion).toBe('2024-06-30');
+    expect(getTrabajador(trabajador.entityId).activo).toBe(false);
     expect(listTrabajadores({ incluirBaja: true })).toHaveLength(1);
   });
 

@@ -2,6 +2,7 @@
 
 import { loadEntities } from '../../storage.js';
 import { calcularPeriodo } from '../utils/liquidacion-service.js';
+import { listContratos } from '../utils/contratos-service.js';
 import {
   estadoElegibilidad,
   listNovedades
@@ -131,9 +132,17 @@ export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
       `Período ${etiquetaPeriodo(selected)}: ${periodo?.estado || 'abierto'}`,
       `${aprobadas} novedad(es) aprobada(s)`,
       `${info.pendientes} pendiente(s)`,
-      `${info.rechazadas} rechazada(s)`
+      `${info.rechazadas} rechazada(s)`,
+      `${info.anuladas || 0} anulada(s)`
     ];
     eligibilityNode.appendChild(el(documentRef, 'p', null, parts.join(' · ')));
+    calculateButton.disabled = cerrado || !info.elegible;
+    calculateButton.setAttribute(
+      'title',
+      !info.elegible && !cerrado
+        ? 'Resuelve las novedades pendientes antes de calcular.'
+        : ''
+    );
     if (cerrado) {
       eligibilityNode.classList.add('rrhh-eligibility-blocked');
       eligibilityNode.appendChild(
@@ -196,7 +205,11 @@ export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
       return;
     }
     const entities = loadEntities();
-    const contratos = entities.map(contratoDesdeEntidad).filter(Boolean);
+    const storedContracts = listContratos({ incluirTerminados: true });
+    const contratos =
+      storedContracts.length > 0
+        ? storedContracts
+        : entities.map(contratoDesdeEntidad).filter(Boolean);
     try {
       const result = calcularPeriodo({
         periodo: selected,

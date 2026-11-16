@@ -1,12 +1,13 @@
 import { can } from '../seguridad/roles.js';
 import { periodoCerrado as esPeriodoCerrado } from './periodos.js';
 
-export const ACCIONES_NOVEDAD = ['aprobar', 'rechazar', 'reenviar'];
+export const ACCIONES_NOVEDAD = ['aprobar', 'rechazar', 'anular'];
 
 const TRANSICIONES = {
-  pendiente: { aprobar: 'aprobada', rechazar: 'rechazada' },
-  rechazada: { reenviar: 'pendiente' },
-  aprobada: {}
+  pendiente: { aprobar: 'aprobada', rechazar: 'rechazada', anular: 'anulada' },
+  rechazada: {},
+  aprobada: {},
+  anulada: {}
 };
 
 export function puedeRegistrarNovedades(viewer) {
@@ -25,7 +26,7 @@ export function puedeRechazarNovedades(viewer) {
   return puedeAprobarNovedades(viewer);
 }
 
-export function puedeReenviarNovedades(viewer) {
+export function puedeAnularNovedades(viewer) {
   return puedeEditarNovedades(viewer);
 }
 
@@ -42,13 +43,53 @@ function periodoEstaCerrado(context = {}) {
   return esPeriodoCerrado(context.periodo);
 }
 
+function trabajadorDe(novedad) {
+  return novedad?.trabajadorEntityId || novedad?.entity_id || '';
+}
+
+function mismoActor(a, b) {
+  return Boolean(a && b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase());
+}
+
+function validarAlcance(novedad, viewer, context) {
+  if (!['aprobar', 'rechazar'].includes(context.accion)) return [];
+  const errors = [];
+  const workerId = trabajadorDe(novedad);
+
+  if (viewer.role === 'jefatura') {
+    const team = Array.isArray(context.equipo) ? context.equipo : null;
+    if (team && !team.map(String).includes(String(workerId))) {
+      errors.push('La novedad pertenece a un trabajador fuera de tu jefatura.');
+    }
+  }
+
+  if (viewer.role === 'administrador') {
+    const jefeId = context.jefeId || context.trabajador?.jefeId || '';
+    if (jefeId) {
+      const registeredByJefatura = novedad.registradoPorRol === 'jefatura';
+      const sameJefatura =
+        !novedad.registradoPorId ||
+        !jefeId ||
+        String(novedad.registradoPorId) === String(jefeId);
+      if (!registeredByJefatura || !sameJefatura) {
+        errors.push(
+          'El administrador solo aprueba novedades sin jefatura directa o registradas por la jefatura del equipo.'
+        );
+      }
+    }
+  }
+
+  return errors;
+}
+
 /**
- * Validate an approval/rejection/resubmission. The result is pure and can be
+ * Validate an approval, rejection or annulment. The result is pure and can be
  * used by the service before it mutates storage.
  */
 export function validarAccionNovedad(novedad, accion, context = {}) {
   const errors = [];
   const viewer = context.viewer || {};
+  const accionContext = { ...context, accion };
   if (!novedad) {
     return { valid: false, errors: ['La novedad no existe.'] };
   }
@@ -64,12 +105,16 @@ export function validarAccionNovedad(novedad, accion, context = {}) {
   if (accion === 'rechazar' && !puedeRechazarNovedades(viewer)) {
     errors.push('Solo la Jefatura puede rechazar novedades.');
   }
-  if (accion === 'reenviar' && !puedeReenviarNovedades(viewer)) {
-    errors.push('Tu rol no puede corregir y reenviar novedades.');
+  if (accion === 'anular' && !puedeAnularNovedades(viewer)) {
+    errors.push('Tu rol no puede anular novedades.');
   }
   if (accion === 'rechazar' && !String(context.motivo || '').trim()) {
     errors.push('El rechazo requiere un motivo.');
   }
+  if (['aprobar', 'rechazar'].includes(accion) && mismoActor(viewer.usuario, novedad.registradoPor)) {
+    errors.push('No puedes aprobar ni rechazar una novedad que tú registraste.');
+  }
+  errors.push(...validarAlcance(novedad, viewer, accionContext));
   if (periodoEstaCerrado(context)) {
     errors.push('El período está cerrado: la novedad es de solo lectura.');
   }
@@ -98,10 +143,10 @@ export function aplicarAccionNovedad(novedad, accion, context = {}) {
     changes.motivoRechazo = String(context.motivo).trim();
     changes.aprobadoPor = actor;
     changes.fechaAprobacion = now;
-  } else if (accion === 'reenviar') {
-    changes.motivoRechazo = '';
-    changes.aprobadoPor = null;
-    changes.fechaAprobacion = null;
+  } else if (accion === 'anular') {
+    changes.anuladoPor = actor;
+    changes.fechaAnulacion = now;
+    changes.motivoAnulacion = String(context.motivo || '').trim();
   }
   return changes;
 }

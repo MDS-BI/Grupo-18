@@ -18,10 +18,25 @@ import {
 
 const viewer = { role: 'analista', usuario: 'Analista RRHH' };
 
+const RUTS = [
+  '12.345.678-5',
+  '11.111.111-1',
+  '22.222.222-2',
+  '13.579.246-2',
+  '24.680.135-5',
+  '15.802.469-1',
+  '26.913.579-4',
+  '9.876.543-3',
+  '11.223.344-K',
+  '55.667.788-3'
+];
+
 let store;
+let rutIndex;
 
 beforeEach(() => {
   store = new Map();
+  rutIndex = 0;
   globalThis.localStorage = {
     getItem: (key) => (store.has(key) ? store.get(key) : null),
     setItem: (key, value) => store.set(key, String(value)),
@@ -31,7 +46,9 @@ beforeEach(() => {
 });
 
 function createWorker(name = 'Ana Pérez', code = 'TRAB-001') {
-  return crearTrabajador({ name, code }, viewer);
+  const rut = RUTS[rutIndex % RUTS.length];
+  rutIndex += 1;
+  return crearTrabajador({ name, code, rut }, viewer);
 }
 
 function contractPayload(entityId, overrides = {}) {
@@ -39,7 +56,7 @@ function contractPayload(entityId, overrides = {}) {
     entityId,
     tipoContrato: 'indefinido',
     sueldoBase: 1000000,
-    jornadaHorasSemanales: 45,
+    jornadaHorasSemanales: 42,
     fechaInicio: '2024-01-01',
     modalidadGratificacion: 'art50',
     asignacionColacion: 50000,
@@ -157,8 +174,12 @@ describe('US2 - historial y vigencia de contratos', () => {
     const worker = createWorker();
     const contrato = crearContrato(contractPayload(worker.entityId), viewer);
 
-    const edited = actualizarContrato(contrato.id, { sueldoBase: 1100000 }, viewer);
-    expect(edited.sueldoBase).toBe(1100000);
+    const edited = actualizarContrato(
+      contrato.id,
+      { observacion: 'Corrección administrativa' },
+      viewer
+    );
+    expect(edited.observacion).toBe('Corrección administrativa');
 
     const terminated = terminarContrato(contrato.id, '2024-12-31', viewer);
     expect(terminated.estado).toBe('terminado');
