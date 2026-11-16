@@ -75,6 +75,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 **Reglas de negocio**:
 
+- El administrador/a de RR.HH. y el analista de remuneraciones pueden registrar, modificar y terminar contratos.
+- Un contrato está vigente desde su fecha de inicio hasta su fecha de término, o sin fecha de término si es indefinido, mientras no haya sido terminado.
 - Solo se puede registrar un contrato para un Trabajador existente y no desvinculado.
 - El tipo de contrato, la fecha de inicio, el sueldo base y la jornada son obligatorios; la fecha de término es obligatoria en contratos a plazo fijo y no aplica a los indefinidos.
 - Un contrato indefinido no lleva fecha de término y el sistema no la admite.
