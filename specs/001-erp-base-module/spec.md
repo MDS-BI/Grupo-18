@@ -386,6 +386,46 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ---
 
+### Historia de Usuario 10 - Reportes de Gestión y Equidad Salarial (Prioridad: P2)
+
+**Como** administrador/a de RR.HH. o analista de remuneraciones,
+**quiero** ver reportes del personal y de la planilla (dotación, costo por centro de costo, horas extra, ausentismo y brecha salarial de género por cargo),
+**para** tomar decisiones con datos y detectar sesgos sin exponer información individual.
+
+**Por qué esta prioridad**: Convierte los datos que el módulo ya registra en información útil para la gestión y para detectar desigualdades. Es de solo lectura, por lo que no arriesga los datos de las demás historias.
+
+**Alcance**: incluye los reportes, sus filtros, los gráficos y un campo opcional de género en la ficha, usado solo en reportes agregados. No incluye exportar archivos (US11) ni modificar datos de ninguna otra historia.
+
+**Reglas de negocio**:
+
+- Los reportes se calculan sobre los períodos cerrados (US4); los períodos abiertos o calculados no se incluyen, para que las cifras no cambien después.
+- **Dotación**: Trabajadores activos al último día del período, altas (ingresos) y bajas (desvinculaciones) del período, por departamento.
+- **Costo de la planilla**: suma del costo empleador por centro de costo y por período, con la variación porcentual respecto del período anterior.
+- **Horas extra**: total de horas extra aprobadas por departamento y período.
+- **Ausentismo**: días de ausencia divididos por los días hábiles del período, por departamento. Las licencias médicas, las vacaciones y los permisos legales no se cuentan como ausentismo y se muestran por separado, para no castigar enfermedad ni maternidad.
+- **Brecha salarial de género por cargo**: diferencia porcentual entre la mediana del sueldo base de cada género dentro de un mismo cargo. Si algún grupo del cargo tiene menos de 5 personas, el sistema oculta el resultado de ese cargo e indica que hay muy pocas personas para mostrarlo sin identificar a nadie.
+- El género es un campo opcional de la ficha (Femenino, Masculino, No binario, Prefiere no informar), clasificado como dato sensible; solo se usa en el reporte de brecha y nunca aparece en listados, búsquedas ni filtros de Trabajadores.
+- Los reportes muestran solo totales y nunca datos de una persona identificable.
+- El administrador/a de RR.HH. ve todos los reportes; el analista ve todos menos la brecha de género; la jefatura ve solo horas extra y ausentismo de su equipo, sin montos; el Trabajador no accede a reportes.
+- Cada reporte puede filtrarse por rango de períodos y por departamento, y muestra un estado vacío explicativo cuando no hay períodos cerrados.
+
+**Prueba Independiente**: Con datos semilla de tres períodos cerrados y Trabajadores de distintos cargos y géneros, el administrador/a ve la dotación, el costo por centro de costo y la brecha por cargo; un cargo con menos de 5 personas en algún grupo aparece oculto. No modifica ningún dato.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** tres períodos cerrados, **cuando** el administrador/a abre el reporte de costo, **entonces** ve el costo empleador por centro de costo de cada período y la variación porcentual respecto del anterior.
+2. **Dado** un período con altas y bajas, **cuando** el usuario abre el reporte de dotación, **entonces** ve los Trabajadores activos al cierre, las altas y las bajas por departamento.
+3. **Dado** un período con licencias médicas y ausencias injustificadas, **cuando** el usuario abre el reporte de ausentismo, **entonces** el indicador considera solo las ausencias, y las licencias y vacaciones aparecen por separado.
+4. **Dado** un cargo con 6 mujeres y 7 hombres con sueldo base registrado, **cuando** el administrador/a abre el reporte de brecha, **entonces** ve la mediana de cada grupo y la diferencia porcentual del cargo.
+5. **Dado** un cargo con 3 mujeres y 10 hombres, **cuando** el administrador/a abre el reporte de brecha, **entonces** el resultado de ese cargo aparece oculto con el mensaje de que hay muy pocas personas para mostrarlo.
+6. **Dado** un período abierto o calculado, **cuando** el usuario abre cualquier reporte, **entonces** ese período no se incluye en las cifras.
+7. **Dado** una jefatura, **cuando** abre los reportes, **entonces** ve solo las horas extra y el ausentismo de su equipo, sin montos de dinero; **y cuando** intenta abrir el reporte de costo o de brecha, **entonces** el sistema lo impide.
+8. **Dado** un analista de remuneraciones, **cuando** intenta abrir el reporte de brecha de género, **entonces** el sistema lo impide e indica que no tiene autorización.
+9. **Dado** que no existen períodos cerrados, **cuando** el usuario abre los reportes, **entonces** ve un estado vacío que explica que los reportes se calculan sobre períodos cerrados.
+10. **Dado** que el administrador/a consulta el reporte de brecha de género, **cuando** la consulta se completa, **entonces** la bitácora de auditoría registra la consulta de un dato sensible (regla transversal de la US6).
+
+---
+
 ### Historia de Usuario 12 - Parámetros Legales (Prioridad: P1)
 
 [US12]
