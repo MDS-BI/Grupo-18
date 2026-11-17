@@ -2,14 +2,14 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Actualizada**: 2026-11-16  
+**Actualizada**: 2026-11-17  
 **Estado**: Borrador   
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2), con FR-001–FR-087 y las reglas transversales de seguridad, auditoría y respaldo.
+**Última incorporación**: Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2) e Historia de Usuario 12 (Parámetros legales, P1), con FR-001–FR-087 y FR-105–FR-107, SC-001–SC-029 y las reglas transversales de seguridad, auditoría y respaldo.
 
 ## Propósito
 
-Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio. Sobre esta base se construye el módulo de **Recursos Humanos y Planilla** (Historias de Usuario 1 a 6), que reutiliza la Entidad como **Trabajador** y el Documento como **Liquidación**, y añade contratos, novedades, períodos, cálculo legal, explicación e impresión de liquidaciones y gobierno de datos.
+Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio. Sobre esta base se construye el módulo de **Recursos Humanos y Planilla** (Historias de Usuario 1 a 6 y 12), que reutiliza la Entidad como **Trabajador** y el Documento como **Liquidación**, y añade contratos, novedades, períodos, cálculo legal, explicación e impresión de liquidaciones, gobierno de datos y parámetros legales versionados.
 
 ## Clarifications
 
@@ -304,6 +304,12 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 11. **Dado** una operación sobre información sensible, **cuando** la bitácora no puede escribirse, **entonces** la operación no se completa.
 12. **Dado** un acceso denegado por falta de permisos, **cuando** el sistema lo rechaza, **entonces** el intento queda registrado en la bitácora.
 13. **Dado** cualquier cambio o consulta de información sensible, **cuando** la operación se completa, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
+
+---
+
+### Historia de Usuario 12 - Parámetros Legales (Prioridad: P1)
+
+[US12]
 
 ---
 
