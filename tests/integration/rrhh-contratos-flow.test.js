@@ -96,7 +96,9 @@ describe('US2 - contracts flow inside the ERP shell', () => {
 
     const rows = [...document.querySelectorAll('#rrhh-contratos-view tbody tr')];
     expect(rows).toHaveLength(2);
-    expect(document.querySelector('#rrhh-contratos-view tbody').textContent).toContain('$1.200.000');
+    expect(document.querySelector('#rrhh-contratos-view tbody').textContent).toContain(
+      '$1.200.000'
+    );
     expect(document.querySelector('#rrhh-contratos-view tbody').textContent).toContain('terminado');
   });
 

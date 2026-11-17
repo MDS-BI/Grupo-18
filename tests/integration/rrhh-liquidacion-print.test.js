@@ -2,10 +2,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
-import { createDemoLiquidacion, formatMoney, totals } from '../../src/rrhh/utils/liquidacion-data.js';
+import {
+  createDemoLiquidacion,
+  formatMoney,
+  totals
+} from '../../src/rrhh/utils/liquidacion-data.js';
 import { createPrintController, renderLiquidacion } from '../../src/rrhh/views/liquidacion.js';
 
-const css = fs.readFileSync(fileURLToPath(new URL('../../src/styles.css', import.meta.url)), 'utf8');
+const css = fs.readFileSync(
+  fileURLToPath(new URL('../../src/styles.css', import.meta.url)),
+  'utf8'
+);
 
 let dom;
 
@@ -94,7 +101,11 @@ describe('US5 - clean printing and PDF', () => {
     draft.dispose();
 
     dom.window.document.getElementById('root').textContent = '';
-    const paid = mount({ ...createDemoLiquidacion(), estado: 'pagada', periodo: { ...createDemoLiquidacion().periodo, cerrado: true } });
+    const paid = mount({
+      ...createDemoLiquidacion(),
+      estado: 'pagada',
+      periodo: { ...createDemoLiquidacion().periodo, cerrado: true }
+    });
     expect(dom.window.document.getElementById('liq-print')).not.toBeNull();
     paid.dispose();
   });
@@ -102,7 +113,11 @@ describe('US5 - clean printing and PDF', () => {
   it('includes company, worker, period, detail, totals, net pay and issue date in the printable content', () => {
     const liquidacion = createDemoLiquidacion();
     const result = mount(liquidacion, {
-      empresa: { razonSocial: 'Comercial Andes SpA', rut: '76.543.210-K', direccion: 'Av. Providencia 1234' }
+      empresa: {
+        razonSocial: 'Comercial Andes SpA',
+        rut: '76.543.210-K',
+        direccion: 'Av. Providencia 1234'
+      }
     });
     const text = dom.window.document.getElementById('root').textContent;
     const expected = totals(liquidacion);

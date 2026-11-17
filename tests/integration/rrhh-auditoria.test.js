@@ -1,24 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { addEntity } from '../../src/storage.js';
-import {
-  aprobarNovedad,
-  crearNovedad
-} from '../../src/rrhh/utils/novedades-service.js';
+import { aprobarNovedad, crearNovedad } from '../../src/rrhh/utils/novedades-service.js';
 import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 import {
   aprobarLiquidacion,
   calcularPeriodo,
   loadLiquidacion
 } from '../../src/rrhh/utils/liquidacion-service.js';
-import {
-  abrirPeriodo,
-  cerrarPeriodo
-} from '../../src/rrhh/utils/periodos-service.js';
-import {
-  auditarConsulta,
-  assertSensitiveAccess
-} from '../../src/rrhh/seguridad/acceso-datos.js';
+import { abrirPeriodo, cerrarPeriodo } from '../../src/rrhh/utils/periodos-service.js';
+import { auditarConsulta, assertSensitiveAccess } from '../../src/rrhh/seguridad/acceso-datos.js';
 import { SENSITIVE_DATA } from '../../src/rrhh/seguridad/roles.js';
 import {
   AUDITORIA_KEY,
@@ -124,13 +115,7 @@ describe('US6 - automatic audit of sensitive consultations and changes', () => {
     const rows = readAuditoria();
     expect(rows.length).toBeGreaterThanOrEqual(6);
     expect(rows.map((row) => row.accion)).toEqual(
-      expect.arrayContaining([
-        'crear',
-        'aprobar',
-        'calcular',
-        'ver_sensible',
-        'cerrar_periodo'
-      ])
+      expect.arrayContaining(['crear', 'aprobar', 'calcular', 'ver_sensible', 'cerrar_periodo'])
     );
 
     for (const row of rows) {
@@ -154,7 +139,9 @@ describe('US6 - automatic audit of sensitive consultations and changes', () => {
     expect(calculation.registroId).toBe('2026-09');
     expect(calculation.rol).toBe('analista');
 
-    const stateChange = rows.find((row) => row.accion === 'aprobar' && row.tabla === 'liquidaciones');
+    const stateChange = rows.find(
+      (row) => row.accion === 'aprobar' && row.tabla === 'liquidaciones'
+    );
     expect(stateChange.registroId).toBe(liquidation.id);
     expect(stateChange.rol).toBe('administrador');
 
@@ -235,7 +222,9 @@ describe('US6 - automatic audit of sensitive consultations and changes', () => {
 
     expect(document.getElementById('rrhh-auditoria-view')).not.toBeNull();
     expect(document.getElementById('auditoria-list')).not.toBeNull();
-    expect(document.getElementById('auditoria-list').textContent).toMatch(/Consulta sensible|Creaci.n|Aprobaci.n/i);
+    expect(document.getElementById('auditoria-list').textContent).toMatch(
+      /Consulta sensible|Creaci.n|Aprobaci.n/i
+    );
 
     const filter = document.getElementById('auditoria-tabla');
     filter.value = 'liquidaciones';

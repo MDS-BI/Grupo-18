@@ -125,7 +125,11 @@ describe('US14 - individual approval and rejection', () => {
 
   it('exposes only approved novedades to later processing', () => {
     const aprobada = createNovedad({ cantidad: 4 });
-    const pendiente = createNovedad({ cantidad: 2, fechaInicio: '2026-09-08', fechaFin: '2026-09-09' });
+    const pendiente = createNovedad({
+      cantidad: 2,
+      fechaInicio: '2026-09-08',
+      fechaFin: '2026-09-09'
+    });
     const rechazada = createNovedad({
       cantidad: 1,
       fechaInicio: '2026-09-10',

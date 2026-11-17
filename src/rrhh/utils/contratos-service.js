@@ -393,7 +393,8 @@ export function actualizarContrato(id, changes = {}, viewer) {
     ...changes,
     entityId: current.entityId
   });
-  merged.estado = current.estado === 'terminado' ? 'terminado' : estadoContratoEn(merged, todayISO());
+  merged.estado =
+    current.estado === 'terminado' ? 'terminado' : estadoContratoEn(merged, todayISO());
   const validation = validarContrato(merged, { ignoreId: id });
   if (!validation.valid) {
     failValidation(validation.errors);

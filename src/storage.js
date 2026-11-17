@@ -242,9 +242,7 @@ function workerEntityIds() {
 }
 
 function isWorkerRecord(entity, ids) {
-  return [entity?.entity_id, entity?.id]
-    .filter(Boolean)
-    .some((id) => ids.has(String(id)));
+  return [entity?.entity_id, entity?.id].filter(Boolean).some((id) => ids.has(String(id)));
 }
 
 export function isTrabajadorEntity(entity) {

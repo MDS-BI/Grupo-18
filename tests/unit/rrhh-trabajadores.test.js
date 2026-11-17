@@ -76,7 +76,11 @@ describe('US1 - catálogos base', () => {
     expect(duplicate.valid).toBe(false);
     expect(duplicate.errors.codigo).toBeDefined();
 
-    const otherType = validarCatalogo({ tipo: 'departamento', codigo: 'OPS', nombre: 'Operaciones' });
+    const otherType = validarCatalogo({
+      tipo: 'departamento',
+      codigo: 'OPS',
+      nombre: 'Operaciones'
+    });
     expect(otherType.valid).toBe(true);
   });
 

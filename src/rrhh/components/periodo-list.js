@@ -54,7 +54,11 @@ export function renderPeriodoList(
     const state = el(doc, 'span', 'rrhh-table-cell');
     state.setAttribute('role', 'cell');
     state.appendChild(
-      badge(doc, ESTADO_PERIODO_LABELS[periodo.estado] || periodo.estado || 'Abierto', statusTone(periodo.estado))
+      badge(
+        doc,
+        ESTADO_PERIODO_LABELS[periodo.estado] || periodo.estado || 'Abierto',
+        statusTone(periodo.estado)
+      )
     );
     row.appendChild(state);
 
@@ -89,7 +93,9 @@ export function renderPeriodoList(
         );
       }
     } else {
-      actions.appendChild(el(doc, 'span', 'panel-copy', cerrado ? 'Solo lectura' : 'Sin permiso de cierre'));
+      actions.appendChild(
+        el(doc, 'span', 'panel-copy', cerrado ? 'Solo lectura' : 'Sin permiso de cierre')
+      );
     }
     row.appendChild(actions);
     table.appendChild(row);

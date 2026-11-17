@@ -79,10 +79,10 @@ function profileFor(entityId) {
 function workerIsActive(entity, profile) {
   return Boolean(
     entity &&
-      !entity.bajaLogica &&
-      entity.activo !== false &&
-      profile?.activo !== false &&
-      profile?.estadoLaboral !== 'Desvinculado'
+    !entity.bajaLogica &&
+    entity.activo !== false &&
+    profile?.activo !== false &&
+    profile?.estadoLaboral !== 'Desvinculado'
   );
 }
 
@@ -115,7 +115,8 @@ export function validarTrabajador(input = {}, context = {}) {
   if (code) {
     const normalizedCode = normalizeSearch(code);
     const duplicate = entities.find(
-      (entity) => entityIdOf(entity) !== currentId && normalizeSearch(entity.code) === normalizedCode
+      (entity) =>
+        entityIdOf(entity) !== currentId && normalizeSearch(entity.code) === normalizedCode
     );
     if (duplicate) errors.code = 'El código del trabajador ya está registrado.';
   }
@@ -124,8 +125,7 @@ export function validarTrabajador(input = {}, context = {}) {
     const normalized = normalizeRut(rut);
     const duplicate = entities.find(
       (entity) =>
-        entityIdOf(entity) !== currentId &&
-        normalizeRut(entity.taxId || entity.rut) === normalized
+        entityIdOf(entity) !== currentId && normalizeRut(entity.taxId || entity.rut) === normalized
     );
     if (duplicate) errors.rut = 'El RUT ya está registrado en otra ficha de trabajador.';
   }
@@ -192,7 +192,8 @@ function join(entity, profile, catalogos, entities = []) {
     jefeId,
     jefeNombre: jefe?.name || '',
     estadoLaboral:
-      profile?.estadoLaboral || (entity.bajaLogica || entity.activo === false ? 'Desvinculado' : 'Activo'),
+      profile?.estadoLaboral ||
+      (entity.bajaLogica || entity.activo === false ? 'Desvinculado' : 'Activo'),
     activo: workerIsActive(entity, profile),
     bajaLogica: Boolean(entity.bajaLogica)
   };
@@ -317,10 +318,7 @@ export function actualizarTrabajador(entityId, changes = {}, viewer) {
   if (current.estadoLaboral === 'Desvinculado' && merged.estadoLaboral === 'Activo') {
     fail('Un trabajador desvinculado no puede reactivarse.', 'REACTIVACION_PROHIBIDA');
   }
-  if (
-    current.estadoLaboral !== 'Desvinculado' &&
-    merged.estadoLaboral === 'Desvinculado'
-  ) {
+  if (current.estadoLaboral !== 'Desvinculado' && merged.estadoLaboral === 'Desvinculado') {
     fail(
       'La desvinculación se registra con fecha mediante la acción Desvincular.',
       'DESVINCULACION_REQUERIDA'
@@ -424,7 +422,10 @@ export function desactivarTrabajador(entityId, fechaDesvinculacion, viewer) {
     fail('La fecha de desvinculación es obligatoria.', 'FECHA_DESVINCULACION_REQUERIDA');
   }
   if (!isValidDate(fecha)) {
-    fail('La fecha de desvinculación debe tener formato AAAA-MM-DD.', 'FECHA_DESVINCULACION_INVALIDA');
+    fail(
+      'La fecha de desvinculación debe tener formato AAAA-MM-DD.',
+      'FECHA_DESVINCULACION_INVALIDA'
+    );
   }
   if (current.fechaIngreso && fecha < current.fechaIngreso) {
     fail(

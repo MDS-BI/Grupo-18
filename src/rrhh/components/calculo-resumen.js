@@ -22,7 +22,9 @@ export function renderCalculoResumen(container, { doc, resumen = {}, periodo } =
   title.id = 'calculo-resumen-title';
   header.appendChild(title);
   if (periodo) {
-    header.appendChild(el(doc, 'p', 'panel-copy', `Período ${periodo.etiqueta || periodo.id || periodo}`));
+    header.appendChild(
+      el(doc, 'p', 'panel-copy', `Período ${periodo.etiqueta || periodo.id || periodo}`)
+    );
   }
   wrapper.appendChild(header);
 

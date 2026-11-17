@@ -1,9 +1,4 @@
-import {
-  formatDate,
-  formatFactor,
-  formatMoney,
-  formatPercent
-} from '../../utils/format.js';
+import { formatDate, formatFactor, formatMoney, formatPercent } from '../../utils/format.js';
 
 export { formatDate, formatFactor, formatMoney, formatPercent };
 
@@ -187,7 +182,9 @@ export function validateLiquidacion(liquidacion) {
     return { valid: false, errors: ['La liquidación debe ser un objeto.'] };
   }
   if (!liquidacion.id) errors.push('La liquidación requiere un identificador.');
-  if (!liquidacion.trabajador?.nombre) errors.push('La liquidación requiere el nombre del trabajador.');
+  if (!liquidacion.trabajador?.nombre) {
+    errors.push('La liquidación requiere el nombre del trabajador.');
+  }
   if (!liquidacion.trabajador?.rut) errors.push('La liquidación requiere el RUT del trabajador.');
   if (!liquidacion.periodo?.etiqueta) errors.push('La liquidación requiere un período.');
   if (!liquidacion.fechaEmision) errors.push('La liquidación requiere una fecha de emisión.');

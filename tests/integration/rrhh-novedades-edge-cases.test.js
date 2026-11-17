@@ -90,9 +90,7 @@ describe('US14 - novedades edge cases', () => {
     expect(() => rechazarNovedad(novedad.id, jefatura, '')).toThrow(/motivo/i);
 
     rechazarNovedad(novedad.id, jefatura, 'Documentacion incompleta');
-    expect(() => actualizarNovedad(novedad.id, { cantidad: 2 }, analista)).toThrow(
-      /pendientes/i
-    );
+    expect(() => actualizarNovedad(novedad.id, { cantidad: 2 }, analista)).toThrow(/pendientes/i);
     expect(() => anularNovedad(novedad.id, analista, 'Duplicada')).toThrow(/rechazada/i);
     expect(listNovedades()[0].estado).toBe('rechazada');
     expect(listNovedades()[0].motivoRechazo).toBe('Documentacion incompleta');

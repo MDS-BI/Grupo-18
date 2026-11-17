@@ -83,7 +83,9 @@ export function listCatalogos({ tipo, incluirInactivos = false } = {}) {
   if (tipo) rows = rows.filter((row) => row.tipo === tipo);
   if (!incluirInactivos) rows = rows.filter((row) => row.activo !== false);
   return rows.sort(
-    (a, b) => String(a.tipo).localeCompare(String(b.tipo)) || String(a.nombre).localeCompare(String(b.nombre))
+    (a, b) =>
+      String(a.tipo).localeCompare(String(b.tipo)) ||
+      String(a.nombre).localeCompare(String(b.nombre))
   );
 }
 
@@ -141,7 +143,9 @@ export function actualizarCatalogo(id, changes = {}, viewer) {
       changes.descripcion !== undefined ? String(changes.descripcion).trim() : current.descripcion,
     activo: changes.activo !== undefined ? Boolean(changes.activo) : current.activo
   };
-  const validation = validarCatalogo(merged, { catalogos: listCatalogos({ incluirInactivos: true }) });
+  const validation = validarCatalogo(merged, {
+    catalogos: listCatalogos({ incluirInactivos: true })
+  });
   if (!validation.valid) {
     const error = new Error('Catálogo inválido.');
     error.errors = validation.errors;

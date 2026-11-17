@@ -9,9 +9,7 @@ import { puedeAprobarNovedades, puedeEditarNovedades } from '../utils/novedades-
 import { badge, button, el, statusTone } from './dom.js';
 
 function workerName(entityId, entities) {
-  const entity = (entities || []).find(
-    (row) => row.entity_id === entityId || row.id === entityId
-  );
+  const entity = (entities || []).find((row) => row.entity_id === entityId || row.id === entityId);
   return entity?.name || entityId || 'Trabajador sin identificar';
 }
 
@@ -78,7 +76,11 @@ export function renderNovedadList(
     );
     header.appendChild(title);
     header.appendChild(
-      badge(doc, ESTADO_NOVEDAD_LABELS[novedad.estado] || novedad.estado || '', statusTone(novedad.estado))
+      badge(
+        doc,
+        ESTADO_NOVEDAD_LABELS[novedad.estado] || novedad.estado || '',
+        statusTone(novedad.estado)
+      )
     );
     item.appendChild(header);
 
@@ -96,7 +98,12 @@ export function renderNovedadList(
       );
     }
     if (novedad.estado === 'rechazada' && novedad.motivoRechazo) {
-      const reason = el(doc, 'p', 'rrhh-rejection-reason', `Motivo del rechazo: ${novedad.motivoRechazo}`);
+      const reason = el(
+        doc,
+        'p',
+        'rrhh-rejection-reason',
+        `Motivo del rechazo: ${novedad.motivoRechazo}`
+      );
       item.appendChild(reason);
     }
     if (novedad.estado === 'anulada') {
@@ -113,15 +120,22 @@ export function renderNovedadList(
 
     const actions = el(doc, 'div', 'rrhh-row-actions');
     const ownNovedad =
-      String(viewer?.usuario || '').trim().toLowerCase() ===
-      String(novedad.registradoPor || '').trim().toLowerCase();
+      String(viewer?.usuario || '')
+        .trim()
+        .toLowerCase() ===
+      String(novedad.registradoPor || '')
+        .trim()
+        .toLowerCase();
 
     if (novedad.estado === 'pendiente' && canApprove && !ownNovedad) {
       const reasonInput = el(doc, 'input', 'rrhh-reject-reason');
       reasonInput.type = 'text';
       reasonInput.id = `motivo-rechazo-${novedad.id}`;
       reasonInput.placeholder = 'Motivo de rechazo';
-      reasonInput.setAttribute('aria-label', `Motivo de rechazo de la novedad de ${workerName(novedad.trabajadorEntityId, entities)}`);
+      reasonInput.setAttribute(
+        'aria-label',
+        `Motivo de rechazo de la novedad de ${workerName(novedad.trabajadorEntityId, entities)}`
+      );
       reasonInput.disabled = !periodoAbierto;
       actions.appendChild(reasonInput);
 

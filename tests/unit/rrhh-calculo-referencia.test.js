@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  calcularLiquidacionTrabajador,
-  redondearPeso
-} from '../../src/rrhh/calculo/motor.js';
+import { calcularLiquidacionTrabajador, redondearPeso } from '../../src/rrhh/calculo/motor.js';
 import { PARAMETROS_INICIALES } from '../../src/rrhh/calculo/parametros.js';
 
 const contrato = {

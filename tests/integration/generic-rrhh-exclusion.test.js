@@ -50,10 +50,7 @@ afterEach(() => {
 });
 
 function createWorker(name, code, rut) {
-  return crearTrabajador(
-    { name, code, rut },
-    { role: 'analista', usuario: 'Analista RRHH' }
-  );
+  return crearTrabajador({ name, code, rut }, { role: 'analista', usuario: 'Analista RRHH' });
 }
 
 describe('generic screens exclude RRHH-managed records', () => {
@@ -85,9 +82,7 @@ describe('generic screens exclude RRHH-managed records', () => {
 
     expect(loadEntities().some((entity) => entity.id === worker.id)).toBe(true);
     expect(qs('entity-feedback').hidden).toBe(false);
-    expect(qs('entity-feedback').textContent).toContain(
-      'no se gestiona en la pantalla genérica'
-    );
+    expect(qs('entity-feedback').textContent).toContain('no se gestiona en la pantalla genérica');
   });
 
   it('rejects deleting a worker from generic storage', () => {

@@ -66,7 +66,9 @@ describe('US5 - explanation and printing edge cases', () => {
     const liquidacion = createDemoLiquidacion();
     liquidacion.lineas[0] = { ...liquidacion.lineas[0], parametroLegal: null };
     const result = mount(liquidacion);
-    expect(dom.window.document.querySelectorAll('.liq-line')).toHaveLength(liquidacion.lineas.length);
+    expect(dom.window.document.querySelectorAll('.liq-line')).toHaveLength(
+      liquidacion.lineas.length
+    );
 
     click(dom.window.document.querySelector(`[data-line-id="${liquidacion.lineas[0].id}"]`));
     const panel = dom.window.document.getElementById('liq-explanation');
@@ -124,7 +126,13 @@ describe('US5 - explanation and printing edge cases', () => {
       fechaEmision: '2026-09-30',
       estado: 'pagada',
       lineas: [
-        { id: 'l1', concepto: 'Cotización de salud', tipo: 'descuento', base: 1000000, parametroCodigo: 'SALUD' }
+        {
+          id: 'l1',
+          concepto: 'Cotización de salud',
+          tipo: 'descuento',
+          base: 1000000,
+          parametroCodigo: 'SALUD'
+        }
       ],
       parametros
     });
@@ -148,7 +156,9 @@ describe('US5 - explanation and printing edge cases', () => {
     expect(dom.window.document.querySelector('.liq-warning').textContent).toContain(
       'Emisor no configurado'
     );
-    expect(dom.window.document.querySelectorAll('.liq-line')).toHaveLength(liquidacion.lineas.length);
+    expect(dom.window.document.querySelectorAll('.liq-line')).toHaveLength(
+      liquidacion.lineas.length
+    );
     result.dispose();
   });
 

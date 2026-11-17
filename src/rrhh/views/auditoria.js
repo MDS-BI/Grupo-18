@@ -131,7 +131,11 @@ export function renderAuditoriaView(root, { doc, viewer } = {}) {
             badge(
               documentRef,
               value,
-              entry.accion === 'acceso_denegado' ? 'danger' : entry.accion === 'ver_sensible' ? 'warn' : 'ok'
+              entry.accion === 'acceso_denegado'
+                ? 'danger'
+                : entry.accion === 'ver_sensible'
+                  ? 'warn'
+                  : 'ok'
             )
           );
         }

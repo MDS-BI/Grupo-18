@@ -75,8 +75,8 @@ describe('US1 - workers flow inside the ERP shell', () => {
     setValue('trabajador-rut', '12.345.678-5');
     setValue('trabajador-email', 'ana.perez@example.com');
     setValue('trabajador-fechaIngreso', '2024-01-15');
-    const cargoOption = [...document.getElementById('trabajador-cargo').options].find(
-      (option) => option.textContent.includes('Analista de remuneraciones')
+    const cargoOption = [...document.getElementById('trabajador-cargo').options].find((option) =>
+      option.textContent.includes('Analista de remuneraciones')
     );
     setValue('trabajador-cargo', cargoOption.value);
     const departamentoOption = [...document.getElementById('trabajador-departamento').options].find(
@@ -127,7 +127,9 @@ describe('US1 - workers flow inside the ERP shell', () => {
       (button) => button.textContent === 'Desactivar'
     );
     inactiveButton.click();
-    expect(document.querySelector('#rrhh-catalogos-view tbody').textContent).not.toContain('Finanzas');
+    expect(document.querySelector('#rrhh-catalogos-view tbody').textContent).not.toContain(
+      'Finanzas'
+    );
 
     click('rrhh-tab-trabajadores');
     const options = [...document.getElementById('trabajador-departamento').options].map(

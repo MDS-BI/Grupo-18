@@ -89,8 +89,7 @@ export function validarNovedad(novedad, context = {}) {
     const dias = Math.max(
       1,
       Math.round(
-        (Date.parse(novedad.fechaFin || novedad.fechaInicio) -
-          Date.parse(novedad.fechaInicio)) /
+        (Date.parse(novedad.fechaFin || novedad.fechaInicio) - Date.parse(novedad.fechaInicio)) /
           86400000
       ) + 1
     );

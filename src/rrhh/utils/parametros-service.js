@@ -24,9 +24,7 @@ export function inicializarParametros({ force = false } = {}) {
   if (force || existentes.length === 0) {
     for (const row of PARAMETROS_INICIALES) insert(PARAMETROS_TABLE, row, { prefix: 'par' });
   } else {
-    const claves = new Set(
-      existentes.map((row) => `${row.codigo}|${row.vigenciaDesde || ''}`)
-    );
+    const claves = new Set(existentes.map((row) => `${row.codigo}|${row.vigenciaDesde || ''}`));
     for (const row of PARAMETROS_INICIALES) {
       if (!claves.has(`${row.codigo}|${row.vigenciaDesde || ''}`)) {
         insert(PARAMETROS_TABLE, row, { prefix: 'par' });

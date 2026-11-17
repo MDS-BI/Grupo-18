@@ -1,10 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { renderPeriodosView } from '../../src/rrhh/views/periodos.js';
-import {
-  PeriodoCerradoError,
-  getPeriodo
-} from '../../src/rrhh/utils/periodos-service.js';
+import { PeriodoCerradoError, getPeriodo } from '../../src/rrhh/utils/periodos-service.js';
 import { cerrarPeriodo } from '../../src/rrhh/utils/periodos-service.js';
 
 let dom;
@@ -72,9 +69,9 @@ describe('US14 - period management view', () => {
 
   it('blocks operations once the period is closed', () => {
     cerrarPeriodo('2026-10', { role: 'jefatura', usuario: 'Jefatura RRHH' });
-    expect(() =>
-      cerrarPeriodo('2026-10', { role: 'jefatura', usuario: 'Jefatura RRHH' })
-    ).toThrow(PeriodoCerradoError);
+    expect(() => cerrarPeriodo('2026-10', { role: 'jefatura', usuario: 'Jefatura RRHH' })).toThrow(
+      PeriodoCerradoError
+    );
   });
 
   it('reports invalid period input without creating a record', () => {

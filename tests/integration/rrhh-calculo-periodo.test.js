@@ -62,7 +62,11 @@ beforeEach(() => {
   abrirPeriodo('2026-09', { role: 'administrador', usuario: 'Administrador' });
   writeTable('novedades', [
     novedad('nov-aprobada', 'aprobada'),
-    novedad('nov-rechazada', 'rechazada', { cantidad: 1, fechaInicio: '2026-09-10', fechaFin: '2026-09-10' })
+    novedad('nov-rechazada', 'rechazada', {
+      cantidad: 1,
+      fechaInicio: '2026-09-10',
+      fechaFin: '2026-09-10'
+    })
   ]);
 });
 

@@ -78,7 +78,9 @@ describe('US15 - legal parameter resolution by validity date', () => {
     expect(map.UF.valor).toBe(39500);
     expect(map.UTM.valor).toBe(71649);
     expect(map.APORTE_EMP_PREVISIONAL).toBeUndefined();
-    expect(mapaParametrosVigentes('2026-09-01', versionados).APORTE_EMP_PREVISIONAL.valor).toBe(3.5);
+    expect(mapaParametrosVigentes('2026-09-01', versionados).APORTE_EMP_PREVISIONAL.valor).toBe(
+      3.5
+    );
   });
 
   it('freezes parameters with source and validity metadata', () => {

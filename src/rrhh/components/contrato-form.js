@@ -86,7 +86,9 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     step: 1,
     value: '42'
   });
-  fields.appendChild(wrap(documentRef, 'contrato-jornadaHorasSemanales', 'Jornada semanal (horas) *', jornadaInput));
+  fields.appendChild(
+    wrap(documentRef, 'contrato-jornadaHorasSemanales', 'Jornada semanal (horas) *', jornadaInput)
+  );
 
   const inicioInput = input(documentRef, { id: 'contrato-fechaInicio', type: 'date' });
   fields.appendChild(wrap(documentRef, 'contrato-fechaInicio', 'Fecha de inicio *', inicioInput));
@@ -102,7 +104,9 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     })),
     value: 'art50'
   });
-  fields.appendChild(wrap(documentRef, 'contrato-modalidadGratificacion', 'Gratificación', modalidadSelect));
+  fields.appendChild(
+    wrap(documentRef, 'contrato-modalidadGratificacion', 'Gratificación', modalidadSelect)
+  );
 
   const colacionInput = input(documentRef, {
     id: 'contrato-asignacionColacion',
@@ -111,7 +115,9 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     step: 1,
     value: '0'
   });
-  fields.appendChild(wrap(documentRef, 'contrato-asignacionColacion', 'Asignación colación', colacionInput));
+  fields.appendChild(
+    wrap(documentRef, 'contrato-asignacionColacion', 'Asignación colación', colacionInput)
+  );
 
   const movilizacionInput = input(documentRef, {
     id: 'contrato-asignacionMovilizacion',
@@ -120,10 +126,22 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     step: 1,
     value: '0'
   });
-  fields.appendChild(wrap(documentRef, 'contrato-asignacionMovilizacion', 'Asignación movilización', movilizacionInput));
+  fields.appendChild(
+    wrap(
+      documentRef,
+      'contrato-asignacionMovilizacion',
+      'Asignación movilización',
+      movilizacionInput
+    )
+  );
 
-  const observacionInput = input(documentRef, { id: 'contrato-observacion', placeholder: 'Observaciones' });
-  fields.appendChild(wrap(documentRef, 'contrato-observacion', 'Observación', observacionInput, true));
+  const observacionInput = input(documentRef, {
+    id: 'contrato-observacion',
+    placeholder: 'Observaciones'
+  });
+  fields.appendChild(
+    wrap(documentRef, 'contrato-observacion', 'Observación', observacionInput, true)
+  );
 
   form.appendChild(fields);
 

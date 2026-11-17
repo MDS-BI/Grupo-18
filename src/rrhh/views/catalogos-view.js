@@ -10,7 +10,16 @@ import {
   puedeGestionarCatalogos,
   puedeVerCatalogos
 } from '../utils/catalogos-service.js';
-import { badge, button, el, feedback, hideFeedback, input, select, showFeedback } from '../components/dom.js';
+import {
+  badge,
+  button,
+  el,
+  feedback,
+  hideFeedback,
+  input,
+  select,
+  showFeedback
+} from '../components/dom.js';
 
 function errorMessages(error) {
   if (!error) return ['No se pudo guardar el catálogo.'];
@@ -23,7 +32,9 @@ function accessDenied(documentRef, root) {
   const denied = el(documentRef, 'div', 'rrhh-access-denied panel');
   denied.setAttribute('role', 'alert');
   denied.appendChild(el(documentRef, 'h3', null, 'Acceso denegado'));
-  denied.appendChild(el(documentRef, 'p', null, 'Tu rol no tiene permiso para consultar catálogos base.'));
+  denied.appendChild(
+    el(documentRef, 'p', null, 'Tu rol no tiene permiso para consultar catálogos base.')
+  );
   root.appendChild(denied);
   return { refresh() {}, dispose() {} };
 }
@@ -86,14 +97,22 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
     });
     fields.appendChild(wrap(documentRef, 'catalogo-tipo', 'Tipo *', tipoSelect, true));
 
-    codigoInput = input(documentRef, { id: 'catalogo-codigo', placeholder: 'Código único por tipo' });
+    codigoInput = input(documentRef, {
+      id: 'catalogo-codigo',
+      placeholder: 'Código único por tipo'
+    });
     fields.appendChild(wrap(documentRef, 'catalogo-codigo', 'Código *', codigoInput));
 
     nombreInput = input(documentRef, { id: 'catalogo-nombre', placeholder: 'Nombre visible' });
     fields.appendChild(wrap(documentRef, 'catalogo-nombre', 'Nombre *', nombreInput));
 
-    descripcionInput = input(documentRef, { id: 'catalogo-descripcion', placeholder: 'Descripción (opcional)' });
-    fields.appendChild(wrap(documentRef, 'catalogo-descripcion', 'Descripción', descripcionInput, true));
+    descripcionInput = input(documentRef, {
+      id: 'catalogo-descripcion',
+      placeholder: 'Descripción (opcional)'
+    });
+    fields.appendChild(
+      wrap(documentRef, 'catalogo-descripcion', 'Descripción', descripcionInput, true)
+    );
 
     form.appendChild(fields);
 
@@ -162,7 +181,12 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
     };
   } else {
     formPanel.appendChild(
-      el(documentRef, 'div', 'panel rrhh-readonly', 'Tu rol puede consultar catálogos, pero no modificarlos.')
+      el(
+        documentRef,
+        'div',
+        'panel rrhh-readonly',
+        'Tu rol puede consultar catálogos, pero no modificarlos.'
+      )
     );
   }
 
@@ -172,12 +196,18 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
   toolbar.appendChild(filterLabel);
   const filterSelect = select(documentRef, {
     id: 'catalogo-filtro',
-    options: [{ value: '', label: 'Todos' }, ...TIPOS_CATALOGO.map((value) => ({ value, label: TIPO_CATALOGO_LABELS[value] }))]
+    options: [
+      { value: '', label: 'Todos' },
+      ...TIPOS_CATALOGO.map((value) => ({ value, label: TIPO_CATALOGO_LABELS[value] }))
+    ]
   });
   toolbar.appendChild(filterSelect);
 
   const includeLabel = el(documentRef, 'label', 'rrhh-checkbox');
-  const includeInactive = input(documentRef, { id: 'catalogo-incluir-inactivos', type: 'checkbox' });
+  const includeInactive = input(documentRef, {
+    id: 'catalogo-incluir-inactivos',
+    type: 'checkbox'
+  });
   includeLabel.appendChild(includeInactive);
   includeLabel.appendChild(documentRef.createTextNode(' Incluir inactivos'));
   toolbar.appendChild(includeLabel);
@@ -217,7 +247,13 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
       tr.appendChild(el(documentRef, 'td', null, row.codigo));
       tr.appendChild(el(documentRef, 'td', null, row.nombre));
       const stateCell = el(documentRef, 'td');
-      stateCell.appendChild(badge(documentRef, row.activo === false ? 'Inactivo' : 'Activo', row.activo === false ? 'neutral' : 'ok'));
+      stateCell.appendChild(
+        badge(
+          documentRef,
+          row.activo === false ? 'Inactivo' : 'Activo',
+          row.activo === false ? 'neutral' : 'ok'
+        )
+      );
       tr.appendChild(stateCell);
 
       const actions = el(documentRef, 'td', 'rrhh-row-actions');

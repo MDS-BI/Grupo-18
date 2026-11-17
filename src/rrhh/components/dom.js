@@ -11,7 +11,10 @@ export function el(doc, tag, className, text) {
   return node;
 }
 
-export function button(doc, { id, label, className = 'button', onClick, disabled = false, ariaLabel } = {}) {
+export function button(
+  doc,
+  { id, label, className = 'button', onClick, disabled = false, ariaLabel } = {}
+) {
   const node = el(doc, 'button', className, label);
   node.type = 'button';
   if (id) node.id = id;
@@ -36,7 +39,10 @@ export function field(doc, { id, label, input, help, wide = false }) {
   return wrapper;
 }
 
-export function input(doc, { id, type = 'text', value = '', min, max, step, placeholder, required = false } = {}) {
+export function input(
+  doc,
+  { id, type = 'text', value = '', min, max, step, placeholder, required = false } = {}
+) {
   const node = el(doc, 'input');
   node.id = id;
   node.name = id;

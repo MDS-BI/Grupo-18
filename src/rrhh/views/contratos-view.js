@@ -15,7 +15,9 @@ function accessDenied(documentRef, root) {
   const denied = el(documentRef, 'div', 'rrhh-access-denied panel');
   denied.setAttribute('role', 'alert');
   denied.appendChild(el(documentRef, 'h3', null, 'Acceso denegado'));
-  denied.appendChild(el(documentRef, 'p', null, 'Tu rol no tiene permiso para consultar contratos.'));
+  denied.appendChild(
+    el(documentRef, 'p', null, 'Tu rol no tiene permiso para consultar contratos.')
+  );
   root.appendChild(denied);
   return { refresh() {}, dispose() {} };
 }
@@ -90,7 +92,10 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   toolbar.appendChild(filterSelect);
 
   const includeLabel = el(documentRef, 'label', 'rrhh-checkbox');
-  const includeTerminated = input(documentRef, { id: 'contratos-incluir-terminados', type: 'checkbox' });
+  const includeTerminated = input(documentRef, {
+    id: 'contratos-incluir-terminados',
+    type: 'checkbox'
+  });
   includeTerminated.checked = true;
   includeLabel.appendChild(includeTerminated);
   includeLabel.appendChild(documentRef.createTextNode(' Incluir terminados'));
@@ -100,7 +105,16 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   const table = el(documentRef, 'table', 'rrhh-table');
   const thead = el(documentRef, 'thead');
   const headRow = el(documentRef, 'tr');
-  for (const label of ['Trabajador', 'Tipo', 'Sueldo base', 'Jornada', 'Inicio', 'Término', 'Estado', '']) {
+  for (const label of [
+    'Trabajador',
+    'Tipo',
+    'Sueldo base',
+    'Jornada',
+    'Inicio',
+    'Término',
+    'Estado',
+    ''
+  ]) {
     headRow.appendChild(el(documentRef, 'th', null, label));
   }
   thead.appendChild(headRow);
@@ -118,7 +132,8 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   container.appendChild(layout);
   root.appendChild(container);
 
-  const workerName = (entityId) => trabajadores.find((row) => row.entityId === entityId)?.name || entityId;
+  const workerName = (entityId) =>
+    trabajadores.find((row) => row.entityId === entityId)?.name || entityId;
 
   function refresh() {
     const rows = listContratos({
@@ -130,7 +145,9 @@ export function renderContratosView(root, { doc, viewer } = {}) {
       const tr = el(documentRef, 'tr');
       tr.dataset.contratoId = row.id;
       tr.appendChild(el(documentRef, 'td', null, workerName(row.entityId)));
-      tr.appendChild(el(documentRef, 'td', null, TIPO_CONTRATO_LABELS[row.tipoContrato] || row.tipoContrato));
+      tr.appendChild(
+        el(documentRef, 'td', null, TIPO_CONTRATO_LABELS[row.tipoContrato] || row.tipoContrato)
+      );
       tr.appendChild(el(documentRef, 'td', null, formatMoney(row.sueldoBase)));
       tr.appendChild(el(documentRef, 'td', null, `${row.jornadaHorasSemanales} h`));
       tr.appendChild(el(documentRef, 'td', null, row.fechaInicio));

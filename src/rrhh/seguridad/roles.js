@@ -189,8 +189,8 @@ export function canViewLiquidacion(liquidacion, viewer = { role: 'analista_rrhh'
   if (permissions.viewAll) return true;
   return Boolean(
     permissions.viewOwn &&
-      viewer.trabajadorId &&
-      liquidacion?.trabajador?.id === viewer.trabajadorId
+    viewer.trabajadorId &&
+    liquidacion?.trabajador?.id === viewer.trabajadorId
   );
 }
 
@@ -213,8 +213,12 @@ export function canAccessSensitive(role, dataType) {
   if (!permissions) return false;
   if (dataType === SENSITIVE_DATA.sueldos) return Boolean(permissions.canViewSueldos);
   if (dataType === SENSITIVE_DATA.liquidaciones) return Boolean(permissions.canViewLiquidaciones);
-  if (dataType === SENSITIVE_DATA.cuentas_bancarias) return Boolean(permissions.canViewDatosBancarios);
-  if (dataType === SENSITIVE_DATA.cuotas_sindicales) return Boolean(permissions.canViewCuotasSindicales);
+  if (dataType === SENSITIVE_DATA.cuentas_bancarias) {
+    return Boolean(permissions.canViewDatosBancarios);
+  }
+  if (dataType === SENSITIVE_DATA.cuotas_sindicales) {
+    return Boolean(permissions.canViewCuotasSindicales);
+  }
   return false;
 }
 

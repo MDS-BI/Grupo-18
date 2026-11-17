@@ -10,7 +10,15 @@ import { crearNovedad, actualizarNovedad } from '../utils/novedades-service.js';
 import { equipoDeJefatura } from '../utils/jefatura.js';
 import { loadEntities } from '../../storage.js';
 import { rangoPeriodo } from '../utils/periodos.js';
-import { currentPeriodoId, el, feedback, hideFeedback, input, select, showFeedback } from './dom.js';
+import {
+  currentPeriodoId,
+  el,
+  feedback,
+  hideFeedback,
+  input,
+  select,
+  showFeedback
+} from './dom.js';
 
 function entitiesForOptions(viewer) {
   try {
@@ -68,7 +76,9 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     id: 'novedad-trabajador',
     options: [{ value: '', label: 'Selecciona un trabajador' }, ...optionsForEntities(entities)]
   });
-  fields.appendChild(fieldWrapper(documentRef, 'novedad-trabajador', 'Trabajador *', workerSelect, true));
+  fields.appendChild(
+    fieldWrapper(documentRef, 'novedad-trabajador', 'Trabajador *', workerSelect, true)
+  );
 
   const periodInput = input(documentRef, {
     id: 'novedad-periodo',
@@ -92,10 +102,14 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     min: 0,
     step: 0.5
   });
-  fields.appendChild(fieldWrapper(documentRef, 'novedad-cantidad', 'Cantidad (horas o días) *', quantityInput));
+  fields.appendChild(
+    fieldWrapper(documentRef, 'novedad-cantidad', 'Cantidad (horas o días) *', quantityInput)
+  );
 
   const startInput = input(documentRef, { id: 'novedad-fecha-inicio', type: 'date' });
-  fields.appendChild(fieldWrapper(documentRef, 'novedad-fecha-inicio', 'Fecha de inicio *', startInput));
+  fields.appendChild(
+    fieldWrapper(documentRef, 'novedad-fecha-inicio', 'Fecha de inicio *', startInput)
+  );
 
   const endInput = input(documentRef, { id: 'novedad-fecha-fin', type: 'date' });
   fields.appendChild(fieldWrapper(documentRef, 'novedad-fecha-fin', 'Fecha de fin *', endInput));
@@ -199,7 +213,8 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
       cantidad: Number(quantityInput.value),
       fechaInicio: startInput.value,
       fechaFin: endInput.value,
-      observacion: tipo === 'licencia_medica' ? '' : observationField.querySelector('textarea').value,
+      observacion:
+        tipo === 'licencia_medica' ? '' : observationField.querySelector('textarea').value,
       justificacion:
         tipo === 'horas_extra' ? justificationField.querySelector('textarea').value : '',
       estado: editing?.estado || 'pendiente'

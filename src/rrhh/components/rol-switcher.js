@@ -10,7 +10,8 @@ import { el } from './dom.js';
  * single source of truth; otherwise a new picker is appended to `root`.
  */
 export function renderRolSwitcher(root, { doc, select, onChange } = {}) {
-  const documentRef = doc || root?.ownerDocument || (typeof document !== 'undefined' ? document : null);
+  const documentRef =
+    doc || root?.ownerDocument || (typeof document !== 'undefined' ? document : null);
   if (!documentRef) return null;
 
   const node = select || el(documentRef, 'select', 'role-select');

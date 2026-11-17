@@ -24,7 +24,12 @@ export function redondearPeso(value) {
 function fechaDelPeriodo(periodo) {
   if (!periodo) return new Date().toISOString().slice(0, 10);
   if (typeof periodo === 'string') return rangoPeriodo(periodo).fechaFin;
-  return periodo.fechaFin || periodo.fechaPago || periodo.fechaInicio || new Date().toISOString().slice(0, 10);
+  return (
+    periodo.fechaFin ||
+    periodo.fechaPago ||
+    periodo.fechaInicio ||
+    new Date().toISOString().slice(0, 10)
+  );
 }
 
 function etiquetaDe(periodo) {
@@ -105,11 +110,7 @@ export function calcularSueldoProporcional(sueldoBase, diasTrabajados = 30) {
 }
 
 /** Step 2: overtime hour value. */
-export function calcularValorHoraExtra({
-  sueldoBase,
-  jornadaHorasSemanales = 42,
-  recargo = 1.5
-}) {
+export function calcularValorHoraExtra({ sueldoBase, jornadaHorasSemanales = 42, recargo = 1.5 }) {
   const jornada = Number(jornadaHorasSemanales) || 42;
   return redondearPeso(((Number(sueldoBase) || 0) / 30) * (7 / jornada) * (Number(recargo) || 1.5));
 }
@@ -122,14 +123,21 @@ export function calcularGratificacion({ base, ingresoMinimo, topeIMM = 4.75 }) {
 }
 
 /** Step 10: single income tax from the UTM bracket. */
-export function calcularImpuestoUnico({ baseTributable, utm, tramos = TRAMOS_IMPUESTO_INICIALES, fecha }) {
+export function calcularImpuestoUnico({
+  baseTributable,
+  utm,
+  tramos = TRAMOS_IMPUESTO_INICIALES,
+  fecha
+}) {
   if (!(Number(utm) > 0)) return { monto: 0, tramo: null, baseUTM: 0 };
   const baseUTM = Number(baseTributable) / Number(utm);
   const tramo = resolverTramoImpuesto(baseUTM, tramos, fecha);
   if (!tramo) return { monto: 0, tramo: null, baseUTM };
   const monto = Math.max(
     0,
-    redondearPeso(Number(baseTributable) * Number(tramo.factor) - Number(tramo.rebajaUTM) * Number(utm))
+    redondearPeso(
+      Number(baseTributable) * Number(tramo.factor) - Number(tramo.rebajaUTM) * Number(utm)
+    )
   );
   return { monto, tramo, baseUTM };
 }
@@ -254,17 +262,22 @@ export function calcularLiquidacionTrabajador({
   const tasaSalud = valor('TASA_SALUD_LEGAL', fecha, parametros, 7) / 100;
   const esIndefinido = tipoContrato === 'indefinido';
   const tasaAfcTrabajador =
-    valor(esIndefinido ? 'TASA_AFC_TRAB_INDEF' : 'TASA_AFC_TRAB_PLAZO', fecha, parametros, esIndefinido ? 0.6 : 0) /
-    100;
+    valor(
+      esIndefinido ? 'TASA_AFC_TRAB_INDEF' : 'TASA_AFC_TRAB_PLAZO',
+      fecha,
+      parametros,
+      esIndefinido ? 0.6 : 0
+    ) / 100;
 
   const afp = redondearPeso(baseAfpSalud * tasaAfp);
   const salud = redondearPeso(baseAfpSalud * tasaSalud);
   const afc = redondearPeso(baseAfc * tasaAfcTrabajador);
 
   const tributable = Math.max(0, imponible - afp - salud - afc);
-  const tramos = parametros && !Array.isArray(parametros) && parametros.tramos
-    ? parametros.tramos
-    : TRAMOS_IMPUESTO_INICIALES;
+  const tramos =
+    parametros && !Array.isArray(parametros) && parametros.tramos
+      ? parametros.tramos
+      : TRAMOS_IMPUESTO_INICIALES;
   const impuesto = calcularImpuestoUnico({
     baseTributable: tributable,
     utm,
@@ -479,8 +492,12 @@ export function calcularLiquidacionTrabajador({
   const liquido = redondearPeso(totalHaberes - descuentos - impuestos);
 
   const tasaAfcEmpleador =
-    valor(esIndefinido ? 'TASA_AFC_EMP_INDEF' : 'TASA_AFC_EMP_PLAZO', fecha, parametros, esIndefinido ? 2.4 : 3) /
-    100;
+    valor(
+      esIndefinido ? 'TASA_AFC_EMP_INDEF' : 'TASA_AFC_EMP_PLAZO',
+      fecha,
+      parametros,
+      esIndefinido ? 2.4 : 3
+    ) / 100;
   const aportes = [
     {
       codigo: 'APORTE_EMP_AFC',
@@ -494,7 +511,9 @@ export function calcularLiquidacionTrabajador({
       concepto: 'Aporte previsional del empleador',
       base: imponible,
       tasa: valor('APORTE_EMP_PREVISIONAL', fecha, parametros, 0) / 100,
-      monto: redondearPeso(imponible * (valor('APORTE_EMP_PREVISIONAL', fecha, parametros, 0) / 100))
+      monto: redondearPeso(
+        imponible * (valor('APORTE_EMP_PREVISIONAL', fecha, parametros, 0) / 100)
+      )
     },
     {
       codigo: 'APORTE_EMP_MUTUAL',

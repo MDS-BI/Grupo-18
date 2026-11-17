@@ -51,10 +51,7 @@ function contextoValidacion(periodoIdValue, extra = {}) {
 function assertPeriodoParaNovedad(periodoIdValue) {
   const periodo = getPeriodo(periodoIdValue);
   if (!periodo) {
-    fail(
-      'El período no existe. Créalo antes de registrar novedades.',
-      'PERIODO_NO_ENCONTRADO'
-    );
+    fail('El período no existe. Créalo antes de registrar novedades.', 'PERIODO_NO_ENCONTRADO');
   }
   assertPeriodoAbierto(periodo);
 }
@@ -62,10 +59,7 @@ function assertPeriodoParaNovedad(periodoIdValue) {
 function assertTrabajadorActivo(entityId) {
   const profile = profileFor(entityId);
   if (profile && (profile.activo === false || profile.estadoLaboral === 'Desvinculado')) {
-    fail(
-      'El trabajador está desvinculado y no admite novedades.',
-      'TRABAJADOR_DESVINCULADO'
-    );
+    fail('El trabajador está desvinculado y no admite novedades.', 'TRABAJADOR_DESVINCULADO');
   }
 }
 
@@ -84,10 +78,7 @@ function assertAlcanceJefatura(viewer, entityId) {
   const team = equipoDeJefatura(viewer);
   if (!team) return;
   if (!team.map(String).includes(String(entityId))) {
-    fail(
-      'La novedad no pertenece a un trabajador de tu equipo.',
-      'PERMISO_DENEGADO'
-    );
+    fail('La novedad no pertenece a un trabajador de tu equipo.', 'PERMISO_DENEGADO');
   }
 }
 
@@ -179,8 +170,7 @@ export function listNovedades(filters = {}) {
   if (filters.trabajadorEntityId) {
     rows = rows.filter(
       (row) =>
-        String(row.trabajadorEntityId || row.entity_id) ===
-        String(filters.trabajadorEntityId)
+        String(row.trabajadorEntityId || row.entity_id) === String(filters.trabajadorEntityId)
     );
   }
   if (filters.estado) rows = rows.filter((row) => row.estado === filters.estado);

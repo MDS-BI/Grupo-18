@@ -8,7 +8,15 @@ import {
 } from '../utils/periodos-service.js';
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
 import { renderPeriodoList } from '../components/periodo-list.js';
-import { button, currentPeriodoId, el, feedback, input, showFeedback, hideFeedback } from '../components/dom.js';
+import {
+  button,
+  currentPeriodoId,
+  el,
+  feedback,
+  input,
+  showFeedback,
+  hideFeedback
+} from '../components/dom.js';
 
 export function renderPeriodosView(root, { doc, viewer } = {}) {
   const documentRef = doc || root.ownerDocument;

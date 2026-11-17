@@ -68,9 +68,7 @@ function validarAlcance(novedad, viewer, context) {
     if (jefeId) {
       const registeredByJefatura = novedad.registradoPorRol === 'jefatura';
       const sameJefatura =
-        !novedad.registradoPorId ||
-        !jefeId ||
-        String(novedad.registradoPorId) === String(jefeId);
+        !novedad.registradoPorId || !jefeId || String(novedad.registradoPorId) === String(jefeId);
       if (!registeredByJefatura || !sameJefatura) {
         errors.push(
           'El administrador solo aprueba novedades sin jefatura directa o registradas por la jefatura del equipo.'
@@ -111,7 +109,10 @@ export function validarAccionNovedad(novedad, accion, context = {}) {
   if (accion === 'rechazar' && !String(context.motivo || '').trim()) {
     errors.push('El rechazo requiere un motivo.');
   }
-  if (['aprobar', 'rechazar'].includes(accion) && mismoActor(viewer.usuario, novedad.registradoPor)) {
+  if (
+    ['aprobar', 'rechazar'].includes(accion) &&
+    mismoActor(viewer.usuario, novedad.registradoPor)
+  ) {
     errors.push('No puedes aprobar ni rechazar una novedad que tú registraste.');
   }
   errors.push(...validarAlcance(novedad, viewer, accionContext));

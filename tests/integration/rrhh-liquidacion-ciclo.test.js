@@ -93,9 +93,9 @@ describe('US15 - liquidation approval, payment, annulment and traceability', () 
     const liquidation = calculate();
     expect(() => pagarLiquidacion(liquidation.id, admin)).toThrow(/pagada|transici/i);
     aprobarLiquidacion(liquidation.id, gerencia);
-    expect(() =>
-      cambiarEstadoLiquidacion(liquidation.id, 'borrador', { viewer: admin })
-    ).toThrow(/borrador|aprobada|transici/i);
+    expect(() => cambiarEstadoLiquidacion(liquidation.id, 'borrador', { viewer: admin })).toThrow(
+      /borrador|aprobada|transici/i
+    );
     pagarLiquidacion(liquidation.id, admin);
     expect(() => aprobarLiquidacion(liquidation.id, gerencia)).toThrow(/pagada|transici/i);
   });
@@ -120,7 +120,9 @@ describe('US15 - liquidation approval, payment, annulment and traceability', () 
 
     const rows = listAuditoria({ tabla: 'liquidaciones' });
     const actions = rows.map((row) => row.accion);
-    expect(actions).toEqual(expect.arrayContaining(['calcular', 'aprobar', 'pagar', 'ver_sensible']));
+    expect(actions).toEqual(
+      expect.arrayContaining(['calcular', 'aprobar', 'pagar', 'ver_sensible'])
+    );
 
     const approval = rows.find((row) => row.accion === 'aprobar');
     expect(approval.usuario).toBe('Gerencia General');

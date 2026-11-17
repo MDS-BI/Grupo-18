@@ -2,14 +2,8 @@ import { createDemoLiquidacion, validateLiquidacion } from './liquidacion-data.j
 import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { can } from '../seguridad/roles.js';
 import { validarRut } from '../calculo/rut.js';
-import {
-  calcularLiquidacionTrabajador,
-  resolverParametroDeCalculo
-} from '../calculo/motor.js';
-import {
-  assertCambioEstado,
-  ESTADO_LIQUIDACION_LABELS
-} from './liquidacion-estados.js';
+import { calcularLiquidacionTrabajador, resolverParametroDeCalculo } from '../calculo/motor.js';
+import { assertCambioEstado, ESTADO_LIQUIDACION_LABELS } from './liquidacion-estados.js';
 import {
   asegurarPeriodo,
   getPeriodo,
@@ -96,7 +90,10 @@ export function listLiquidaciones() {
 export function listLiquidacionesPeriodo(periodoId) {
   if (!periodoId) return listLiquidaciones();
   return listLiquidaciones().filter(
-    (row) => row.periodoId === periodoId || row.periodo?.id === periodoId || row.periodo?.periodo === periodoId
+    (row) =>
+      row.periodoId === periodoId ||
+      row.periodo?.id === periodoId ||
+      row.periodo?.periodo === periodoId
   );
 }
 
@@ -175,17 +172,14 @@ function contratosDelTrabajador(trabajador, contratos) {
   const entityId = trabajador.entityId || trabajador.id;
   return (Array.isArray(contratos) ? contratos : []).filter(
     (row) =>
-      String(row.entity_id || row.entityId || row.trabajadorEntityId || '') ===
-      String(entityId)
+      String(row.entity_id || row.entityId || row.trabajadorEntityId || '') === String(entityId)
   );
 }
 
 function contratoYdias(trabajador, contratos, periodo) {
   const entityId = trabajador.entityId || trabajador.id;
   const propios = contratosDelTrabajador(trabajador, contratos);
-  const candidatos = entityId
-    ? contratosEnPeriodo(periodo, { entityId, contratos: propios })
-    : [];
+  const candidatos = entityId ? contratosEnPeriodo(periodo, { entityId, contratos: propios }) : [];
   const provided = Array.isArray(contratos) && contratos.length > 0;
   const contrato = candidatos[0] || (!provided ? trabajador.contrato || null : null);
   if (!contrato) return { contrato: null, diasTrabajados: 0 };
@@ -197,7 +191,11 @@ function contratoYdias(trabajador, contratos, periodo) {
 }
 
 function numeroLiquidacion(periodo, entityId) {
-  const suffix = String(entityId || '').replace(/[^a-zA-Z0-9]/g, '').slice(-5).toUpperCase() || '00000';
+  const suffix =
+    String(entityId || '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(-5)
+      .toUpperCase() || '00000';
   return `LQ-${periodo.anio}-${String(periodo.mes).padStart(2, '0')}-${suffix}`;
 }
 
@@ -276,8 +274,7 @@ export function calcularPeriodo({
   const trabajadoresExcluidos = [];
   const liquidaciones = [];
   const existentes = readAll();
-  const novedadesDelPeriodo =
-    novedades === undefined ? novedadesAprobadas(normalized.id) : null;
+  const novedadesDelPeriodo = novedades === undefined ? novedadesAprobadas(normalized.id) : null;
 
   for (const entity of trabajadores) {
     const trabajador = trabajadorDesdeEntidad(entity);
@@ -289,11 +286,7 @@ export function calcularPeriodo({
       error.code = 'RUT_INVALIDO';
       throw error;
     }
-    const { contrato, diasTrabajados } = contratoYdias(
-      trabajador,
-      contratos,
-      normalized
-    );
+    const { contrato, diasTrabajados } = contratoYdias(trabajador, contratos, normalized);
     if (!contrato || ['anulada', 'cancelado'].includes(contrato.estado)) {
       trabajadoresExcluidos.push({
         entityId: trabajador.entityId,
@@ -320,13 +313,9 @@ export function calcularPeriodo({
     const workerNovedades =
       novedades !== undefined
         ? novedades.filter(
-            (row) =>
-              row.trabajadorEntityId === trabajador.entityId &&
-              row.estado === 'aprobada'
+            (row) => row.trabajadorEntityId === trabajador.entityId && row.estado === 'aprobada'
           )
-        : novedadesDelPeriodo.filter(
-            (row) => row.trabajadorEntityId === trabajador.entityId
-          );
+        : novedadesDelPeriodo.filter((row) => row.trabajadorEntityId === trabajador.entityId);
 
     const resultado = calcularLiquidacionTrabajador({
       trabajador,

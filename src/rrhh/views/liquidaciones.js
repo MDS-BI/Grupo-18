@@ -120,7 +120,9 @@ export function renderLiquidacionesView(
 
   function renderFilter(rows) {
     const all = allLiquidations();
-    const periods = [...new Set(all.map(periodoKey).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+    const periods = [...new Set(all.map(periodoKey).filter(Boolean))].sort((a, b) =>
+      b.localeCompare(a)
+    );
     filterContainer.textContent = '';
     const filter = select(documentRef, {
       id: 'liquidaciones-periodo',
@@ -145,7 +147,12 @@ export function renderLiquidacionesView(
   function renderList(rows) {
     listContainer.textContent = '';
     if (rows.length === 0) {
-      const empty = el(documentRef, 'div', 'empty-state', 'No hay liquidaciones en el período seleccionado.');
+      const empty = el(
+        documentRef,
+        'div',
+        'empty-state',
+        'No hay liquidaciones en el período seleccionado.'
+      );
       empty.id = 'liquidaciones-empty';
       listContainer.appendChild(empty);
       return;
@@ -160,7 +167,9 @@ export function renderLiquidacionesView(
 
       const rowHeader = el(documentRef, 'div', 'rrhh-list-item-header');
       const info = el(documentRef, 'div', 'rrhh-list-item-title');
-      info.appendChild(el(documentRef, 'strong', null, liquidacion.trabajador?.nombre || 'Trabajador'));
+      info.appendChild(
+        el(documentRef, 'strong', null, liquidacion.trabajador?.nombre || 'Trabajador')
+      );
       info.appendChild(
         el(
           documentRef,
@@ -197,13 +206,13 @@ export function renderLiquidacionesView(
   function lifecycleActions(liquidacion) {
     actionsContainer.textContent = '';
     if (!liquidacion) return;
-    const cerrado = isPeriodoCerrado(periodoKey(liquidacion)) || liquidacion.periodo?.cerrado === true;
+    const cerrado =
+      isPeriodoCerrado(periodoKey(liquidacion)) || liquidacion.periodo?.cerrado === true;
     const siguientes = estadosSiguientes(liquidacion.estado);
     const canApprove =
       siguientes.includes('aprobada') && can(viewer?.role, 'canApproveLiquidaciones');
     const canPay = siguientes.includes('pagada') && can(viewer?.role, 'canPayLiquidaciones');
-    const canAnnull =
-      siguientes.includes('anulada') && can(viewer?.role, 'canAnularLiquidaciones');
+    const canAnnull = siguientes.includes('anulada') && can(viewer?.role, 'canAnularLiquidaciones');
 
     if (canApprove) {
       actionsContainer.appendChild(
@@ -249,7 +258,9 @@ export function renderLiquidacionesView(
       );
     }
     if (cerrado) {
-      actionsContainer.appendChild(el(documentRef, 'span', 'panel-copy', 'Período cerrado: solo lectura.'));
+      actionsContainer.appendChild(
+        el(documentRef, 'span', 'panel-copy', 'Período cerrado: solo lectura.')
+      );
     }
   }
 

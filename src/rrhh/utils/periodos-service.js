@@ -121,10 +121,14 @@ export function cerrarPeriodo(id, viewer, extra = {}) {
   const { fechaFin } = rangoPeriodo(existing.id);
   const parametrosCongelados = congelarParametrosDeFecha(fechaFin);
   const valorUF = Number(
-    extra.valorUF ?? parametrosCongelados.find((row) => row.codigo === 'UF')?.valorAplicado ?? obtenerParametro('UF', fechaFin)?.valor
+    extra.valorUF ??
+      parametrosCongelados.find((row) => row.codigo === 'UF')?.valorAplicado ??
+      obtenerParametro('UF', fechaFin)?.valor
   );
   const valorUTM = Number(
-    extra.valorUTM ?? parametrosCongelados.find((row) => row.codigo === 'UTM')?.valorAplicado ?? obtenerParametro('UTM', fechaFin)?.valor
+    extra.valorUTM ??
+      parametrosCongelados.find((row) => row.codigo === 'UTM')?.valorAplicado ??
+      obtenerParametro('UTM', fechaFin)?.valor
   );
   const ingresoMinimo = Number(
     extra.ingresoMinimo ??

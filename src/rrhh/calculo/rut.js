@@ -1,7 +1,9 @@
 /** Chilean RUT helpers: normalization, check digit and validation. */
 
 export function limpiarRut(value) {
-  return String(value || '').replace(/[.\-\s]/g, '').toUpperCase();
+  return String(value || '')
+    .replace(/[.\-\s]/g, '')
+    .toUpperCase();
 }
 
 /** Compute the module-11 check digit for a RUT body. */
@@ -44,7 +46,9 @@ export function validarRut(value) {
 
 export function assertRutValido(value) {
   if (!validarRut(value)) {
-    const error = new Error(`RUT inválido: ${value || '(vacío)'} no tiene un dígito verificador válido.`);
+    const error = new Error(
+      `RUT inválido: ${value || '(vacío)'} no tiene un dígito verificador válido.`
+    );
     error.code = 'RUT_INVALIDO';
     throw error;
   }

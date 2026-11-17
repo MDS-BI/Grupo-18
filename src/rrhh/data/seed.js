@@ -6,11 +6,7 @@
  * entity exclusion rules remain unchanged.
  */
 
-import {
-  DOCUMENT_KEY,
-  loadEntities,
-  saveEntities
-} from '../../storage.js';
+import { DOCUMENT_KEY, loadEntities, saveEntities } from '../../storage.js';
 import { calcularLiquidacionTrabajador } from '../calculo/motor.js';
 import { clearTable, list } from '../storage-rrhh.js';
 import { resetAuditoria } from '../seguridad/auditoria.js';
@@ -19,10 +15,7 @@ import {
   inicializarConceptos,
   resetConceptosSeed
 } from '../utils/conceptos-service.js';
-import {
-  clearCatalogos,
-  crearCatalogo
-} from '../utils/catalogos-service.js';
+import { clearCatalogos, crearCatalogo } from '../utils/catalogos-service.js';
 import {
   clearContratos,
   contratosEnPeriodo,

@@ -183,9 +183,7 @@ class LiquidationView {
         )
       );
     }
-    period.appendChild(
-      el(doc, 'p', 'liq-state', `Estado: ${liq.estado || 'sin estado'}`)
-    );
+    period.appendChild(el(doc, 'p', 'liq-state', `Estado: ${liq.estado || 'sin estado'}`));
     meta.appendChild(period);
 
     const issuer = el(doc, 'div', 'liq-meta-block');
@@ -200,12 +198,7 @@ class LiquidationView {
 
     header.appendChild(meta);
     header.appendChild(
-      el(
-        doc,
-        'p',
-        'liq-issue-date',
-        `Fecha de emisión: ${formatDate(liq.fechaEmision)}`
-      )
+      el(doc, 'p', 'liq-issue-date', `Fecha de emisión: ${formatDate(liq.fechaEmision)}`)
     );
     return header;
   }
@@ -380,7 +373,12 @@ class LiquidationView {
       appendField(doc, details, 'Parámetro legal', explanation.parametroTexto);
       appendField(doc, details, 'Vigencia', explanation.vigenciaTexto);
       appendField(doc, details, 'Fuente', explanation.fuente);
-      appendField(doc, details, 'Snapshot del período', explanation.congeladoEnPeriodo || 'No registrado');
+      appendField(
+        doc,
+        details,
+        'Snapshot del período',
+        explanation.congeladoEnPeriodo || 'No registrado'
+      );
     }
     this.explanationBody.appendChild(details);
 
@@ -413,7 +411,9 @@ class LiquidationView {
   buildSignature() {
     const doc = this.doc;
     const footer = el(doc, 'footer', 'liq-signature');
-    footer.appendChild(el(doc, 'p', null, 'Documento generado por el módulo de RR.HH. y Planilla.'));
+    footer.appendChild(
+      el(doc, 'p', null, 'Documento generado por el módulo de RR.HH. y Planilla.')
+    );
     footer.appendChild(
       el(
         doc,

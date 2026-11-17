@@ -63,7 +63,9 @@ export class RrhhWorkspace {
     if (selected && this.panels.has(selected.dataset.rrhhTab)) {
       return selected.dataset.rrhhTab;
     }
-    return this.panels.has('liquidaciones') ? 'liquidaciones' : RRHH_TABS.find((name) => this.panels.has(name));
+    return this.panels.has('liquidaciones')
+      ? 'liquidaciones'
+      : RRHH_TABS.find((name) => this.panels.has(name));
   }
 
   bind() {

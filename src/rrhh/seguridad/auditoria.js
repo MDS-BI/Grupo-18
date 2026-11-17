@@ -77,9 +77,7 @@ export function registrarAuditoria({
     accion: ALLOWED_ACTIONS.has(accion) ? accion : accion || 'editar',
     tabla,
     registroId,
-    camposModificados: Array.isArray(camposModificados)
-      ? camposModificados.map(String)
-      : [],
+    camposModificados: Array.isArray(camposModificados) ? camposModificados.map(String) : [],
     motivo: motivo ? String(motivo) : ''
   };
   const rows = readAuditoria();
@@ -111,11 +109,18 @@ export function editarAuditoria() {
 
 /** Deleting an audit entry is always rejected, for every role. */
 export function eliminarAuditoria() {
-  throw new Error('La bitácora de auditoría es de solo inserción: no se permite eliminar registros.');
+  throw new Error(
+    'La bitácora de auditoría es de solo inserción: no se permite eliminar registros.'
+  );
 }
 
 /** Audited query helper used by sensitive services. */
-export function auditarConsultaSensible({ tabla, registroId, motivo = '', accion = 'ver_sensible' }) {
+export function auditarConsultaSensible({
+  tabla,
+  registroId,
+  motivo = '',
+  accion = 'ver_sensible'
+}) {
   return registrarAuditoria({ accion, tabla, registroId, motivo });
 }
 

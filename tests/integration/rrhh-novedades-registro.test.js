@@ -23,7 +23,12 @@ function submit() {
     .dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
 }
 
-function fillBase({ tipo = 'horas_extra', cantidad = 5, inicio = '2026-09-01', fin = '2026-09-05' }) {
+function fillBase({
+  tipo = 'horas_extra',
+  cantidad = 5,
+  inicio = '2026-09-01',
+  fin = '2026-09-05'
+}) {
   setValue('novedad-trabajador', entity.entity_id);
   setValue('novedad-periodo', '2026-09');
   setValue('novedad-tipo', tipo);

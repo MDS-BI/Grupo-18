@@ -59,13 +59,17 @@ describe('Datos de prueba RRHH', () => {
   it('carga un dataset válido y representativo sin exponer trabajadores en lo genérico', async () => {
     const seed = await import('../../src/rrhh/data/seed.js');
     const summary = seed.loadSeedData();
-    expect(summary).toMatchObject({ trabajadores: 5, contratos: 5, novedades: 5, liquidaciones: 3 });
+    expect(summary).toMatchObject({
+      trabajadores: 5,
+      contratos: 5,
+      novedades: 5,
+      liquidaciones: 3
+    });
 
     const { validarRut } = await import('../../src/rrhh/calculo/rut.js');
     const { listTrabajadores } = await import('../../src/rrhh/utils/trabajadores-service.js');
-    const { listContratos, getContratoVigente } = await import(
-      '../../src/rrhh/utils/contratos-service.js'
-    );
+    const { listContratos, getContratoVigente } =
+      await import('../../src/rrhh/utils/contratos-service.js');
     const { listNovedades } = await import('../../src/rrhh/utils/novedades-service.js');
     const { listLiquidaciones } = await import('../../src/rrhh/utils/liquidacion-service.js');
     const { loadGenericEntities } = await import('../../src/storage.js');

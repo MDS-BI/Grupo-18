@@ -72,7 +72,12 @@ describe('US6 - insert-only audit log', () => {
 
   it('keeps insertion order and supports filters', () => {
     registrarAuditoria({ accion: 'crear', tabla: 'novedades', registroId: 'n1', rol: 'analista' });
-    registrarAuditoria({ accion: 'aprobar', tabla: 'novedades', registroId: 'n1', rol: 'jefatura' });
+    registrarAuditoria({
+      accion: 'aprobar',
+      tabla: 'novedades',
+      registroId: 'n1',
+      rol: 'jefatura'
+    });
     registrarAuditoria({
       accion: 'ver_sensible',
       tabla: 'liquidaciones',

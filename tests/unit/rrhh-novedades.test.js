@@ -35,7 +35,10 @@ describe('HU14 - novedad model validation', () => {
   it('accepts one valid record per supported type', () => {
     expect(TIPOS_NOVEDAD).toEqual(['horas_extra', 'licencia_medica', 'ausencia']);
     expect(validate().valid).toBe(true);
-    expect(validate({ tipo: 'licencia_medica', cantidad: 3, unidad: 'dias', fechaFin: '2026-09-12' }).valid).toBe(true);
+    expect(
+      validate({ tipo: 'licencia_medica', cantidad: 3, unidad: 'dias', fechaFin: '2026-09-12' })
+        .valid
+    ).toBe(true);
     expect(validate({ tipo: 'ausencia', cantidad: 1, unidad: 'dias' }).valid).toBe(true);
   });
 
@@ -122,11 +125,13 @@ describe('HU14 - novedad model validation', () => {
       { tipo: 'ausencia', cantidad: 1 }
     ]);
     expect(resumen).toMatchObject({ horasExtra: 4, diasLicencia: 2, diasAusencia: 1, total: 3 });
-    expect(diasNoTrabajados([
-      { tipo: 'licencia_medica', cantidad: 2 },
-      { tipo: 'ausencia', cantidad: 1 },
-      { tipo: 'horas_extra', cantidad: 4 }
-    ])).toBe(3);
+    expect(
+      diasNoTrabajados([
+        { tipo: 'licencia_medica', cantidad: 2 },
+        { tipo: 'ausencia', cantidad: 1 },
+        { tipo: 'horas_extra', cantidad: 4 }
+      ])
+    ).toBe(3);
   });
 
   it('normalizes the record through crearNovedad', () => {

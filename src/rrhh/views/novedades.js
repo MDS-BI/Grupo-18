@@ -263,7 +263,11 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
           return;
         }
         form.edit(novedad);
-        showFeedback(messages, 'Corrige los datos de la novedad pendiente y guarda los cambios.', 'info');
+        showFeedback(
+          messages,
+          'Corrige los datos de la novedad pendiente y guarda los cambios.',
+          'info'
+        );
       },
       onAnnul: (novedad) => {
         act(() => anularNovedad(novedad.id, viewer, ''), 'Novedad anulada.');

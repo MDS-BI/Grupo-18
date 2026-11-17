@@ -106,7 +106,7 @@ Objeto de configuración cargado al arrancar que adapta el módulo base en un m�
 
 ## Extensión RR.HH. y Planilla
 
-El módulo de Recursos Humanos y Planilla reutiliza `Entity` como **Trabajador** y `Document` como **Liquidación de Sueldo**. Las tablas de extensión se guardan en `localStorage` con el prefijo `erp_rrhh:*` y se vinculan mediante `entity_id` (trabajador) y `periodoId` (período). El detalle completo del MER y el diccionario de datos está en `specs/002-rrhh-planilla/data-model.md`.
+El módulo de Recursos Humanos y Planilla reutiliza `Entity` como **Trabajador** y `Document` como **Liquidación de Sueldo**. Las tablas de extensión se guardan en `localStorage` con el prefijo `erp_rrhh:*` y se vinculan mediante `entity_id` (trabajador) y `periodoId` (período). El detalle completo del MER y el diccionario de datos está en `specs/001-erp-base-module/data-model.md`.
 
 Trabajador, Contrato, Novedad y Período de Remuneración forman parte del modelo de este feature (001). **Trabajador no crea una tabla nueva**: es la Entidad base con campos personalizados, por lo que su clave sigue siendo `erp_base_module:entities`; las demás entidades de extensión usan `erp_rrhh:*`.
 
@@ -114,13 +114,13 @@ Trabajador, Contrato, Novedad y Período de Remuneración forman parte del model
 |---|---|---|---|
 | TRABAJADOR | `erp_base_module:entities` (Entidad base + `customFields`) | `entity_id`, `taxId` (RUT), `fechaIngreso`, `fechaNacimiento`, `estadoLaboral`, `category` (departamento), `afp`, `sistemaSalud`, `banco`, `numeroCuenta`, `contactoEmergencia` | Reutiliza Entidad; es referenciado por contratos, novedades y liquidaciones |
 | CONTRATO | `erp_rrhh:contratos` | `id`, `entity_id`, `sueldoBase`, `jornadaSemanal`, `tipoContrato`, `fechaInicio`, `fechaTermino`, `vigenciaDesde`, `vigenciaHasta` | Pertenece a un Trabajador; origina liquidaciones |
-| PERIODO_REMUNERACION | `erp_rrhh:periodos` | `id`, `anio`, `mes`, `estado` (Abierto/Cerrado), `cerradoPor`, `fechaCierre`, `uf`, `utm`, `imm` | Agrupa novedades y liquidaciones; congela parámetros al cerrar |
+| PERIODO_REMUNERACION | `erp_rrhh:periodos` | `id`, `anio`, `mes`, `estado` (Abierto/Calculado/Cerrado), `cerradoPor`, `fechaCierre`, `uf`, `utm`, `imm` | Agrupa novedades y liquidaciones; congela parámetros al cerrar |
 | NOVEDAD | `erp_rrhh:novedades` | `id`, `trabajadorEntityId`, `periodoId`, `tipo`, `cantidad`, `unidad`, `fechaInicio`, `fechaFin`, `estado`, `registradoPor`, `aprobadoPor`, `fechaAprobacion`, `motivoRechazo` | Pertenece a un Trabajador y a un Período; solo las aprobadas alimentan el cálculo |
 | CONCEPTO_REMUNERACION | `erp_rrhh:conceptos` | `id`, `codigo`, `nombre`, `tipo`, `imponible`, `cuentaContable`, `esSensible` | Clasifica líneas de liquidación y novedades |
 | PARAMETRO_LEGAL | `erp_rrhh:parametros` | `id`, `codigo`, `descripcion`, `valor`, `unidad`, `vigenciaDesde`, `vigenciaHasta`, `fuente` | Se selecciona por vigencia y se congela en la liquidación |
 | TRAMO_IMPUESTO | `erp_rrhh:tramos-impuesto` | `id`, `periodoVigencia`, `desdeUtm`, `hastaUtm`, `factor`, `rebaja` | Sustenta el impuesto único |
 | LINEA_LIQUIDACION | `erp_rrhh:lineas-liquidacion` | `id`, `liquidacionId`, `conceptoId`, `tipo`, `monto`, `base`, `tasaFactor`, `formula`, `parametroSnapshot`, `motivoManual` | Pertenece a una Liquidación; conserva el snapshot del cálculo |
-| REGISTRO_AUDITORIA | `erp_rrhh:auditoria` | `id`, `entidad`, `entidadId`, `accion`, `campos`, `usuario`, `fecha`, `motivo` | Traza cálculo, aprobación, pago, anulación y consultas sensibles |
+| REGISTRO_AUDITORIA | `erp_rrhh:auditoria` | `id`, `entidad`, `entidadId`, `accion`, `campos`, `usuario`, `rol`, `fecha`, `motivo` | Traza cálculo, aprobación, pago, anulación y consultas sensibles |
 
 ### Reglas de la extensión RR.HH.
 

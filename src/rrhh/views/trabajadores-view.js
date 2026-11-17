@@ -8,7 +8,15 @@ import {
 } from '../utils/trabajadores-service.js';
 import { listCatalogos } from '../utils/catalogos-service.js';
 import { renderTrabajadorForm } from '../components/trabajador-form.js';
-import { badge, button, el, feedback, hideFeedback, input, showFeedback } from '../components/dom.js';
+import {
+  badge,
+  button,
+  el,
+  feedback,
+  hideFeedback,
+  input,
+  showFeedback
+} from '../components/dom.js';
 
 function accessDenied(documentRef, root) {
   const denied = el(documentRef, 'div', 'rrhh-access-denied panel');
@@ -88,7 +96,12 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
   table.appendChild(tbody);
   listPanel.appendChild(table);
 
-  const empty = el(documentRef, 'p', 'rrhh-empty', 'No hay trabajadores que coincidan con la búsqueda.');
+  const empty = el(
+    documentRef,
+    'p',
+    'rrhh-empty',
+    'No hay trabajadores que coincidan con la búsqueda.'
+  );
   empty.hidden = true;
   listPanel.appendChild(empty);
 

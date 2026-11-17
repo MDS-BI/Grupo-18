@@ -1,9 +1,6 @@
 /** Worker file form with RUT validation and catalog selectors. */
 
-import {
-  actualizarTrabajador,
-  crearTrabajador
-} from '../utils/trabajadores-service.js';
+import { actualizarTrabajador, crearTrabajador } from '../utils/trabajadores-service.js';
 import { listCatalogos } from '../utils/catalogos-service.js';
 import { el, feedback, hideFeedback, input, select, showFeedback } from './dom.js';
 
@@ -109,7 +106,9 @@ export function renderTrabajadorForm(
     id: 'trabajador-departamento',
     options: optionsFor(catalogs, 'departamento')
   });
-  fields.appendChild(wrap(documentRef, 'trabajador-departamento', 'Departamento', departamentoSelect));
+  fields.appendChild(
+    wrap(documentRef, 'trabajador-departamento', 'Departamento', departamentoSelect)
+  );
 
   const centroSelect = select(documentRef, {
     id: 'trabajador-centro-costo',

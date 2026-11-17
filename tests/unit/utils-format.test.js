@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  formatDate,
-  formatFactor,
-  formatMoney,
-  formatPercent
-} from '../../src/utils/format.js';
+import { formatDate, formatFactor, formatMoney, formatPercent } from '../../src/utils/format.js';
 
 describe('shared formatting helpers', () => {
   it('formats amounts as Chilean pesos', () => {

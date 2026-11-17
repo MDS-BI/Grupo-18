@@ -3,15 +3,8 @@
 import { loadEntities } from '../../storage.js';
 import { calcularPeriodo } from '../utils/liquidacion-service.js';
 import { listContratos } from '../utils/contratos-service.js';
-import {
-  estadoElegibilidad,
-  listNovedades
-} from '../utils/novedades-service.js';
-import {
-  getPeriodo,
-  isPeriodoCerrado,
-  listPeriodos
-} from '../utils/periodos-service.js';
+import { estadoElegibilidad, listNovedades } from '../utils/novedades-service.js';
+import { getPeriodo, isPeriodoCerrado, listPeriodos } from '../utils/periodos-service.js';
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
 import { can } from '../seguridad/roles.js';
 import { renderCalculoResumen } from '../components/calculo-resumen.js';
@@ -29,16 +22,16 @@ import {
 export function contratoDesdeEntidad(entity = {}) {
   const entityId = entity.entity_id || entity.id;
   const custom = entity.customFields || entity.camposPersonalizados || {};
-  const sueldoBase = Number(
-    entity.sueldoBase ?? entity.remuneracionBase ?? custom.sueldoBase ?? 0
-  );
+  const sueldoBase = Number(entity.sueldoBase ?? entity.remuneracionBase ?? custom.sueldoBase ?? 0);
   if (!sueldoBase) return null;
   return {
     id: `contrato-${entityId}`,
     entity_id: entityId,
     estado: entity.estadoContrato || 'vigente',
     sueldoBase,
-    jornadaHorasSemanales: Number(entity.jornadaHorasSemanales || custom.jornadaHorasSemanales || 42),
+    jornadaHorasSemanales: Number(
+      entity.jornadaHorasSemanales || custom.jornadaHorasSemanales || 42
+    ),
     tipoContrato: entity.tipoContrato || custom.tipoContrato || 'indefinido',
     modalidadGratificacion:
       entity.modalidadGratificacion || custom.modalidadGratificacion || 'art50',
@@ -139,14 +132,17 @@ export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
     calculateButton.disabled = cerrado || !info.elegible;
     calculateButton.setAttribute(
       'title',
-      !info.elegible && !cerrado
-        ? 'Resuelve las novedades pendientes antes de calcular.'
-        : ''
+      !info.elegible && !cerrado ? 'Resuelve las novedades pendientes antes de calcular.' : ''
     );
     if (cerrado) {
       eligibilityNode.classList.add('rrhh-eligibility-blocked');
       eligibilityNode.appendChild(
-        el(documentRef, 'p', null, 'Período cerrado: no se permite recalcular ni editar liquidaciones.')
+        el(
+          documentRef,
+          'p',
+          null,
+          'Período cerrado: no se permite recalcular ni editar liquidaciones.'
+        )
       );
     }
     for (const warning of info.advertencias) {
@@ -188,7 +184,12 @@ export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
     resultsContainer.appendChild(list);
     if (result.liquidaciones.length === 0) {
       resultsContainer.appendChild(
-        el(documentRef, 'div', 'empty-state', 'No se calculó ningún trabajador: revisa contratos vigentes y novedades.')
+        el(
+          documentRef,
+          'div',
+          'empty-state',
+          'No se calculó ningún trabajador: revisa contratos vigentes y novedades.'
+        )
       );
     }
   }

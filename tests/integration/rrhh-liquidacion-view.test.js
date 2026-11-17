@@ -2,7 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
-import { createDemoLiquidacion, totals, formatMoney } from '../../src/rrhh/utils/liquidacion-data.js';
+import {
+  createDemoLiquidacion,
+  totals,
+  formatMoney
+} from '../../src/rrhh/utils/liquidacion-data.js';
 import { renderLiquidacion } from '../../src/rrhh/views/liquidacion.js';
 
 const html = fs.readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8');

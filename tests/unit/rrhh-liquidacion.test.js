@@ -10,7 +10,10 @@ import {
   totals,
   validateLiquidacion
 } from '../../src/rrhh/utils/liquidacion-data.js';
-import { PARAMETROS_LEGALES, calcularLiquidacion } from '../../src/rrhh/utils/liquidacion-calculo.js';
+import {
+  PARAMETROS_LEGALES,
+  calcularLiquidacion
+} from '../../src/rrhh/utils/liquidacion-calculo.js';
 import {
   clearLiquidaciones,
   loadLiquidacion,
@@ -160,7 +163,15 @@ describe('RRHH liquidation calculation and snapshot', () => {
         fechaFin: '2026-09-30'
       },
       fechaEmision: '2026-09-30',
-      lineas: [{ id: 'l1', concepto: 'Cotización AFP', tipo: 'descuento', base: 1000000, parametroCodigo: 'AFP' }],
+      lineas: [
+        {
+          id: 'l1',
+          concepto: 'Cotización AFP',
+          tipo: 'descuento',
+          base: 1000000,
+          parametroCodigo: 'AFP'
+        }
+      ],
       parametros
     });
 
@@ -190,10 +201,16 @@ describe('RRHH liquidation calculation and snapshot', () => {
     expect(parameterStatus(null, periodo)).toBe('sin-parametro');
     expect(parameterStatus({ fechaVigencia: '2026-01-01' }, periodo)).toBe('sin-snapshot');
     expect(
-      parameterStatus({ fechaVigencia: '2026-01-01', congeladoEnPeriodo: 'Septiembre 2026' }, periodo)
+      parameterStatus(
+        { fechaVigencia: '2026-01-01', congeladoEnPeriodo: 'Septiembre 2026' },
+        periodo
+      )
     ).toBe('vigente');
     expect(
-      parameterStatus({ fechaVigencia: '2027-01-01', congeladoEnPeriodo: 'Septiembre 2026' }, periodo)
+      parameterStatus(
+        { fechaVigencia: '2027-01-01', congeladoEnPeriodo: 'Septiembre 2026' },
+        periodo
+      )
     ).toBe('no-vigente');
   });
 });

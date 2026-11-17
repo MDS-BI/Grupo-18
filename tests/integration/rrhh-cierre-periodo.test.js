@@ -101,9 +101,7 @@ describe('US15 - period closure, frozen values and read-only history', () => {
     cerrarPeriodo('2026-09', jefatura);
 
     expect(() => calculate()).toThrow(PeriodoCerradoError);
-    expect(() => cambiarEstadoLiquidacion(id, 'aprobada', { viewer: admin })).toThrow(
-      /cerrado/i
-    );
+    expect(() => cambiarEstadoLiquidacion(id, 'aprobada', { viewer: admin })).toThrow(/cerrado/i);
     expect(listLiquidacionesPeriodo('2026-09')).toHaveLength(1);
     expect(listLiquidacionesPeriodo('2026-09')[0].estado).toBe('calculada');
   });

@@ -21,14 +21,14 @@ El plan cubre la especificación vigente completa:
 
 ### Módulo de Recursos Humanos y Planilla
 
-La extensión de RR.HH. y Planilla reutiliza la **Entidad** como **Trabajador** y el **Documento** como **Liquidación de Sueldo**, sin modificar el código central; lo específico vive en `src/rrhh/` y en `src/module-config.js`, y las tablas propias usan el prefijo `erp_rrhh:*`. El detalle de atributos y relaciones se documenta en `specs/002-rrhh-planilla/data-model.md` (referencia conservada).
+La extensión de RR.HH. y Planilla reutiliza la **Entidad** como **Trabajador** y el **Documento** como **Liquidación de Sueldo**, sin modificar el código central; lo específico vive en `src/rrhh/` y en `src/module-config.js`, y las tablas propias usan el prefijo `erp_rrhh:*`. El detalle de atributos y relaciones se documenta en `specs/001-erp-base-module/data-model.md` (documento vigente).
 
 Incluye: fichas y catálogos; contratos con historial, vigencia y alertas; parámetros legales versionados por vigencia y cargados manualmente por administrador/a; períodos con apertura, cálculo y cierre; novedades con segregación de funciones y aprobación; motor de cálculo con líneas explicables y parámetros congelados al cierre; ciclo de vida de liquidaciones y comprobante imprimible; sesión simulada por rol; bitácora de auditoría de solo inserción; y exportación/importación completa en JSON para respaldo y restauración. El motor calcula, para cada trabajador con un contrato cuya vigencia comprenda al menos un día del período (incluidos terminados o vencidos con vigencia en el período), haberes/descuentos/impuestos y costo empleador de forma proporcional a los días de vigencia, usando parámetros vigentes y topes legales, conservando por línea base, tasa/fórmula y snapshot del parámetro aplicado; los totales se obtienen de líneas redondeadas al peso.
 
 ## Clarificaciones y Decisiones
 
 **2026-11-08 (clarify inicial)**:
-- Entidades RR.HH. definidas en 001 con detalle en `specs/002-rrhh-planilla/data-model.md`; Trabajador reutiliza Entidad y Liquidación reutiliza Documento.
+- Entidades RR.HH. definidas en 001 con detalle en `specs/001-erp-base-module/data-model.md`; Trabajador reutiliza Entidad y Liquidación reutiliza Documento.
 - Sesión simulada con selector de rol, sin autenticación real ni credenciales.
 - Parámetros legales cargados y versionados manualmente; sin integración externa de indicadores.
 - Bitácora conservada durante la relación laboral y 6 años después del término (Ley 21.719).
@@ -60,9 +60,9 @@ Incluye: fichas y catálogos; contratos con historial, vigencia y alertas; pará
 - **II. Pruebas primero y Verificación (PASS)**: flujos de CRUD, búsqueda, contratos, novedades/aprobación, cálculo/cierre, explicación/impresión, permisos por rol, auditoría inmutable, respaldo/restauración y rendimiento de 500 trabajadores cubiertos por pruebas Vitest + jsdom, incluidos los tiempos de SC-011, SC-012 y SC-022; ninguna historia completa sin pruebas en verde.
 - **III. Consistencia de Experiencia de Usuario (PASS)**: mensajes de validación, estados vacíos, estados de solo lectura/bloqueo, denegaciones sin revelar contenido y marco consistente (barra superior + barra lateral) en todas las pantallas, incluida la vista imprimible.
 - **IV. Rendimiento y Fiabilidad (PASS)**: 500 entidades y cálculo de 500 trabajadores en 10 segundos o menos (SC-023); persistencia local con respaldo/restauración JSON; si la bitácora no puede escribirse, la operación sensible no se completa (FR-055).
-- **Quality Standards (DEUDA EXPLÍCITA)**: documentación `docs/rrhh.md` pendiente (registrada en Seguimiento de Complejidad).
+- **Quality Standards (PASS)**: documentación `docs/rrhh.md` entregada (T161) y verificación ejecutada (T162): `npm run lint`, `npm run format:check` y `npm run test:run` en verde.
 
-**Resultado**: PASS con una deuda documental explícita y rastreada.
+**Resultado**: PASS; sin bloqueantes de release por documentación o verificación. Las brechas de cobertura no cerradas se rastrean en `tasks.md` (T163–T169).
 
 ## Fases de Diseño
 

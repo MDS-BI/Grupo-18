@@ -80,7 +80,7 @@ Operaciones:
 
 ## Contrato de Almacenamiento RR.HH. y Planilla
 
-La extensión de Recursos Humanos usa las mismas garantías de identidad, marcas de tiempo e integridad referencial de la base, con tablas propias bajo el prefijo `erp_rrhh:*`. El detalle del MER está en `specs/002-rrhh-planilla/data-model.md`.
+La extensión de Recursos Humanos usa las mismas garantías de identidad, marcas de tiempo e integridad referencial de la base, con tablas propias bajo el prefijo `erp_rrhh:*`. El detalle del MER está en `specs/001-erp-base-module/data-model.md`.
 
 ### Claves y operaciones
 

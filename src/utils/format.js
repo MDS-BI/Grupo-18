@@ -18,7 +18,10 @@ export function formatDate(value) {
 }
 
 function trimDecimal(value) {
-  return value.toFixed(2).replace(/\.?0+$/, '').replace('.', ',');
+  return value
+    .toFixed(2)
+    .replace(/\.?0+$/, '')
+    .replace('.', ',');
 }
 
 /** Format a rate expressed as a fraction, e.g. 0.105 -> "10,5%". */

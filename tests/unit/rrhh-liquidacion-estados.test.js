@@ -27,13 +27,7 @@ function liq(estado, extra = {}) {
 
 describe('US15 - liquidation lifecycle', () => {
   it('declares every lifecycle state and its allowed transitions', () => {
-    expect(ESTADOS_LIQUIDACION).toEqual([
-      'borrador',
-      'calculada',
-      'aprobada',
-      'pagada',
-      'anulada'
-    ]);
+    expect(ESTADOS_LIQUIDACION).toEqual(['borrador', 'calculada', 'aprobada', 'pagada', 'anulada']);
     expect(TRANSICIONES_LIQUIDACION.borrador).toContain('calculada');
     expect(TRANSICIONES_LIQUIDACION.calculada).toContain('aprobada');
     expect(TRANSICIONES_LIQUIDACION.aprobada).toContain('pagada');
