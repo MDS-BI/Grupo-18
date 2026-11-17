@@ -3,7 +3,7 @@
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
 **Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 12 de `spec.md`, incluyendo FR-040–FR-107 y SC-001–SC-029 (las tareas de US8 a US12 se agregan a medida que se incorpora cada historia), la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
-**Actualizado**: 2026-11-17 (incorporada la Historia de Usuario 7, Fase 9, tareas T170–T190; revisión anterior 2026-11-16 contra código/tests actuales con rutas ajustadas a la estructura real `src/rrhh/...`)
+**Actualizado**: 2026-11-17 (incorporada la Historia de Usuario 10, Fase 10, tareas T191–T216; incorporada la Historia de Usuario 7, Fase 9, tareas T170–T190; revisión anterior 2026-11-16 contra código/tests actuales con rutas ajustadas a la estructura real `src/rrhh/...`)
 **Tests**: Incluidos por mandato de la constitución (Principio II) y del plan de verificación con Vitest + jsdom.
 
 ## Formato: `[ID] [P?] [Historia] Descripción con ruta de archivo`
@@ -576,7 +576,75 @@
 
 ---
 
-## Fase 10: Pulido y Preocupaciones Transversales
+## Fase 10: Historia de Usuario 10 – Reportes de Gestión y Equidad Salarial (Prioridad: P2)
+
+**Objetivo**: Generar reportes de solo lectura sobre períodos cerrados (dotación, costo por centro de costo, horas extra, ausentismo y brecha salarial de género por cargo), con filtros, gráficos y un campo de género sensible usado solo en agregados, sin exponer información individual ni exportar archivos (US11).
+
+**Prueba Independiente**: Con datos semilla de tres períodos cerrados y Trabajadores de distintos cargos y géneros, el administrador/a ve la dotación, el costo por centro de costo y la brecha por cargo; un cargo con menos de 5 personas en algún grupo aparece oculto. No modifica ningún dato.
+
+### Pruebas de la Historia de Usuario 10
+
+- [ ] T191 [P] [US10] Crear pruebas unitarias de dotación (Trabajadores activos al último día del período, altas y bajas por departamento) en `tests/unit/rrhh-reportes-dotacion.test.js` (US10-E2)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-dotacion.test.js`.
+- [ ] T192 [P] [US10] Crear pruebas unitarias de costo empleador por centro de costo con variación porcentual respecto del período anterior en `tests/unit/rrhh-reportes-costo.test.js` (US10-E1)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-costo.test.js`.
+- [ ] T193 [P] [US10] Crear pruebas unitarias de horas extra aprobadas por departamento y período en `tests/unit/rrhh-reportes-horas-extra.test.js` (US10-E7)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-horas-extra.test.js`.
+- [ ] T194 [P] [US10] Crear pruebas unitarias de ausentismo (solo ausencias; licencias médicas, vacaciones y permisos legales por separado) en `tests/unit/rrhh-reportes-ausentismo.test.js` (US10-E3)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-ausentismo.test.js`.
+- [ ] T195 [P] [US10] Crear pruebas unitarias de brecha salarial (mediana por género dentro del cargo, diferencia porcentual y ocultamiento si algún grupo tiene menos de 5 personas) en `tests/unit/rrhh-reportes-brecha.test.js` (US10-E4, US10-E5)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-brecha.test.js`.
+- [ ] T196 [P] [US10] Crear pruebas unitarias de que solo se incluyen períodos Cerrados y quedan fuera los Abiertos y Calculados en `tests/unit/rrhh-reportes-periodos-cerrados.test.js` (US10-E6)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-periodos-cerrados.test.js`.
+- [ ] T197 [P] [US10] Crear pruebas unitarias de permisos por rol (administrador/a: todos; analista: todos menos brecha; jefatura: solo horas extra y ausentismo de su equipo sin montos; Trabajador: ninguno) en `tests/unit/rrhh-reportes-permisos.test.js` (US10-E7, US10-E8)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-permisos.test.js`.
+- [ ] T198 [P] [US10] Crear pruebas unitarias de que el campo `genero` nunca aparece en listados, búsquedas ni filtros de Trabajadores en `tests/unit/rrhh-reportes-genero-oculto.test.js`
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-genero-oculto.test.js`.
+- [ ] T199 [P] [US10] Crear prueba de integración del flujo completo de reportes, incluido el estado vacío sin períodos cerrados y los filtros por rango de períodos y departamento, en `tests/integration/rrhh-reportes-flow.test.js` (US10-E1–US10-E6, US10-E9)
+  - Falta: historia nueva; no existe `tests/integration/rrhh-reportes-flow.test.js`.
+- [ ] T200 [P] [US10] Crear prueba de integración de que consultar la brecha de género registra la consulta sensible en la bitácora (US6) y de que los reportes no modifican ningún dato en `tests/integration/rrhh-reportes-auditoria.test.js` (US10-E10)
+  - Falta: historia nueva; no existe `tests/integration/rrhh-reportes-auditoria.test.js`.
+
+### Implementación de la Historia de Usuario 10
+
+- [ ] T201 [P] [US10] Agregar el campo opcional sensible `genero` (Femenino, Masculino, No binario, Prefiere no informar) en la ficha en `src/rrhh/utils/trabajadores-service.js` y `src/rrhh/components/trabajador-form.js`
+  - Falta: historia nueva; agregar el campo y sus valores permitidos en `src/rrhh/utils/trabajadores-service.js` y `src/rrhh/components/trabajador-form.js`.
+- [ ] T202 [US10] Ocultar `genero` en listados, búsquedas y filtros de Trabajadores apoyándose en `src/rrhh/seguridad/acceso-datos.js` y ajustando `src/rrhh/views/trabajadores-view.js`
+  - Falta: historia nueva; depende de T201 y de la regla de dato sensible de US6.
+- [ ] T203 [P] [US10] Crear funciones puras de mediana y variación porcentual en `src/rrhh/calculo/estadisticas.js`
+  - Falta: historia nueva; no existe `src/rrhh/calculo/estadisticas.js`.
+- [ ] T204 [P] [US10] Crear el esqueleto de `src/rrhh/utils/reportes-service.js` con el filtro de períodos cerrados y la estructura común de reportes, reutilizando `src/rrhh/utils/periodos-service.js`
+  - Falta: historia nueva; depende de US4 (períodos cerrados) y, para el ausentismo, de US7 (días hábiles y vacaciones: T176–T179).
+- [ ] T205 [US10] Implementar el reporte de dotación en `src/rrhh/utils/reportes-service.js`, reutilizando `src/rrhh/utils/contratos-service.js`
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204.
+- [ ] T206 [US10] Implementar el reporte de costo empleador por centro de costo y su variación porcentual en `src/rrhh/utils/reportes-service.js`, reutilizando `src/rrhh/utils/liquidacion-service.js`, `src/rrhh/utils/costo-empleador.js` y T203
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204.
+- [ ] T207 [US10] Implementar el reporte de horas extra aprobadas por departamento y período en `src/rrhh/utils/reportes-service.js`, reutilizando `src/rrhh/utils/novedades-service.js`
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204.
+- [ ] T208 [US10] Implementar el reporte de ausentismo (solo ausencias; licencias, vacaciones y permisos legales por separado) en `src/rrhh/utils/reportes-service.js`, reutilizando `src/rrhh/utils/novedades-service.js` y US7 (días hábiles y vacaciones: T176–T179)
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204.
+- [ ] T209 [US10] Implementar el reporte de brecha salarial de género por cargo (mediana por género, diferencia porcentual y ocultamiento de grupos con menos de 5 personas) en `src/rrhh/utils/reportes-service.js`, usando T201 y T203
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204 y respetar el carácter sensible del campo `genero`.
+- [ ] T210 [P] [US10] Agregar los permisos de reportes por rol (administrador/a: todos; analista: todos menos brecha; jefatura: solo horas extra y ausentismo de su equipo sin montos; Trabajador: ninguno) en `src/rrhh/seguridad/roles.js`
+  - Falta: historia nueva; extender la matriz de roles de US6 en `src/rrhh/seguridad/roles.js`.
+- [ ] T211 [P] [US10] Aplicar el alcance de equipo de la jefatura para horas extra y ausentismo en `src/rrhh/utils/jefatura.js`
+  - Falta: historia nueva; reutilizar el alcance existente de `src/rrhh/utils/jefatura.js` sin incluir montos.
+- [ ] T212 [P] [US10] Registrar en la bitácora la consulta de brecha de género como dato sensible en `src/rrhh/seguridad/auditoria.js`
+  - Falta: historia nueva; registrar usuario, rol, fecha y hora según la regla transversal de US6.
+- [ ] T213 [P] [US10] Crear el componente de gráficos sin librerías externas (SVG/CSS) en `src/rrhh/components/grafico-reporte.js`
+  - Falta: historia nueva; no existe `src/rrhh/components/grafico-reporte.js`.
+- [ ] T214 [US10] Crear la vista de reportes con filtros por rango de períodos y departamento, estado vacío explicativo y gráficos en `src/rrhh/views/reportes.js`
+  - Falta: historia nueva; no existe `src/rrhh/views/reportes.js`; depende de T204–T213.
+- [ ] T215 [US10] Integrar la vista de reportes en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js` y `src/rrhh/views/workspace.js`
+  - Falta: historia nueva; agregar entrada y ruta en `src/rrhh/views/rrhh-router.js` y `src/rrhh/views/workspace.js` (depende de T214).
+- [ ] T216 [US10] Agregar tres períodos cerrados, Trabajadores de distintos cargos y géneros y un cargo con menos de 5 personas en algún grupo a los datos semilla en `src/rrhh/data/seed.js`
+  - Falta: historia nueva; T190 también edita `src/rrhh/data/seed.js`, coordinar el merge.
+
+**Punto de control**: Las Historias de Usuario 1 a 7 y 10 deben funcionar de forma independiente.
+
+---
+
+## Fase 11: Pulido y Preocupaciones Transversales
 
 **Propósito**: Mejoras que afectan a varias historias y cierre de la entrega.
 
@@ -640,6 +708,8 @@
 | FR-090 | T172, T174, T177, T180, T182, T183, T188 |
 | FR-091 | T173–T175, T181, T184, T186 |
 | SC-024 | T170, T174 |
+| FR-097–FR-100 (reportes de gestión y equidad salarial, US10) | T191–T200, T204–T209, T213, T214 |
+| US10-E1–US10-E10 y reglas de negocio (períodos cerrados, agregación, género sensible y permisos) | T191–T202, T210–T212, T216 |
 
 ---
 
@@ -678,8 +748,8 @@
 - **Configuración (Fase 1)**: Sin dependencias; puede iniciar de inmediato.
 - **Fundacional (Fase 2)**: Depende de la Fase 1 y BLOQUEA todas las historias. Incluye el núcleo append-only de auditoría y los parámetros legales por vigencia.
 - **Módulo base (Fase 2B)**: Depende de la Fase 2; puede ejecutarse en paralelo con US1 si hay capacidad.
-- **Historias de Usuario (Fases 3–9)**: Dependen de la Fase 2 (y del módulo base para vistas que reutilizan el marco).
-- **Pulido (Fase 10)**: Depende de que las historias deseadas estén completas.
+- **Historias de Usuario (Fases 3–10)**: Dependen de la Fase 2 (y del módulo base para vistas que reutilizan el marco).
+- **Pulido (Fase 11)**: Depende de que las historias deseadas estén completas.
 
 ### Dependencias entre Historias
 
@@ -690,6 +760,7 @@
 - **US6 (P1)**: El núcleo de auditoría ya existe desde la Fase 2; la implementación de roles, scoping de equipo y permisos se aplica después de US1–US4 para restringir servicios y vistas existentes, y antes de US5 para que la explicación/impresión respete permisos desde el inicio.
 - **US5 (P2)**: Depende de las liquidaciones de US4 y de los permisos/auditoría de US6.
 - **US7 (P2)**: Depende de US1 (fecha de ingreso y jefatura directa), US2 (contrato vigente en las fechas) y US3 (superposición con licencias y ausencias), y aplica los permisos/auditoría de US6. Solo la verificación de que las vacaciones no descuentan en la liquidación (T175, T186) toca US4.
+- **US10 (P2)**: Depende de US4 (períodos cerrados y costo empleador), US1 (ficha y desvinculación), US3 (horas extra y ausencias), US6 (roles y auditoría) y US7 (vacaciones y días hábiles para el ausentismo).
 
 ### Dentro de Cada Historia
 
@@ -760,7 +831,8 @@ Task: "Construir vista de auditoría exclusiva del administrador en src/rrhh/vie
 7. US6 → probar → desplegar (seguridad, scoping de equipo, auditoría y respaldo).
 8. US5 → probar → desplegar (explicación e impresión con permisos).
 9. US7 → probar → desplegar (vacaciones, saldo y calendario de feriados).
-10. Cada historia añade valor sin romper las anteriores.
+10. US10 → probar → desplegar (reportes de gestión, equidad salarial y campo de género sensible).
+11. Cada historia añade valor sin romper las anteriores.
 
 ### Estrategia de Equipo en Paralelo
 
