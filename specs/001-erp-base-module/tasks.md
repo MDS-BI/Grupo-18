@@ -2,14 +2,14 @@
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
-**Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 6 de `spec.md`, incluyendo FR-040–FR-087, la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
-**Actualizado**: 2026-11-16 (revisado contra código/tests actuales; rutas ajustadas a la estructura real `src/rrhh/...`)
+**Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 7 de `spec.md`, incluyendo FR-040–FR-091, la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
+**Actualizado**: 2026-11-17 (incorporada la Historia de Usuario 7, Fase 9, tareas T170–T190; revisión anterior 2026-11-16 contra código/tests actuales con rutas ajustadas a la estructura real `src/rrhh/...`)
 **Tests**: Incluidos por mandato de la constitución (Principio II) y del plan de verificación con Vitest + jsdom.
 
 ## Formato: `[ID] [P?] [Historia] Descripción con ruta de archivo`
 
 - **[P]**: Puede ejecutarse en paralelo (archivos distintos, sin dependencias pendientes)
-- **[US1]–[US6]**: Historia de Usuario a la que pertenece la tarea
+- **[US1]–[US7]**: Historia de Usuario a la que pertenece la tarea
 - Las tareas de configuración, fundacionales, módulo base y pulido no llevan etiqueta de historia
 - Todas las rutas son explícitas y relativas a la raíz del repositorio
 
@@ -518,7 +518,65 @@
 
 ---
 
-## Fase 9: Pulido y Preocupaciones Transversales
+## Fase 9: Historia de Usuario 7 – Vacaciones: Solicitud, Aprobación y Saldo (Prioridad: P2)
+
+**Objetivo**: Calcular el saldo de vacaciones por devengo proporcional, registrar solicitudes en días hábiles según el calendario de feriados, aprobarlas o rechazarlas con segregación de funciones, impedir excesos de saldo y superposiciones, y alertar del feriado acumulado al máximo, sin descontar días en la liquidación.
+
+**Prueba Independiente**: Con Trabajadores, contratos y feriados precargados como datos semilla, un Trabajador ve su saldo, solicita días, su jefatura los aprueba y el saldo se descuenta; una solicitud que supera el saldo o que se superpone con una licencia es rechazada. No requiere ejecutar el cálculo de planilla.
+
+### Pruebas de la Historia de Usuario 7
+
+- [ ] T170 [P] [US7] Crear pruebas unitarias del devengo de 1,25 días hábiles por mes completo desde la fecha de ingreso, del saldo disponible (devengados menos aprobados) y del máximo acumulado de 30 días hábiles en `tests/unit/rrhh-vacaciones-saldo.test.js` (FR-088, SC-024)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-vacaciones-saldo.test.js`.
+- [ ] T171 [P] [US7] Crear pruebas unitarias del conteo de días hábiles (excluye sábados, domingos y feriados del calendario) y de la unicidad de feriados por fecha en `tests/unit/rrhh-vacaciones-dias-habiles.test.js` (FR-089)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-vacaciones-dias-habiles.test.js`.
+- [ ] T172 [P] [US7] Crear pruebas unitarias de estados Pendiente/Aprobada/Rechazada/anulada, quién aprueba (jefatura directa o, sin ella, administrador/a), prohibición de aprobar lo que se registró, motivo obligatorio de rechazo y anulación de Aprobadas solo antes de su inicio en `tests/unit/rrhh-vacaciones-aprobacion.test.js` (FR-090)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-vacaciones-aprobacion.test.js`.
+- [ ] T173 [P] [US7] Crear pruebas unitarias de rechazo por saldo insuficiente, superposición con otras vacaciones o con licencias/ausencias (US3) y Trabajador sin contrato vigente en las fechas en `tests/unit/rrhh-vacaciones-validaciones.test.js` (FR-091)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-vacaciones-validaciones.test.js`.
+- [ ] T174 [P] [US7] Crear prueba de integración del flujo completo (consulta de saldo, solicitud, aprobación, rechazo con motivo, anulación con devolución de días, alerta de feriado acumulado al máximo y auditoría) en `tests/integration/rrhh-vacaciones-flow.test.js` (FR-088–FR-091)
+  - Falta: historia nueva; no existe `tests/integration/rrhh-vacaciones-flow.test.js`.
+- [ ] T175 [P] [US7] Crear prueba de integración que verifique que las vacaciones aprobadas no descuentan días en la liquidación al ejecutar el cálculo de planilla (US4) en `tests/integration/rrhh-vacaciones-liquidacion.test.js` (FR-091)
+  - Falta: historia nueva; no existe `tests/integration/rrhh-vacaciones-liquidacion.test.js`.
+
+### Implementación de la Historia de Usuario 7
+
+- [ ] T176 [P] [US7] Definir el esquema y la clave de almacenamiento del calendario de feriados (fecha y nombre, sin fechas repetidas) con su CRUD exclusivo del administrador/a de RR.HH. en `src/rrhh/utils/feriados-service.js` y `src/rrhh/storage-rrhh.js` (FR-089)
+  - Falta: historia nueva; no existe `src/rrhh/utils/feriados-service.js`.
+- [ ] T177 [P] [US7] Definir el esquema de solicitud de vacaciones (Trabajador, fechas, días hábiles, estado, quién la registró y quién la resolvió, motivo de rechazo) y su clave de almacenamiento en `src/rrhh/utils/vacaciones-service.js` y `src/rrhh/storage-rrhh.js` (FR-090)
+  - Falta: historia nueva; no existe `src/rrhh/utils/vacaciones-service.js`.
+- [ ] T178 [US7] Implementar el conteo de días hábiles entre dos fechas excluyendo fines de semana y feriados del calendario en `src/rrhh/utils/vacaciones-service.js` (FR-089)
+  - Falta: historia nueva; depende de T176.
+- [ ] T179 [US7] Implementar el cálculo del saldo: devengo de 1,25 días hábiles por mes completo desde la fecha de ingreso, menos días aprobados, con máximo acumulado de 30 días hábiles, en `src/rrhh/utils/vacaciones-service.js` (FR-088)
+  - Falta: historia nueva.
+- [ ] T180 [US7] Implementar el registro de solicitudes en estado "Pendiente" (el Trabajador para sí; jefatura y administrador/a en nombre de un Trabajador de su ámbito) y la edición/anulación de Pendientes en `src/rrhh/utils/vacaciones-service.js` (FR-090)
+  - Falta: historia nueva; reutilizar el alcance de equipo de `src/rrhh/utils/jefatura.js`.
+- [ ] T181 [US7] Implementar las validaciones de saldo suficiente a la fecha de inicio, superposición con vacaciones Aprobadas/Pendientes y con licencias o ausencias de `src/rrhh/utils/novedades-service.js`, y contrato vigente en las fechas en `src/rrhh/utils/vacaciones-service.js` (FR-091)
+  - Falta: historia nueva; depende de US2 (contratos) y US3 (novedades).
+- [ ] T182 [US7] Implementar la aprobación y el rechazo con segregación de funciones (jefatura directa o, sin ella, administrador/a; nadie resuelve lo que registró), motivo obligatorio de rechazo y anulación de Aprobadas solo antes de su inicio con devolución de días al saldo en `src/rrhh/utils/vacaciones-service.js` (FR-090)
+  - Falta: historia nueva.
+- [ ] T183 [US7] Agregar los permisos de vacaciones y feriados a la matriz de roles (Trabajador: solo las suyas; jefatura: su equipo; administrador/a: todas y el calendario) en `src/rrhh/seguridad/roles.js` (FR-090; regla transversal de la US6)
+  - Falta: historia nueva.
+- [ ] T184 [US7] Registrar en la bitácora la creación, edición, aprobación, rechazo y anulación de solicitudes y los cambios del calendario de feriados con valores anterior/nuevo en `src/rrhh/utils/vacaciones-service.js`, `src/rrhh/utils/feriados-service.js` y `src/rrhh/seguridad/auditoria.js` (FR-091)
+  - Falta: historia nueva.
+- [ ] T185 [US7] Agregar la alerta de feriado acumulado al máximo (30 días hábiles) en el panel principal en `src/rrhh/utils/alertas-service.js` (FR-088)
+  - Falta: historia nueva; reutilizar el mecanismo de alertas de contratos de US2.
+- [ ] T186 [US7] Garantizar que el cálculo de planilla no descuente días por vacaciones aprobadas (no se tratan como ausencia) en `src/rrhh/calculo/motor.js` y `src/rrhh/utils/liquidacion-service.js` (FR-091)
+  - Falta: historia nueva; verificar con T175.
+- [ ] T187 [P] [US7] Construir el formulario de solicitud de vacaciones con fechas, días hábiles calculados y saldo disponible en `src/rrhh/components/vacacion-form.js` (FR-088, FR-089)
+  - Falta: historia nueva.
+- [ ] T188 [P] [US7] Construir la vista de vacaciones con el saldo por Trabajador, el listado de solicitudes con acciones de aprobar/rechazar/anular según rol y la gestión del calendario de feriados en `src/rrhh/views/vacaciones.js` (FR-088–FR-090)
+  - Falta: historia nueva.
+- [ ] T189 [US7] Integrar la vista de vacaciones en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js` y `src/rrhh/views/workspace.js`
+  - Falta: historia nueva.
+- [ ] T190 [US7] Agregar feriados y solicitudes de vacaciones a los datos semilla para la prueba independiente en `src/rrhh/data/seed.js`
+  - Falta: historia nueva.
+
+**Punto de control**: Las Historias de Usuario 1 a 7 deben funcionar de forma independiente.
+
+---
+
+## Fase 10: Pulido y Preocupaciones Transversales
 
 **Propósito**: Mejoras que afectan a varias historias y cierre de la entrega.
 
@@ -577,6 +635,11 @@
 | FR-087 | T120, T137, T139 |
 | XR-001–XR-005 | T005, T031, T034, T039 |
 | SC-021 | T169 |
+| FR-088 | T170, T174, T179, T185, T187, T188 |
+| FR-089 | T171, T176, T178, T187, T188 |
+| FR-090 | T172, T174, T177, T180, T182, T183, T188 |
+| FR-091 | T173–T175, T181, T184, T186 |
+| SC-024 | T170, T174 |
 
 ---
 
@@ -615,8 +678,8 @@
 - **Configuración (Fase 1)**: Sin dependencias; puede iniciar de inmediato.
 - **Fundacional (Fase 2)**: Depende de la Fase 1 y BLOQUEA todas las historias. Incluye el núcleo append-only de auditoría y los parámetros legales por vigencia.
 - **Módulo base (Fase 2B)**: Depende de la Fase 2; puede ejecutarse en paralelo con US1 si hay capacidad.
-- **Historias de Usuario (Fases 3–8)**: Dependen de la Fase 2 (y del módulo base para vistas que reutilizan el marco).
-- **Pulido (Fase 9)**: Depende de que las historias deseadas estén completas.
+- **Historias de Usuario (Fases 3–9)**: Dependen de la Fase 2 (y del módulo base para vistas que reutilizan el marco).
+- **Pulido (Fase 10)**: Depende de que las historias deseadas estén completas.
 
 ### Dependencias entre Historias
 
@@ -626,6 +689,7 @@
 - **US4 (P1)**: Integra US1, US2, US3 y los parámetros legales fundacionales; es la historia de mayor acoplamiento.
 - **US6 (P1)**: El núcleo de auditoría ya existe desde la Fase 2; la implementación de roles, scoping de equipo y permisos se aplica después de US1–US4 para restringir servicios y vistas existentes, y antes de US5 para que la explicación/impresión respete permisos desde el inicio.
 - **US5 (P2)**: Depende de las liquidaciones de US4 y de los permisos/auditoría de US6.
+- **US7 (P2)**: Depende de US1 (fecha de ingreso y jefatura directa), US2 (contrato vigente en las fechas) y US3 (superposición con licencias y ausencias), y aplica los permisos/auditoría de US6. Solo la verificación de que las vacaciones no descuentan en la liquidación (T175, T186) toca US4.
 
 ### Dentro de Cada Historia
 
@@ -695,7 +759,8 @@ Task: "Construir vista de auditoría exclusiva del administrador en src/rrhh/vie
 6. US4 → probar → desplegar.
 7. US6 → probar → desplegar (seguridad, scoping de equipo, auditoría y respaldo).
 8. US5 → probar → desplegar (explicación e impresión con permisos).
-9. Cada historia añade valor sin romper las anteriores.
+9. US7 → probar → desplegar (vacaciones, saldo y calendario de feriados).
+10. Cada historia añade valor sin romper las anteriores.
 
 ### Estrategia de Equipo en Paralelo
 

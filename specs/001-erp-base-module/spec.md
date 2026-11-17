@@ -2,10 +2,10 @@
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
-**Actualizada**: 2026-11-16  
+**Actualizada**: 2026-11-17  
 **Estado**: Borrador   
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2), con FR-001–FR-087 y las reglas transversales de seguridad, auditoría y respaldo.
+**Última incorporación**: Historia de Usuario 7 (Vacaciones: solicitud, aprobación y saldo, prioridad P2), con FR-088–FR-091 y SC-024. Se suma a las Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2), con FR-001–FR-087 y las reglas transversales de seguridad, auditoría y respaldo.
 
 ## Propósito
 
@@ -307,6 +307,48 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ---
 
+### Historia de Usuario 7 - Vacaciones: Solicitud, Aprobación y Saldo (Prioridad: P2)
+
+**Como** Trabajador, jefatura o administrador/a de RR.HH.,
+**quiero** solicitar días de vacaciones, aprobarlos o rechazarlos y consultar el saldo disponible de cada Trabajador,
+**para** planificar los descansos del equipo y cumplir el feriado legal sin llevar el control en planillas aparte.
+
+**Por qué esta prioridad**: El feriado anual es un derecho que la empresa debe controlar y que genera reclamos cuando no se lleva bien. No bloquea el cálculo de sueldos, porque las vacaciones no descuentan remuneración, por lo que puede construirse después del flujo principal.
+
+**Alcance**: incluye el saldo de vacaciones por Trabajador, las solicitudes, su aprobación o rechazo y el calendario de feriados. No incluye las novedades de horas extra, licencias y ausencias (US3), ni el pago de vacaciones proporcionales al término de la relación laboral, y aplica, sin redefinirlas, las reglas transversales de roles, datos sensibles y bitácora de la US6.
+
+**Reglas de negocio**:
+
+- Cada Trabajador acumula 15 días hábiles de feriado por cada año de servicio, devengados de forma proporcional: 1,25 días hábiles por cada mes completo trabajado desde su fecha de ingreso (art. 67 del Código del Trabajo).
+- Los días de vacaciones se cuentan en días hábiles: de lunes a viernes, sin contar los feriados registrados en el calendario de feriados (art. 69 del Código del Trabajo).
+- El saldo disponible es igual a los días devengados menos los días de solicitudes aprobadas. Una solicitud no puede superar el saldo disponible a la fecha de inicio de las vacaciones.
+- El saldo acumulado no puede superar dos períodos anuales (30 días hábiles) (art. 70 del Código del Trabajo); al alcanzar ese máximo, el sistema muestra una alerta en el panel principal.
+- El Trabajador solicita sus propias vacaciones; la jefatura y el administrador/a de RR.HH. pueden registrar una solicitud en nombre de un Trabajador de su ámbito. Toda solicitud nueva queda en estado "Pendiente".
+- Aprueba o rechaza la jefatura directa del Trabajador; si no tiene jefatura directa, lo hace el administrador/a de RR.HH. Nadie puede aprobar ni rechazar una solicitud que haya registrado. Un rechazo requiere un motivo.
+- Una solicitud "Pendiente" puede editarse o anularse; una "Aprobada" solo puede anularse antes de su fecha de inicio, y entonces los días vuelven al saldo.
+- Las vacaciones no pueden superponerse con otra solicitud de vacaciones aprobada o pendiente ni con licencias o ausencias registradas (US3) del mismo Trabajador.
+- Solo un Trabajador activo con contrato vigente en las fechas solicitadas puede tener vacaciones.
+- Las vacaciones aprobadas no descuentan días en la liquidación: el Trabajador recibe su remuneración íntegra (art. 71 del Código del Trabajo).
+- El administrador/a de RR.HH. mantiene el calendario de feriados (fecha y nombre); un feriado no puede repetirse en la misma fecha.
+
+**Prueba Independiente**: Con Trabajadores, contratos y feriados precargados como datos semilla, un Trabajador ve su saldo, solicita días, su jefatura los aprueba y el saldo se descuenta; una solicitud que supera el saldo o que se superpone con una licencia es rechazada. No requiere ejecutar el cálculo de planilla.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un Trabajador que ingresó hace 8 meses completos, **cuando** consulta su saldo, **entonces** ve 10 días hábiles devengados, los días aprobados y el saldo disponible.
+2. **Dado** un Trabajador con saldo suficiente, **cuando** solicita vacaciones indicando fecha de inicio y de término, **entonces** el sistema calcula los días hábiles excluyendo sábados, domingos y feriados del calendario, y registra la solicitud en estado "Pendiente".
+3. **Dado** una solicitud cuyos días hábiles superan el saldo disponible, **cuando** el Trabajador intenta registrarla, **entonces** el sistema la rechaza e indica el saldo disponible.
+4. **Dado** un Trabajador con una licencia médica registrada, **cuando** solicita vacaciones que se superponen con esas fechas, **entonces** el sistema la rechaza e indica la novedad con la que se superpone.
+5. **Dado** una solicitud "Pendiente", **cuando** la jefatura directa la aprueba, **entonces** pasa a "Aprobada" y los días se descuentan del saldo.
+6. **Dado** una solicitud "Pendiente", **cuando** la jefatura intenta rechazarla sin motivo, **entonces** el sistema impide el rechazo y señala que el motivo es obligatorio.
+7. **Dado** una solicitud registrada por una jefatura, **cuando** esa misma jefatura intenta aprobarla, **entonces** el sistema lo impide e indica que no tiene autorización.
+8. **Dado** una solicitud "Aprobada" cuya fecha de inicio aún no llega, **cuando** el Trabajador o el administrador/a la anula, **entonces** pasa a "anulada" y los días vuelven al saldo; **y dado** que la fecha de inicio ya pasó, **entonces** el sistema impide anularla.
+9. **Dado** un Trabajador con 30 días hábiles de saldo acumulado, **cuando** el administrador/a abre el panel principal, **entonces** ve una alerta de feriado acumulado al máximo para ese Trabajador.
+10. **Dado** un período con vacaciones aprobadas, **cuando** se ejecuta el cálculo de planilla (US4), **entonces** la liquidación no descuenta días por esas vacaciones.
+11. **Dado** que se crea, aprueba, rechaza o anula una solicitud, o se modifica el calendario de feriados, **cuando** la operación se completa, **entonces** la bitácora de auditoría la registra (regla transversal provista por la US6).
+
+---
+
 ### Casos Límite
 
 - ¿Qué ocurre cuando un usuario intenta guardar una entidad sin nombre o código obligatorio?
@@ -344,6 +386,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - ¿Qué ocurre cuando un usuario autorizado consulta datos sensibles de un trabajador que no pertenece a su equipo?
 - ¿Qué ocurre cuando el rol de jefatura intenta imprimir o exportar una liquidación?
 - ¿Se registran en la auditoría también los accesos denegados o fallidos?
+- ¿Qué ocurre si una solicitud de vacaciones incluye un feriado agregado al calendario después de aprobarla?
+- ¿Qué ocurre con el saldo de vacaciones de un Trabajador desvinculado?
 
 ## Requisitos *(obligatorio)*
 
@@ -436,6 +480,10 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - **FR-085**: El sistema DEBE aplicar los permisos detallados por rol de la sesión identificada (simulada), en complemento a FR-051–FR-054 (Historia de Usuario 6): el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5 y es el único rol que cierra períodos, consulta la bitácora de auditoría, exporta/importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo; jefatura y Trabajador según las restricciones de visibilidad de FR-052/FR-054, con segregación de FR-053/FR-077.
 - **FR-086**: Al cambiar de rol durante una sesión activa, el sistema DEBE aplicar de inmediato los permisos del nuevo rol, volver a solicitar el Trabajador que se representa cuando el rol sea jefatura o Trabajador, y registrar el cambio en la bitácora de auditoría (Historia de Usuario 6).
 - **FR-087**: La consulta de la bitácora de auditoría DEBE estar disponible exclusivamente para el rol administrador/a de RR.HH., quien puede visualizar y reconstruir los accesos y modificaciones registrados (Historia de Usuario 6).
+- **FR-088**: El sistema DEBE calcular el saldo de vacaciones de cada Trabajador como 1,25 días hábiles devengados por cada mes completo trabajado desde su fecha de ingreso, menos los días de solicitudes aprobadas, con un máximo acumulado de 30 días hábiles, y mostrar una alerta en el panel principal al alcanzar ese máximo (Historia de Usuario 7).
+- **FR-089**: El sistema DEBE contar los días de una solicitud de vacaciones como días hábiles, excluyendo sábados, domingos y los feriados del calendario mantenido por el administrador/a de RR.HH., sin permitir feriados repetidos en la misma fecha (Historia de Usuario 7).
+- **FR-090**: El sistema DEBE gestionar las solicitudes de vacaciones con los estados Pendiente, Aprobada, Rechazada y anulada, aplicando las reglas de quién puede aprobar de la Historia de Usuario 7, exigiendo un motivo para rechazar y devolviendo los días al saldo al anular una solicitud aprobada antes de su inicio (Historia de Usuario 7).
+- **FR-091**: El sistema DEBE impedir solicitudes que superen el saldo disponible, que se superpongan con otras vacaciones, licencias o ausencias del mismo Trabajador o que correspondan a un Trabajador sin contrato vigente en las fechas solicitadas; NO DEBE descontar días de la liquidación por vacaciones aprobadas, y DEBE registrar en la bitácora de auditoría la creación, aprobación, rechazo y anulación de solicitudes y los cambios del calendario de feriados (Historia de Usuario 7).
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -465,6 +513,8 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Contrato**: Condiciones laborales de un Trabajador (sueldo base, jornada y tipo de contrato) con historial por vigencia y alertas de vencimiento; pertenece a un Trabajador.
 - **Novedad**: Evento de un período (horas extra, licencia médica o ausencia) asociado a un Trabajador y a un Período de Remuneración, con estado Pendiente/Aprobada/Rechazada/anulada y sin diagnóstico clínico.
 - **Período de Remuneración**: Mes y año de liquidación con estado Abierto/Calculado/Cerrado; al cerrarse congela UF, UTM, ingreso mínimo y parámetros legales, y agrupa Novedades y Liquidaciones.
+- **Solicitud de Vacaciones**: Período de descanso pedido para un Trabajador, con fechas, días hábiles, estado (Pendiente, Aprobada, Rechazada o anulada), quién la registró y quién la resolvió.
+- **Feriado**: Fecha no hábil del calendario (fecha y nombre), usada para contar los días hábiles de vacaciones.
 
 > El detalle de atributos, claves de almacenamiento y relaciones de las entidades de Recursos Humanos se documenta en `specs/001-erp-base-module/data-model.md`.
 
@@ -495,6 +545,7 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-021**: Al menos el 95% de las pruebas de acceso con distintos roles confirma que los datos ocultos no pueden recuperarse desde la interfaz ni mediante enlaces directos.
 - **SC-022**: Un usuario puede exportar un respaldo completo y restaurarlo sin pérdida de entidades, documentos, novedades, períodos ni liquidaciones en menos de 5 minutos.
 - **SC-023**: El cálculo masivo de un período con hasta 500 Trabajadores y sus novedades aprobadas genera todas las liquidaciones en 10 segundos o menos en el entorno de uso previsto.
+- **SC-024**: Un Trabajador puede consultar su saldo y registrar una solicitud de vacaciones en menos de 1 minuto, y el saldo calculado coincide con el devengo legal en el 100 % de los casos de prueba.
 
 ## Suposiciones
 
