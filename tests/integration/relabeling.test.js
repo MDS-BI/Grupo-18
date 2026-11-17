@@ -83,6 +83,52 @@ describe('User Story 6 - relabel screens from configuration', () => {
     expect(qs('search-empty').textContent).toContain('coincidencias');
   });
 
+  it('keeps generic screens neutral when RRHH is enabled', async () => {
+    await bootWith({
+      moduleName: 'Recursos Humanos',
+      labels: {
+        entity: 'Trabajador',
+        entities: 'Trabajadores',
+        document: 'Liquidación de Sueldo',
+        documents: 'Liquidaciones de Sueldo'
+      },
+      rrhh: { enabled: true, label: 'RRHH / Planilla' }
+    });
+
+    const genericTerms = [
+      qs('nav-entities-label').textContent,
+      qs('nav-documents-label').textContent,
+      qs('action-new-entity-title').textContent,
+      qs('action-new-document-title').textContent,
+      qs('stat-entities-label').textContent,
+      qs('stat-documents-label').textContent
+    ];
+
+    qs('nav-entities').click();
+    genericTerms.push(
+      qs('entities-view-heading').textContent,
+      qs('entity-form-heading').textContent,
+      qs('edit-entity-heading').textContent,
+      qs('delete-entity').textContent
+    );
+
+    qs('nav-documents').click();
+    genericTerms.push(
+      qs('documents-view-heading').textContent,
+      qs('document-form-heading').textContent,
+      qs('edit-document-heading').textContent,
+      qs('delete-document').textContent
+    );
+
+    qs('nav-search').click();
+    genericTerms.push(qs('search-view-heading').textContent, qs('search-input').placeholder);
+
+    expect(qs('nav-entities-label').textContent).toBe('Entidades');
+    expect(qs('nav-documents-label').textContent).toBe('Documentos');
+    expect(qs('nav-rrhh-label').textContent).toBe('RRHH / Planilla');
+    expect(genericTerms.join(' ')).not.toMatch(/Trabajador|Liquidaci/i);
+  });
+
   it('keeps navigation behavior unchanged after relabeling', async () => {
     await bootWith({
       labels: { entity: 'Producto', entities: 'Productos', document: 'Orden', documents: 'Órdenes' }

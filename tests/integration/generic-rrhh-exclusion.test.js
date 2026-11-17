@@ -8,6 +8,7 @@ import {
   deleteDocument,
   deleteEntity,
   loadDocuments,
+  loadEntities,
   loadGenericDocuments,
   loadGenericEntities,
   saveDocuments
@@ -68,6 +69,24 @@ describe('generic screens exclude RRHH-managed records', () => {
     qs('search-input').value = 'Ana';
     qs('search-input').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     expect(qs('search-results-list').querySelectorAll('.entity-item').length).toBe(0);
+  });
+
+  it('does not delete a worker forced into the generic entity selector', () => {
+    const worker = createWorker('Ana Pérez', 'TRAB-001', '12.345.678-5');
+    const select = qs('edit-entity');
+    const option = document.createElement('option');
+    option.value = worker.id;
+    option.textContent = 'Ana Pérez (trabajador forzado)';
+    select.appendChild(option);
+    select.value = worker.id;
+
+    qs('delete-entity').click();
+
+    expect(loadEntities().some((entity) => entity.id === worker.id)).toBe(true);
+    expect(qs('entity-feedback').hidden).toBe(false);
+    expect(qs('entity-feedback').textContent).toContain(
+      'no se gestiona en la pantalla genérica'
+    );
   });
 
   it('rejects deleting a worker from generic storage', () => {

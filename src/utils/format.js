@@ -34,6 +34,3 @@ export function formatFactor(value) {
   if (!Number.isFinite(number)) return '—';
   return trimDecimal(number);
 }
-
-export const formatCLP = formatMoney;
-export const formatDateCL = formatDate;

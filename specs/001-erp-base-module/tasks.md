@@ -48,7 +48,7 @@
 
 - [X] T005 Implementar la capa de almacenamiento base (CRUD de entidades y documentos, identidad, marcas de tiempo, integridad referencial y eliminación en cascada de documentos al eliminar una Entidad genérica) en `src/storage.js` (FR-007, FR-009, XR-004)
   - Evidencia: `src/storage.js` (`createId`, `now`, `addEntity`, `updateEntity`, `deleteEntity`, `addDocument`, `updateDocument`, `deleteDocument`, `deleteDocumentsForEntity`, `validateEntity`, `validateDocument`).
-  - Falta (spec nuevo/reglas pendientes): `deleteEntity` aplica lógica especial RR.HH. (borrado lógico con liquidaciones cerradas y borrado de novedades) y falta verificar cumplimiento pleno de la semántica de Entidad genérica exigida por el spec vigente.
+  - `deleteEntity` elimina Entidades genéricas con sus documentos y rechaza Trabajadores/Liquidaciones gestionados por RR.HH., conforme a FR-003.
 - [X] T006 [P] Crear los estilos compartidos y tokens de diseño (tipografía, formularios, estados vacíos y de error) en `src/styles.css`
   - Evidencia: `src/styles.css` (`:root` tokens/variables, estilos de formularios `.field*`/inputs, estados `.empty-state`, `.field-error`, `.config-errors`, `.rrhh-feedback`).
   - Falta (spec nuevo/reglas pendientes): verificar cobertura completa de todos los tokens/estados exigidos por el spec vigente.
@@ -110,7 +110,7 @@
 - [ ] T021 [P] Implementar el formulario de entidad con validación de nombre/código en `src/components/entity-form.js` (FR-001, FR-002, FR-006)
   - Evidencia parcial: `src/components/entity-form.js` existe y gestiona formulario; la validación se apoya en `src/storage.js` (`validateEntity`), pero no se verificó cumplimiento completo.
 - [X] T022 [P] Implementar la lista de entidades con búsqueda, estado vacío y eliminación de la Entidad genérica en `src/components/entity-list.js` (FR-003, FR-005, FR-007)
-  - Evidencia: `src/components/entity-list.js` (`renderEntitySelect`, `renderSearchResults`) consume `loadGenericEntities`, `searchGenericEntities` y `loadGenericDocuments`; `src/storage.js` (`workerEntityIds`, `isTrabajadorEntity`, `loadGenericEntities`, `searchGenericEntities`, `deleteEntity`) excluye Trabajadores de selectores/búsqueda y rechaza su eliminación con `TRABAJADOR_RRHH_NO_ELIMINABLE`; verificado en `tests/integration/generic-rrhh-exclusion.test.js`.
+  - Evidencia: `src/components/entity-list.js` (`renderEntitySelect` solo renderiza la lista recibida; `renderSearchResults` consume `loadGenericEntities`, `searchGenericEntities` y `loadGenericDocuments`); el filtrado de Trabajadores ocurre en `src/app.js` (`refreshEntityOptions`, `refreshDocumentEntityOptions`) con `loadGenericEntities`; `src/storage.js` (`workerEntityIds`, `isTrabajadorEntity`, `loadGenericEntities`, `searchGenericEntities`, `deleteEntity`) excluye Trabajadores de selectores/búsqueda y rechaza su eliminación con `TRABAJADOR_RRHH_NO_ELIMINABLE`; verificado en `tests/integration/generic-rrhh-exclusion.test.js`.
 - [ ] T023 [P] Implementar el formulario de documentos vinculados a entidad en `src/components/document-form.js` (FR-008)
   - Evidencia parcial: `src/components/document-form.js` existe.
 - [ ] T024 [P] Implementar la lista de documentos y la eliminación en cascada al eliminar la entidad en `src/components/document-list.js` (FR-009)
@@ -118,7 +118,7 @@
 - [X] T025 Implementar la pantalla de gestión consolidada sin listar entidades en `src/app.js` (FR-016, FR-017, FR-018)
   - Evidencia: `src/app.js` (`refreshEntityOptions`, `refreshDocumentOptions`, `refreshDocumentEntityOptions`, `handleEntitySelection`, `handleEntityDelete`, `handleDocumentSelection`, `handleDocumentDelete`, `renderRrhhExclusionNotes`) usa `loadGenericEntities`/`loadGenericDocuments`, de modo que la gestión genérica no lista Trabajadores ni Liquidaciones y muestra retroalimentación controlada al intentar borrarlos; `index.html` agrega notas de exclusión y contenedores de error (`entities-rrhh-note`, `documents-rrhh-note`, `entity-feedback`, `document-feedback`); `src/storage.js` (`isLiquidacionDocument`, `loadGenericDocuments`, `isLiquidacionRecord`, `deleteDocument`) rechaza Liquidaciones con `LIQUIDACION_RRHH_NO_ELIMINABLE`; verificado en `tests/integration/generic-rrhh-exclusion.test.js`. Las vistas y datos de RR.HH. en `src/rrhh/...` no se modificaron.
 - [X] T026 [P] Implementar la búsqueda por nombre, código, categoría, descripción y fecha objetivo en `src/components/search-bar.js` (FR-004, FR-020, FR-021)
-  - Evidencia: `src/components/search-bar.js` (`bindSearch`), `src/storage.js` (`searchEntities`), `src/components/entity-list.js` (`renderSearchResults`).
+  - Evidencia: `src/components/search-bar.js` (`bindSearch`), `src/storage.js` (`searchGenericEntities`), `src/components/entity-list.js` (`renderSearchResults`).
   - Falta (spec nuevo/reglas pendientes): verificar cobertura/campos exactos y reglas de búsqueda del spec vigente (implementación distribuida en rutas reales).
 - [X] T027 Implementar la navegación Panel/Entidades/Documentos/Buscar, incluida la pantalla de búsqueda dedicada al seleccionar Buscar, con módulo activo resaltado en `src/components/shell.js` (FR-012, FR-013, FR-014, FR-015, FR-019, FR-037)
   - Evidencia: `src/components/shell.js` (`renderShell`), `src/app.js` (`views`, `showView`, `bindEvents`).

@@ -357,9 +357,15 @@ export function getConfig() {
   return activeConfig || defaultConfig();
 }
 
+export function genericLabelsFor(config) {
+  if (config && config.rrhh && config.rrhh.enabled) {
+    return { ...DEFAULT_CONFIG.labels };
+  }
+  return { ...((config && config.labels) || DEFAULT_CONFIG.labels) };
+}
+
 /** Resolve a term from the active configuration, falling back to defaults. */
 export function labelFor(key) {
-  const config = getConfig();
-  const labels = config && config.labels ? config.labels : {};
+  const labels = genericLabelsFor(getConfig());
   return labels[key] || DEFAULT_CONFIG.labels[key] || key;
 }

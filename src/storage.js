@@ -279,33 +279,11 @@ function rrhhDeletionError(message, code) {
   return error;
 }
 
-function hasClosedLiquidations(entityId) {
-  return rrhhRows(LIQUIDACIONES_KEY).some(
-    (row) =>
-      (row.trabajador?.entityId === entityId || row.trabajador?.id === entityId) &&
-      (row.estado === 'aprobada' || row.estado === 'pagada')
-  );
-}
-
-function deleteNovedadesForEntity(entityId) {
-  try {
-    const rows = rrhhRows(NOVEDADES_KEY);
-    const kept = rows.filter((row) => row.trabajadorEntityId !== entityId);
-    if (kept.length !== rows.length) {
-      localStorage.setItem(NOVEDADES_KEY, JSON.stringify(kept));
-    }
-    return rows.length - kept.length;
-  } catch {
-    return 0;
-  }
-}
-
 /**
  * Delete a generic entity.
  *
  * Workers and liquidations belong to the RRHH module and are rejected here.
- * When a closed liquidation exists the entity is logically deactivated instead,
- * so the legal payroll record remains reproducible.
+ * Generic entities are removed with their associated documents.
  */
 export function deleteEntity(id) {
   const entities = loadEntities();
@@ -328,22 +306,8 @@ export function deleteEntity(id) {
     );
   }
 
-  if (hasClosedLiquidations(entity.entity_id)) {
-    const timestamp = now();
-    entities[index] = {
-      ...entity,
-      bajaLogica: true,
-      activo: false,
-      deletedAt: timestamp,
-      updatedAt: timestamp
-    };
-    saveEntities(entities);
-    return true;
-  }
-
   saveEntities(entities.filter((item) => item.id !== id));
   deleteDocumentsForEntity(entity.entity_id);
-  deleteNovedadesForEntity(entity.entity_id);
   return true;
 }
 

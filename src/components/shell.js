@@ -1,5 +1,6 @@
 /** Workspace shell: branding, logo monogram, sidebar labels and identity. */
 
+import { genericLabelsFor } from '../module-config.js';
 import { availableRoles } from '../rrhh/seguridad/session.js';
 import { ROLE_MATRIX } from '../rrhh/seguridad/roles.js';
 
@@ -102,7 +103,7 @@ export function applyTheme(config) {
 
 /** Apply branding, navigation labels and headings for the configured module. */
 export function renderShell(config) {
-  const labels = config.labels;
+  const labels = genericLabelsFor(config);
   document.title = config.moduleName;
   document.getElementById('brand-name').textContent = config.moduleName;
   renderLogo(document.getElementById('logo-mark'), config.moduleName);
