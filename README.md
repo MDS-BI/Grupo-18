@@ -72,6 +72,7 @@ All tailoring lives in one place: the `userConfig` object at the top of `src/mod
 - `customFields` — declare extra fields per record type with `target` (`entity` or `document`), `key`, `label`, `type` (`text`, `number`, `date`, or `select`), optional `required`, and `options` for selects. Keys must not collide with base field names (see `specs/001-erp-base-module/data-model.md`). Values persist alongside records and appear in search results.
 - `statusLifecycle` — restrict document statuses to a configured list of `statuses` with permitted `transitions` between them. Without it, status stays a free-form field.
 - `theme.accentColor` — a hex color (e.g., `"#0f62fe"`) applied across the shell as highlights and primary controls. Invalid values fall back to the default.
+- `rrhh` — enables the RRHH/Planilla workspace (`enabled`), sets its `label` and `roleSelector`, and with `only: true` the browser starts directly in RRHH and hides the generic Entities/Documents/Search screens. The base code stays available to tests and other modules.
 
 If the configuration is invalid (unknown types, bad keys, transitions referencing unknown statuses, non-hex accent colors), the app shows the problems in a banner and falls back to defaults instead of breaking...
 

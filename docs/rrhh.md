@@ -13,7 +13,7 @@ Extensión del ERP base sin modificar su núcleo: reutiliza la **Entidad** como 
 
 ## 2. Configuración
 
-`src/module-config.js` centraliza nombre, acento, etiquetas, campos personalizados, ciclo de vida de documentos y bloque `rrhh`/`empresa` (datos de la empresa emisora). Sin configuración se usan los valores por defecto Entidad/Documento. Un módulo adaptado no debe tocar código central (SC-008).
+`src/module-config.js` centraliza nombre, acento, etiquetas, campos personalizados, ciclo de vida de documentos y bloque `rrhh`/`empresa` (datos de la empresa emisora). Sin configuración se usan los valores por defecto Entidad/Documento. Un módulo adaptado no debe tocar código central (SC-008). Con `rrhh.only: true` (configuración actual) el navegador abre directamente en RRHH/Planilla y oculta Panel, Entidades, Documentos y Búsqueda; el código base permanece disponible para pruebas y otros módulos.
 
 ## 3. Modelo y claves de almacenamiento
 

@@ -40,6 +40,7 @@ const BASE_VIEWS = ['dashboard', 'entities', 'documents', 'search'];
 let modelConfig = null;
 let rrhhView = null;
 let liquidationView = null;
+let exclusiveMode = false;
 
 function qs(id) {
   return document.getElementById(id);
@@ -47,6 +48,24 @@ function qs(id) {
 
 function views() {
   return modelConfig?.rrhh?.enabled ? [...BASE_VIEWS, 'rrhh'] : BASE_VIEWS;
+}
+
+function isRrhhOnly() {
+  return Boolean(modelConfig?.rrhh?.enabled && modelConfig?.rrhh?.only);
+}
+
+/**
+ * Keep the base screens in the code, but remove them from the RRHH-only UI.
+ * Called by the browser entry point, not by `boot()`/`initApp()` tests.
+ */
+export function applyExclusiveMode(exclusive = isRrhhOnly()) {
+  exclusiveMode = exclusive;
+  document.body?.classList.toggle('rrhh-only', exclusive);
+  for (const name of BASE_VIEWS) {
+    const navButton = qs(`nav-${name}`);
+    if (navButton) navButton.hidden = exclusive;
+  }
+  if (exclusive) showView('rrhh');
 }
 
 function refreshEntityOptions() {
@@ -88,27 +107,28 @@ function renderSearch() {
 }
 
 function showView(name) {
+  const target = exclusiveMode && name !== 'rrhh' ? 'rrhh' : name;
   for (const view of views()) {
     const section = qs(`view-${view}`);
-    if (section) section.hidden = view !== name;
+    if (section) section.hidden = view !== target;
   }
   document.querySelectorAll('.nav-module').forEach((button) => {
-    if (button.dataset.module === name) button.setAttribute('aria-current', 'page');
+    if (button.dataset.module === target) button.setAttribute('aria-current', 'page');
     else button.removeAttribute('aria-current');
   });
 
-  if (name === 'dashboard') {
+  if (target === 'dashboard') {
     refreshStats();
-  } else if (name === 'entities') {
+  } else if (target === 'entities') {
     clearEntityForm();
     refreshEntityOptions();
-  } else if (name === 'documents') {
+  } else if (target === 'documents') {
     clearDocumentForm();
     refreshDocumentEntityOptions();
     refreshDocumentOptions();
-  } else if (name === 'search') {
+  } else if (target === 'search') {
     renderSearch();
-  } else if (name === 'rrhh') {
+  } else if (target === 'rrhh') {
     renderRrhh();
   }
 }
@@ -350,16 +370,17 @@ function showConfigErrors(errors) {
 /**
  * Boot the workspace with the module profile declared in module-config.js.
  */
-export async function boot() {
+export async function boot(options = {}) {
   const result = await loadModuleConfig();
-  return initApp(result);
+  return initApp(result, options);
 }
 
 /**
  * Initialize the workspace with an already-normalized configuration.
  */
-export async function initApp(result) {
+export async function initApp(result, options = {}) {
   const normalized = result || (await loadModuleConfig());
+  exclusiveMode = false;
   setActiveConfig(normalized.config || null);
   modelConfig = getConfig();
   ensureSeedOnFirstBoot();
@@ -375,6 +396,7 @@ export async function initApp(result) {
   clearDocumentForm();
   bindEvents();
   showView('dashboard');
+  applyExclusiveMode(Boolean(options.exclusive && isRrhhOnly()));
   showConfigErrors(normalized.errors);
 
   return modelConfig;
