@@ -26,13 +26,13 @@ Feedback Avance 03 (16/11/26)
 
 Cambios en la especificacion:
 
-- No hubo cambios esta semana. spec.md no existe en `specs/002-rrhh-planilla/` y tasks.md no se modificó, así que no se puede contrastar con una especificación.
+- spec.md se reescribió: US1–US6 con reglas de negocio, escenarios de aceptación y sesión de clarificaciones (08/11 y 16/11). tasks.md pasó de 4 a más de 60 tareas con rutas reales `src/rrhh/...` y notas de evidencia ("Falta: ...").
+- Es claro y coherente entre ambos, pero la carpeta se llama `001-erp-base-module` y mezcla el ERP base con RR.HH. (antes se usaba `002-rrhh-planilla`). El encabezado de spec.md quedó con un "A" suelto en "Estado".
 
 Consistencia sitio-especificacion:
 
-- Todas las tareas de tasks.md siguen como "[ ]", pero hay mucho implementado. T010-T013 (US1) están en `src/rrhh/views/trabajadores-view.js` y `trabajador-form.js`. T024-T029 (US2) están en `contrato-form.js`, `contratos-service.js` y `alertas-service.js`, y la alerta se muestra en `src/components/dashboard.js`.
-- Las rutas de tasks.md no coinciden con el código. Ejemplos: `src/contract-alerts.js`, `src/components/contract-form.js` y `tests/unit/contracts.test.js`, que en el sitio son `src/rrhh/...` y `tests/unit/rrhh-contratos.test.js`.
-- Hay funcionalidades sin tarea: roles y sesión (`src/rrhh/seguridad/`), catálogos, cierre de períodos, costo empleador, validación de RUT e impresión de liquidación.
+- T045, T046 y T061 están en "[X]" y coinciden con `src/rrhh/calculo/rut.js`. Pero T001 está en "[X]" aunque la propia nota dice que faltan `src/utils/` y `tests/setup/`.
+- Clarificación 16/11 y T022/T025: la pantalla genérica debe excluir Trabajadores y Liquidaciones, pero `src/app.js` y `src/storage.js` los siguen listando y permiten eliminarlos (`deleteEntity`, `index.html`).
 - hacer mejoras de funcionalidad e interfaz de usuario, incluir data simulada para probar campos, incluir mejoras de estilo, transicion, navegacion, etcetera.
 
 Presentacion de MVP final en 2 semanas.
