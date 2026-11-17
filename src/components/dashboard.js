@@ -1,5 +1,5 @@
 import { labelFor } from '../module-config.js';
-import { loadEntities, loadDocuments } from '../storage.js';
+import { loadGenericDocuments, loadGenericEntities } from '../storage.js';
 import { resumenAlertas } from '../rrhh/utils/alertas-service.js';
 import { el } from '../rrhh/components/dom.js';
 import { newPrefix } from './shell.js';
@@ -52,8 +52,8 @@ export function renderContratoAlerts() {
 
 /** Refresh live record counts shown by the dashboard. */
 export function refreshStats() {
-  const entities = loadEntities().length;
-  const documents = loadDocuments().length;
+  const entities = loadGenericEntities().length;
+  const documents = loadGenericDocuments().length;
   const entityStat = qs('stat-entities');
   const documentStat = qs('stat-documents');
   if (entityStat) entityStat.textContent = String(entities);

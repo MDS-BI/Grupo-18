@@ -736,6 +736,19 @@ h3 {
   background: var(--surface);
 }
 
+.rrhh-seed-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.rrhh-seed-feedback {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
 .rrhh-tabs {
   display: flex;
   flex-wrap: wrap;

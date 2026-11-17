@@ -32,6 +32,7 @@ import { renderEntitySelect, renderSearchResults } from './components/entity-lis
 import { renderDocumentSelect } from './components/document-list.js';
 import { bindSearch } from './components/search-bar.js';
 import { getViewer, setRole } from './rrhh/seguridad/session.js';
+import { ensureSeedOnFirstBoot, restoreSeedData } from './rrhh/data/seed.js';
 import { renderRrhhWorkspace } from './rrhh/views/rrhh-router.js';
 
 const BASE_VIEWS = ['dashboard', 'entities', 'documents', 'search'];
@@ -239,6 +240,27 @@ function handleDocumentDelete() {
   refreshStats();
 }
 
+function handleSeedDataRestore() {
+  const message =
+    'Esto reemplazará los datos de RR.HH. de ejemplo por el dataset de prueba. ¿Continuar?';
+  if (typeof confirm === 'function' && !confirm(message)) return;
+
+  const summary = restoreSeedData();
+  if (!summary) {
+    showFeedback('rrhh-seed-feedback', 'La carga de datos de prueba no está disponible.');
+    return;
+  }
+
+  refreshStats();
+  if (modelConfig?.rrhh?.enabled && qs('view-rrhh') && !qs('view-rrhh').hidden) {
+    renderRrhh();
+  }
+  showFeedback(
+    'rrhh-seed-feedback',
+    `Datos de prueba cargados: ${summary.trabajadores} trabajadores, ${summary.contratos} contratos, ${summary.novedades} novedades y ${summary.liquidaciones} liquidaciones.`
+  );
+}
+
 function bindEvents() {
   for (const name of views()) {
     const button = qs(`nav-${name}`);
@@ -274,6 +296,9 @@ function bindEvents() {
   const openEntities = qs('action-open-entities');
   if (openEntities) openEntities.addEventListener('click', () => showView('entities'));
 
+  const seedButton = qs('rrhh-seed-button');
+  if (seedButton) seedButton.addEventListener('click', handleSeedDataRestore);
+
   const find = qs('action-find');
   if (find) {
     find.addEventListener('click', () => {
@@ -306,6 +331,8 @@ function renderRrhhExclusionNotes() {
     const note = qs(id);
     if (note) note.hidden = !enabled;
   }
+  const seedButton = qs('rrhh-seed-button');
+  if (seedButton) seedButton.hidden = !enabled;
 }
 
 function showConfigErrors(errors) {
@@ -335,6 +362,7 @@ export async function initApp(result) {
   const normalized = result || (await loadModuleConfig());
   setActiveConfig(normalized.config || null);
   modelConfig = getConfig();
+  ensureSeedOnFirstBoot();
 
   renderShell(modelConfig);
   renderRrhhExclusionNotes();

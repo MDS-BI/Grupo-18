@@ -45,6 +45,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  globalThis.__ERP_BASE_SEED_DISABLED__ = true;
   dom.window.close();
 });
 
@@ -147,5 +148,48 @@ describe('generic screens exclude RRHH-managed records', () => {
     }
     expect(error?.code).toBe('LIQUIDACION_RRHH_NO_ELIMINABLE');
     expect(error?.message).toContain('Liquidaciones');
+  });
+
+  it('excludes seeded workers and liquidations from dashboard counters and generic screens', async () => {
+    globalThis.__ERP_BASE_SEED_DISABLED__ = false;
+    const seed = await import('../../src/rrhh/data/seed.js');
+    const { listLiquidaciones } = await import('../../src/rrhh/utils/liquidacion-service.js');
+    seed.loadSeedData();
+
+    qs('nav-dashboard').click();
+    expect(qs('stat-entities').textContent).toBe('0');
+    expect(qs('stat-documents').textContent).toBe('0');
+    expect(qs('dashboard-alertas').hidden).toBe(false);
+    expect(qs('dashboard-alertas-list').textContent).toContain('Camila Soto Aguirre');
+
+    qs('nav-entities').click();
+    const entityOptions = optionTexts(qs('edit-entity'));
+    for (const worker of seed.SEED_DATASET.trabajadores) {
+      expect(entityOptions.some((text) => text.includes(worker.name))).toBe(false);
+    }
+
+    qs('nav-documents').click();
+    const documentValues = [...qs('edit-document').options].map((option) => option.value);
+    const entityDocumentOptions = optionTexts(qs('document-entity'));
+    for (const liquidacion of listLiquidaciones()) {
+      expect(documentValues).not.toContain(liquidacion.id);
+      expect(entityDocumentOptions.some((text) => text.includes(liquidacion.numero))).toBe(false);
+    }
+    for (const worker of seed.SEED_DATASET.trabajadores) {
+      expect(entityDocumentOptions.some((text) => text.includes(worker.name))).toBe(false);
+    }
+
+    qs('nav-search').click();
+    const searchTerms = [
+      ...seed.SEED_DATASET.trabajadores.map((worker) => worker.name),
+      ...seed.SEED_DATASET.trabajadores.map((worker) => worker.rut),
+      ...listLiquidaciones().map((liquidacion) => liquidacion.numero)
+    ];
+    for (const term of searchTerms) {
+      qs('search-input').value = term;
+      qs('search-input').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      expect(qs('search-results-list').querySelectorAll('.entity-item').length).toBe(0);
+      expect(qs('search-empty').hidden).toBe(false);
+    }
   });
 });

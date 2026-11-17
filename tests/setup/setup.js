@@ -1,6 +1,8 @@
 import { beforeEach } from 'vitest';
 import { setActiveConfig } from '../../src/module-config.js';
 
+globalThis.__ERP_BASE_SEED_DISABLED__ = true;
+
 function createMemoryStorage() {
   const store = new Map();
   return {
