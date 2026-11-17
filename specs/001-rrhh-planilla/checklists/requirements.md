@@ -2,7 +2,7 @@
 
 **Propósito**: Validar la completitud y calidad de la especificación antes de proceder a la planificación
 **Creada**: 2026-07-08
-**Actualizada**: 2026-11-08 (validación integral tras `/speckit.specify` sobre `001-erp-base-module/`)
+**Actualizada**: 2026-11-08 (validación integral tras `/speckit.specify` sobre `001-rrhh-planilla/`)
 **Funcionalidad**: [Enlace a spec.md](spec.md)
 
 ## Calidad del Contenido

@@ -1,6 +1,6 @@
 ﻿# Tareas: Módulo Base ERP y Módulo de Recursos Humanos y Planilla
 
-**Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
+**Entrada**: Documentos de diseño desde `/specs/001-rrhh-planilla/`
 **Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
 **Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 12 de `spec.md`, incluyendo FR-040–FR-107 y SC-001–SC-029 (las tareas de US8 a US12 se agregan a medida que se incorpora cada historia), la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
 **Actualizado**: 2026-11-17 (incorporada la Historia de Usuario 10, Fase 10, tareas T191–T216; incorporada la Historia de Usuario 7, Fase 9, tareas T170–T190; revisión anterior 2026-11-16 contra código/tests actuales con rutas ajustadas a la estructura real `src/rrhh/...`)
@@ -654,7 +654,7 @@
   - Evidencia: 2026-11-17; `npm run lint` OK, sin errores ni advertencias; `npm run format:check` OK; `npm run test:run` 46/46 archivos y 338/338 pruebas. Registro en `docs/rrhh.md` §9.
 - [ ] T163 [P] Verificar el rendimiento de cálculo de 500 trabajadores en 10 segundos o menos en `src/rrhh/calculo/motor.js` y `tests/integration/rrhh-rendimiento.test.js` (SC-023)
   - Evidencia parcial: existe `tests/integration/rrhh-rendimiento.test.js`; cumplimiento del umbral específico no verificado.
-- [ ] T164 [P] Validar el flujo de RR.HH. descrito en `specs/001-erp-base-module/quickstart.md`, incluidas las reglas corregidas de desvinculación, contratos, novedades, elegibilidad y auditoría
+- [ ] T164 [P] Validar el flujo de RR.HH. descrito en `specs/001-rrhh-planilla/quickstart.md`, incluidas las reglas corregidas de desvinculación, contratos, novedades, elegibilidad y auditoría
   - Falta: no validado en esta revisión.
 - [ ] T165 Revisar el endurecimiento de seguridad de datos sensibles, scoping de equipo, permisos de parámetros/respaldo, sanitización XSS en módulo base y vistas de RR.HH., y bitácora en `src/utils/sanitize.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/seguridad/auditoria.js`, `src/backup.js`, `src/rrhh/calculo/parametros.js` y `src/rrhh/views/`
   - Falta: faltan artefactos clave (`sanitize.js`, `permisos.js`, `backup.js`) y no se evidencia endurecimiento completo.
@@ -862,3 +862,139 @@ Con varios desarrolladores:
 - Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias entre historias que rompan la independencia.
 - Rutas reales observadas que difieren de la versión anterior: `src/rrhh/seguridad/session.js` (no `sesion.js`), `src/rrhh/views/liquidacion.js`, `src/rrhh/views/liquidaciones.js`, `src/rrhh/views/planilla.js`, `src/rrhh/views/periodos.js`, `src/rrhh/views/novedades.js`, `src/rrhh/views/auditoria.js`, `src/rrhh/utils/liquidacion-service.js` y `src/rrhh/utils/liquidacion-estados.js`.
 - No se evidencian en el código actual: `src/utils/sanitize.js`, `src/backup.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/calculo/redondeo.js`, `src/rrhh/components/parametros-form.js`, `src/rrhh/views/parametros-view.js`, `src/rrhh/views/liquidacion-impresion.js`, `src/rrhh/views/liquidacion-impresion.css`, `src/rrhh/components/linea-explicacion.js`, `tests/setup/`, ni varios archivos de prueba nombrados en las tareas.
+
+---
+
+## Apéndice A — División de trabajo grupal del módulo RR.HH.
+
+Contenido incorporado desde `specs/000-rrhh-planilla/tasks.md` al unificar la documentación en esta carpeta. Es el plan de coordinación original del equipo: sus identificadores `T0xx`/`T1xx` son propios de este apéndice y **no deben confundirse** con los identificadores `Txxx` del plan vigente más arriba. En caso de discrepancia prevalece el plan vigente y `spec.md`.
+
+**Formato original**: `[ID] [P?] [Historia] [Responsable] Descripción`
+
+- **[P]**: puede ejecutarse en paralelo con otra tarea de otra historia.
+- **[Historia]**: código de la historia asignada (ej. US1, US2, US3).
+- **[Responsable]**: persona o subequipo encargado.
+- Los archivos de implementación se indican en la descripción.
+
+### A.1 Configuración compartida y base del módulo
+
+**Propósito**: Preparar la base del ERP para RR.HH. y dejar la estructura común lista para todas las historias.
+
+- [ ] T001 [P] [BASE] [Equipo] Revisar y dejar documentado el entorno base ERP y confirmar que la capa de `Entity`/`Document` y `localStorage` soporta la extensión del módulo en `src/storage.js` y `src/app.js`
+- [ ] T002 [P] [BASE] [Equipo] Ajustar `src/module-config.js` con los nombres y etiquetas del dominio RR.HH. (`Trabajador`, `Liquidación de Sueldo`, etc.)
+- [ ] T003 [P] [BASE] [Equipo] Validar el almacenamiento, campos personalizados y ciclo de vida del módulo para la persistencia de trabajadores, contratos y liquidaciones
+
+**Checkpoint**: La base del módulo está lista y todas las historias pueden seguir en paralelo sin reescribir la misma capa.
+
+### A.2 US1 — Ficha del trabajador (P1)
+
+**Objetivo**: Crear y mantener la ficha del trabajador con datos básicos y búsquedas funcionales.
+
+**Prueba Independiente**: Un usuario puede crear un trabajador, verlo en la lista y buscarlo por nombre o identificador.
+
+- [ ] T010 [P] [US1] [Persona 1] Diseñar y validar el modelo del trabajador sobre la estructura base en `src/storage.js`
+- [ ] T011 [P] [US1] [Persona 1] Crear el formulario de trabajador y los campos requeridos en `src/components/entity-form.js`
+- [ ] T012 [US1] [Persona 1] Conectar la persistencia y la validación de creación/edición en `src/app.js`
+- [ ] T013 [US1] [Persona 1] Mostrar la lista y la búsqueda del trabajador en `src/components/entity-list.js` y `src/components/search-bar.js`
+
+**Punto de control**: US1 queda validada como un entregable independiente del resto del módulo.
+
+### A.3 US2 — Gestión de contratos y alertas de plazo (P1)
+
+**Enunciado**: Como analista de remuneraciones, quiero registrar los contratos de trabajo (sueldo base, jornada y tipo de contrato) y recibir alertas de vencimiento para controlar las condiciones vigentes del personal.
+
+**Por qué esta prioridad**: El contrato define los parámetros fundamentales del cálculo de sueldos y previene riesgos laborales por contratos vencidos.
+
+**Prueba Independiente**: Se asocia un contrato a un trabajador y el panel advierte sobre contratos a plazo fijo que vencen dentro de los próximos 30 días. Al registrar un nuevo contrato o anexo por un cambio de sueldo, se conserva el registro anterior y cada condición queda asociada a su período de vigencia.
+
+**Criterios de aceptación para US2**
+
+1. Dado un contrato a plazo fijo cercano a vencer, cuando faltan 30 días o menos, entonces el panel principal muestra una alerta visual.
+2. Dado que se modifica el sueldo base, cuando se registra un nuevo contrato o anexo, entonces el sistema lo asocia al período correspondiente de forma histórica.
+
+**Pruebas para US2**
+
+- [ ] T020 [P] [US2] [Persona 2] Añadir pruebas unitarias de validación del contrato, asociación obligatoria al trabajador y fechas de vigencia en `tests/unit/contracts.test.js`
+- [ ] T021 [P] [US2] [Persona 2] Añadir pruebas unitarias de alertas: vencimiento dentro de 30 días inclusive, más de 30 días, contrato indefinido y contrato vencido en `tests/unit/contracts.test.js`
+- [ ] T022 [P] [US2] [Persona 2] Añadir pruebas unitarias para registrar un cambio de sueldo como nuevo contrato o anexo, conservar el sueldo anterior y asociar ambos registros a sus períodos en `tests/unit/contracts.test.js`
+- [ ] T023 [P] [US2] [Persona 2] Añadir pruebas de integración para crear un contrato asociado a un trabajador y visualizar la alerta de vencimiento en el panel principal en `tests/integration/contracts.test.js`
+
+**Implementación para US2**
+
+- [ ] T024 [P] [US2] [Persona 2] Definir y validar el modelo persistente del contrato, incluyendo trabajador, sueldo base, jornada, tipo de contrato y período de vigencia, en `src/storage.js`
+- [ ] T025 [P] [US2] [Persona 2] Crear el formulario de contrato con sueldo base, jornada, tipo de contrato, fecha de inicio y fecha de término en `src/components/contract-form.js`
+- [ ] T026 [US2] [Persona 2] Conectar la creación, edición y persistencia de contratos vinculados al trabajador en `src/app.js`
+- [ ] T027 [US2] [Persona 2] Implementar la selección de contratos a plazo fijo cuya fecha de término ocurre entre hoy y los próximos 30 días, excluyendo contratos ya vencidos, en `src/contract-alerts.js`
+- [ ] T028 [US2] [Persona 2] Registrar cambios de sueldo como un nuevo contrato o anexo con su período de vigencia, sin sobrescribir los registros históricos, en `src/storage.js`
+- [ ] T029 [US2] [Persona 2] Mostrar las alertas de vencimiento de contratos en el panel principal usando el resultado de `src/contract-alerts.js` en `src/components/dashboard.js`
+
+**Punto de control**: US2 funciona de forma independiente y puede entregarse sin depender de US3/US4.
+
+### A.4 US3 — Parámetros legales y vigencias (P1)
+
+**Objetivo**: Registrar parámetros legales versionados por fecha de vigencia para calcular la remuneración con reglas actualizadas.
+
+**Prueba Independiente**: Un cambio de ley se registra como una nueva versión de parámetro sin romper la vigencia histórica anterior.
+
+- [ ] T030 [P] [US3] [Persona 3] Diseñar y persistir los parámetros legales y sus vigencias en `src/storage.js`
+- [ ] T031 [US3] [Persona 3] Crear la interfaz de configuración de parámetros legales en `src/components/legal-params-form.js`
+- [ ] T032 [US3] [Persona 3] Integrar la validación por vigencia y su uso en el cálculo de planilla en `src/app.js`
+
+**Punto de control**: La configuración legal queda separada del cálculo y puede cambiar en el tiempo sin romper registros anteriores.
+
+### A.5 US4 — Período de remuneraciones y novedades (P1)
+
+**Objetivo**: Abrir períodos, registrar novedades y mantener el proceso de aprobación para la liquidación.
+
+**Prueba Independiente**: El sistema abre un período, acepta novedades por trabajador y puede diferenciar lo aprobado de lo pendiente.
+
+- [ ] T040 [P] [US4] [Persona 4] Definir la entidad de período y novedades en `src/storage.js`
+- [ ] T041 [P] [US4] [Persona 4] Crear el formulario de novedades y el flujo de aprobación en `src/components/payroll-form.js`
+- [ ] T042 [US4] [Persona 4] Conectar el ciclo de vida del período y la validación de novedades en `src/app.js`
+
+**Punto de control**: El flujo de novedades queda funcional y disponible para la parte de cálculo.
+
+### A.6 US5 — Liquidaciones y cálculo de remuneración (P1)
+
+**Objetivo**: Generar liquidaciones con cálculos explicables y totales por período.
+
+**Prueba Independiente**: El sistema calcula una liquidación con bases, descuentos e impuestos desde los parámetros vigentes del período.
+
+- [ ] T050 [P] [US5] [Persona 5] Definir la estructura de liquidación y líneas de cálculo en `src/storage.js`
+- [ ] T051 [US5] [Persona 5] Implementar el motor de cálculo de remuneración en `src/app.js` o en un módulo dedicado `src/payroll-calculator.js`
+- [ ] T052 [US5] [Persona 5] Crear la vista de detalle de liquidación y estados en `src/components/payroll-summary.js`
+
+### A.7 US6 — Panel principal, auditoría y reportes (P2)
+
+**Objetivo**: Entregar una vista operativa con alertas globales, auditoría y resúmenes del módulo.
+
+**Prueba Independiente**: Desde el panel principal, el usuario identifica contratos por vencer, liquidaciones pendientes y cambios con trazabilidad.
+
+- [ ] T060 [P] [US6] [Persona 6] Diseñar el panel principal y tarjetas de resumen en `src/components/dashboard.js`
+- [ ] T061 [US6] [Persona 6] Integrar auditoría y trazabilidad de cambios en `src/app.js` y `src/storage.js`
+- [ ] T062 [US6] [Persona 6] Validar reportes y estado general del módulo en `src/components/report-panel.js`
+
+### A.8 Polish y validación final del equipo
+
+**Propósito**: Revisión cruzada, corrección de inconsistencias y preparación de entrega.
+
+- [ ] T100 [P] [CROSS] [Equipo] Revisar coherencia entre trabajadores, contratos, parámetros y liquidaciones
+- [ ] T101 [P] [CROSS] [Equipo] Validar pruebas unitarias e integración de las historias principales
+- [ ] T102 [CROSS] [Equipo] Revisar UX, mensajes visibles y estados de error del módulo
+- [ ] T103 [CROSS] [Equipo] Preparar entrega final y checklist de cierre para el proyecto grupal
+
+### A.9 Dependencias y recomendaciones originales
+
+- **Fase 1**: no depende de ninguna historia.
+- **US1**: puede arrancar en paralelo con la base compartida.
+- **US2**: depende de la base y puede avanzar en paralelo con US1.
+- **US3 / US4 / US5**: dependen de la base y del flujo principal del módulo, pero cada una puede entregarse en paralelo si el equipo está distribuido.
+- **US6**: depende de que existan datos reales en la aplicación.
+- **Fase 8**: depende de que todas las historias principales estén integradas.
+
+- Asignar una historia principal por persona.
+- Mantener cada historia como un entregable independiente.
+- Usar esta estructura para reuniones de equipo, revisión de PR y control de avance.
+- No se debe “editar el archivo completo” salvo para integrar una historia terminada o cambiar la coordinación general del proyecto.
+
+**MVP recomendado original**: 1) US1 — Ficha del trabajador; 2) US2 — Contratos y alertas de plazo; 3) US3 — Parámetros legales; 4) US4 — Períodos y novedades; 5) US5 — Liquidaciones. El panel y la auditoría quedan como cierre de la fase final.

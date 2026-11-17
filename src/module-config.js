@@ -3,7 +3,7 @@
  *
  * Custom ERP modules tailor the base module by editing ONLY this file:
  * set `userConfig` to a ModuleConfig object (see
- * specs/001-erp-base-module/data-model.md) and leave the rest of the code
+ * specs/001-rrhh-planilla/data-model.md) and leave the rest of the code
  * untouched.
  *
  * Example (Recursos Humanos):

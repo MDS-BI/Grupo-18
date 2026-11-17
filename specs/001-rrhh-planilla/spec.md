@@ -1,9 +1,11 @@
 # Especificación de la Funcionalidad: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
-**Rama de la funcionalidad**: 001-erp-base-module  
+> **Funcionalidad descrita**: módulo de **Recursos Humanos y Planilla (RR.HH.)**. La base ERP (Entidad/Documento) se mantiene como capa reutilizable de soporte; las historias de usuario, requisitos y criterios de aceptación de este documento corresponden al módulo de RR.HH. y Planilla.
+
+**Rama de la funcionalidad**: 001-rrhh-planilla  
 **Creada**: 2026-07-08  
 **Actualizada**: 2026-11-17  
-**Estado**: Borrador   
+**Estado**: Borrador  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
 **Última incorporación**: Historias de Usuario 1 a 12 (US1–US4, US6 y US12 con prioridad P1; US5, US7, US8, US10 y US11 con prioridad P2; US9 con prioridad P3), con FR-001–FR-107, SC-001–SC-029 y las reglas transversales de seguridad, auditoría y respaldo. Las Historias 7 a 12 agregan vacaciones (FR-088–FR-091), cargas familiares y asignación familiar (FR-092–FR-094), simulador de sueldo (FR-095–FR-096), reportes de gestión y equidad salarial (FR-097–FR-100), exportaciones contables y de pago (FR-101–FR-104) y parámetros legales versionados (FR-105–FR-107).
 
@@ -15,7 +17,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ### Session 2026-11-08
 
-- Q: ¿Dónde deben definirse las entidades de Recursos Humanos que usan las Historias de Usuario 1–4 (Trabajador, Contrato, Novedad y Período de remuneración)? → A: Opción A — definir Trabajador, Contrato, Novedad y Período en las Entidades Clave de 001, remitiendo el detalle al data-model de 002.
+- Q: ¿Dónde deben definirse las entidades de Recursos Humanos que usan las Historias de Usuario 1–4 (Trabajador, Contrato, Novedad y Período de remuneración)? → A: Opción A — definir Trabajador, Contrato, Novedad y Período en las Entidades Clave de 001, remitiendo el detalle al data-model de `001-rrhh-planilla`.
 - Q: ¿La identidad y el rol del usuario deben provenir de una autenticación real o de una sesión simulada con selector de rol? → A: Opción A — sesión simulada con selector de rol, sin credenciales ni backend.
 - Q: ¿Cómo se cargan y actualizan los parámetros legales (UF, UTM, tasas y tramos) para cada período? → A: Opción A — carga manual versionada por un administrador mediante formulario o archivo de configuración, sin integración con servicios externos.
 - Q: ¿Durante cuánto tiempo debe conservarse la bitácora de auditoría exigida por la Ley 21.719? → A: Opción A — mientras dure la relación laboral y 6 años después del término (validar con asesoría legal).
@@ -599,7 +601,7 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Solicitud de Vacaciones**: Período de descanso pedido para un Trabajador, con fechas, días hábiles, estado (Pendiente, Aprobada, Rechazada o anulada), quién la registró y quién la resolvió.
 - **Feriado**: Fecha no hábil del calendario (fecha y nombre), usada para contar los días hábiles de vacaciones.
 
-> El detalle de atributos, claves de almacenamiento y relaciones de las entidades de Recursos Humanos se documenta en `specs/001-erp-base-module/data-model.md`.
+> El detalle de atributos, claves de almacenamiento y relaciones de las entidades de Recursos Humanos se documenta en `specs/001-rrhh-planilla/data-model.md`.
 
 ## Criterios de Éxito *(obligatorio)*
 
