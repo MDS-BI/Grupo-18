@@ -5,11 +5,11 @@
 **Actualizada**: 2026-11-17  
 **Estado**: Borrador   
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historia de Usuario 7 (Vacaciones: solicitud, aprobación y saldo, prioridad P2), con FR-088–FR-091 y SC-024. Se suma a las Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2), con FR-001–FR-087 y las reglas transversales de seguridad, auditoría y respaldo.
+**Última incorporación**: Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2), Historia de Usuario 7 (Vacaciones: solicitud, aprobación y saldo, P2) e Historia de Usuario 12 (Parámetros legales, P1), con FR-001–FR-091 y FR-105–FR-107, SC-001–SC-029 y las reglas transversales de seguridad, auditoría y respaldo.
 
 ## Propósito
 
-Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio. Sobre esta base se construye el módulo de **Recursos Humanos y Planilla** (Historias de Usuario 1 a 6), que reutiliza la Entidad como **Trabajador** y el Documento como **Liquidación**, y añade contratos, novedades, períodos, cálculo legal, explicación e impresión de liquidaciones y gobierno de datos.
+Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio. Sobre esta base se construye el módulo de **Recursos Humanos y Planilla** (Historias de Usuario 1 a 7 y 12), que reutiliza la Entidad como **Trabajador** y el Documento como **Liquidación**, y añade contratos, novedades, períodos, cálculo legal, explicación e impresión de liquidaciones, gobierno de datos, vacaciones y parámetros legales versionados.
 
 ## Clarifications
 
@@ -346,6 +346,12 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 9. **Dado** un Trabajador con 30 días hábiles de saldo acumulado, **cuando** el administrador/a abre el panel principal, **entonces** ve una alerta de feriado acumulado al máximo para ese Trabajador.
 10. **Dado** un período con vacaciones aprobadas, **cuando** se ejecuta el cálculo de planilla (US4), **entonces** la liquidación no descuenta días por esas vacaciones.
 11. **Dado** que se crea, aprueba, rechaza o anula una solicitud, o se modifica el calendario de feriados, **cuando** la operación se completa, **entonces** la bitácora de auditoría la registra (regla transversal provista por la US6).
+
+---
+
+### Historia de Usuario 12 - Parámetros Legales (Prioridad: P1)
+
+[US12]
 
 ---
 
