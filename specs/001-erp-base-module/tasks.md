@@ -2,14 +2,14 @@
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
-**Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 7 de `spec.md`, incluyendo FR-040–FR-091, la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
+**Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 12 de `spec.md`, incluyendo FR-040–FR-107 y SC-001–SC-029 (las tareas de US8 a US12 se agregan a medida que se incorpora cada historia), la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
 **Actualizado**: 2026-11-17 (incorporada la Historia de Usuario 7, Fase 9, tareas T170–T190; revisión anterior 2026-11-16 contra código/tests actuales con rutas ajustadas a la estructura real `src/rrhh/...`)
 **Tests**: Incluidos por mandato de la constitución (Principio II) y del plan de verificación con Vitest + jsdom.
 
 ## Formato: `[ID] [P?] [Historia] Descripción con ruta de archivo`
 
 - **[P]**: Puede ejecutarse en paralelo (archivos distintos, sin dependencias pendientes)
-- **[US1]–[US7]**: Historia de Usuario a la que pertenece la tarea
+- **[US1]–[US12]**: Historia de Usuario a la que pertenece la tarea
 - Las tareas de configuración, fundacionales, módulo base y pulido no llevan etiqueta de historia
 - Todas las rutas son explícitas y relativas a la raíz del repositorio
 
@@ -68,7 +68,7 @@
 - [ ] T011 [P] Configurar el entorno de pruebas Vitest + jsdom y los fixtures compartidos en `tests/setup/jsdom.js` y `tests/setup/fixtures.js`
   - Evidencia parcial: existe `tests/setup/setup.js` con configuración base registrada en `vitest.config.mjs`; faltan `tests/setup/jsdom.js` y `tests/setup/fixtures.js` dedicados.
 
-### Núcleo append-only de auditoría (bloqueante para US1–US6)
+### Núcleo append-only de auditoría (bloqueante para US1–US12)
 
 > **NOTA: Escribir T012 antes de implementar T013–T014 y verificar que falle.**
 
@@ -594,7 +594,7 @@
   - Falta: no existe `src/rrhh/utils/common.js`.
 - [ ] T167 [P] Revisar accesibilidad y consistencia visual en `src/rrhh/views/liquidaciones.js`, `src/rrhh/views/novedades.js`, `src/rrhh/views/auditoria.js` y `src/rrhh/components/trabajador-form.js`
   - Falta: no revisado/verificado; rutas reales ajustadas a archivos existentes.
-- [ ] T168 [P] Verificar la cobertura FR-001–FR-087, XR-001–XR-005 y SC-011/SC-015/SC-022/SC-023 con la matriz de trazabilidad de este archivo, y registrar brechas restantes en `docs/rrhh.md` (cierre de G18 y K1)
+- [ ] T168 [P] Verificar la cobertura FR-001–FR-107, XR-001–XR-005 y SC-011/SC-015/SC-022/SC-023/SC-024–SC-029 con la matriz de trazabilidad de este archivo, y registrar brechas restantes en `docs/rrhh.md` (cierre de G18 y K1)
   - Falta: no completado; persisten brechas de trazabilidad. `docs/rrhh.md` ya existe (T161) y T162 está verificado.
 - [ ] T169 [P] [US6] Ejecutar una matriz de pruebas de acceso por rol (administrador/a, analista, jefatura, Trabajador activo/desvinculado) contra vistas, búsquedas, impresión y enlaces directos, y verificar que al menos el 95% confirma que los datos ocultos no son recuperables (SC-021, FR-057)
   - Apoyarse en T118–T124, T130, T140 y T145; registrar el resultado en `docs/rrhh.md`.
