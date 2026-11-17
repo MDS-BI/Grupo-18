@@ -3,11 +3,11 @@ import {
   addEntity,
   updateEntity,
   deleteEntity,
-  loadEntities,
+  loadGenericEntities,
   addDocument,
   updateDocument,
   deleteDocument,
-  loadDocuments,
+  loadGenericDocuments,
   validateEntity,
   validateDocument
 } from './storage.js';
@@ -51,31 +51,32 @@ function views() {
 function refreshEntityOptions() {
   const select = qs('edit-entity');
   if (!select) return;
-  renderEntitySelect(select, loadEntities(), 'Selecciona una entidad');
+  renderEntitySelect(select, loadGenericEntities(), 'Selecciona una entidad');
 }
 
 function refreshDocumentOptions() {
   const select = qs('edit-document');
   if (!select) return;
-  renderDocumentSelect(select, loadDocuments(), 'Selecciona un documento');
+  renderDocumentSelect(select, loadGenericDocuments(), 'Selecciona un documento');
 }
 
 function refreshDocumentEntityOptions() {
   const select = qs('document-entity');
   if (!select) return;
+  const entities = loadGenericEntities();
   const previous = select.value;
   select.textContent = '';
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.textContent = 'Selecciona una entidad';
   select.appendChild(placeholder);
-  for (const entity of loadEntities()) {
+  for (const entity of entities) {
     const option = document.createElement('option');
     option.value = entity.entity_id;
     option.textContent = `${entity.name} — ${entity.code}`;
     select.appendChild(option);
   }
-  if (previous && loadEntities().some((entity) => entity.entity_id === previous)) {
+  if (previous && entities.some((entity) => entity.entity_id === previous)) {
     select.value = previous;
   }
 }
@@ -151,7 +152,7 @@ function handleEntitySubmit(event) {
 
 function handleEntitySelection() {
   const id = qs('edit-entity').value;
-  const entity = loadEntities().find((item) => item.id === id);
+  const entity = loadGenericEntities().find((item) => item.id === id);
   if (entity) fillEntityForm(entity);
   else clearEntityForm();
 }
@@ -159,17 +160,27 @@ function handleEntitySelection() {
 function handleEntityDelete() {
   const id = qs('edit-entity').value;
   if (!id) return;
-  if (typeof confirm === 'function') {
-    const entity = loadEntities().find((item) => item.id === id);
-    if (
-      !confirm(
-        `¿Eliminar ${entity ? entity.name : 'el registro'}? Se eliminarán también sus documentos.`
-      )
-    ) {
-      return;
-    }
+  const entity = loadGenericEntities().find((item) => item.id === id);
+  if (!entity) {
+    showFeedback(
+      'entity-feedback',
+      'El registro seleccionado no se gestiona en la pantalla genérica.'
+    );
+    return;
   }
-  deleteEntity(id);
+  if (
+    typeof confirm === 'function' &&
+    !confirm(`¿Eliminar ${entity.name}? Se eliminarán también sus documentos.`)
+  ) {
+    return;
+  }
+  try {
+    deleteEntity(id);
+  } catch (error) {
+    showFeedback('entity-feedback', error.message);
+    return;
+  }
+  showFeedback('entity-feedback', '');
   clearEntityForm();
   refreshEntityOptions();
   refreshStats();
@@ -199,7 +210,7 @@ function handleDocumentSubmit(event) {
 
 function handleDocumentSelection() {
   const id = qs('edit-document').value;
-  const documentRecord = loadDocuments().find((item) => item.id === id);
+  const documentRecord = loadGenericDocuments().find((item) => item.id === id);
   if (documentRecord) fillDocumentForm(documentRecord);
   else clearDocumentForm();
 }
@@ -207,8 +218,22 @@ function handleDocumentSelection() {
 function handleDocumentDelete() {
   const id = qs('edit-document').value;
   if (!id) return;
+  const documentRecord = loadGenericDocuments().find((item) => item.id === id);
+  if (!documentRecord) {
+    showFeedback(
+      'document-feedback',
+      'El documento seleccionado no se gestiona en la pantalla genérica.'
+    );
+    return;
+  }
   if (typeof confirm === 'function' && !confirm('¿Eliminar el documento seleccionado?')) return;
-  deleteDocument(id);
+  try {
+    deleteDocument(id);
+  } catch (error) {
+    showFeedback('document-feedback', error.message);
+    return;
+  }
+  showFeedback('document-feedback', '');
   clearDocumentForm();
   refreshDocumentOptions();
   refreshStats();
@@ -268,6 +293,21 @@ function bindEvents() {
   bindSearch(qs('search-input'), renderSearch);
 }
 
+function showFeedback(id, message) {
+  const node = qs(id);
+  if (!node) return;
+  node.hidden = !message;
+  node.textContent = message || '';
+}
+
+function renderRrhhExclusionNotes() {
+  const enabled = Boolean(modelConfig?.rrhh?.enabled);
+  for (const id of ['entities-rrhh-note', 'documents-rrhh-note']) {
+    const note = qs(id);
+    if (note) note.hidden = !enabled;
+  }
+}
+
 function showConfigErrors(errors) {
   const banner = qs('config-errors');
   if (!banner) return;
@@ -297,6 +337,7 @@ export async function initApp(result) {
   modelConfig = getConfig();
 
   renderShell(modelConfig);
+  renderRrhhExclusionNotes();
   renderDashboard(modelConfig);
   renderEntityCustomFields();
   renderDocumentCustomFields();

@@ -5,6 +5,7 @@ export const ENTITY_KEY = 'erp_base_module:entities';
 export const DOCUMENT_KEY = 'erp_base_module:documents';
 export const NOVEDADES_KEY = 'erp_rrhh:novedades';
 export const LIQUIDACIONES_KEY = 'erp_rrhh:liquidaciones';
+export const TRABAJADORES_KEY = 'erp_rrhh:trabajadores';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -223,6 +224,61 @@ function rrhhRows(key) {
   }
 }
 
+function workerEntityIds() {
+  const ids = new Set();
+  for (const row of rrhhRows(TRABAJADORES_KEY)) {
+    const id = row.entityId || row.entity_id;
+    if (id) ids.add(String(id));
+  }
+  for (const row of rrhhRows(LIQUIDACIONES_KEY)) {
+    const id = row.trabajador?.entityId || row.trabajador?.id;
+    if (id) ids.add(String(id));
+  }
+  for (const row of rrhhRows(NOVEDADES_KEY)) {
+    const id = row.trabajadorEntityId || row.entity_id;
+    if (id) ids.add(String(id));
+  }
+  return ids;
+}
+
+function isWorkerRecord(entity, ids) {
+  return [entity?.entity_id, entity?.id]
+    .filter(Boolean)
+    .some((id) => ids.has(String(id)));
+}
+
+export function isTrabajadorEntity(entity) {
+  return isWorkerRecord(entity, workerEntityIds());
+}
+
+export function isLiquidacionRecord(id) {
+  if (id === undefined || id === null || id === '') return false;
+  return rrhhRows(LIQUIDACIONES_KEY).some((row) => String(row.id) === String(id));
+}
+
+export function isLiquidacionDocument(documentRecord) {
+  if (!documentRecord) return false;
+  if (documentRecord.tipo === 'liquidacion' || documentRecord.tipo === 'liquidación') return true;
+  if (documentRecord.kind === 'liquidacion' || documentRecord.kind === 'liquidación') return true;
+  if (documentRecord.esLiquidacion === true) return true;
+  return isLiquidacionRecord(documentRecord.id);
+}
+
+export function loadGenericEntities() {
+  const ids = workerEntityIds();
+  return loadEntities().filter((entity) => !isWorkerRecord(entity, ids));
+}
+
+export function loadGenericDocuments() {
+  return loadDocuments().filter((documentRecord) => !isLiquidacionDocument(documentRecord));
+}
+
+function rrhhDeletionError(message, code) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
 function hasClosedLiquidations(entityId) {
   return rrhhRows(LIQUIDACIONES_KEY).some(
     (row) =>
@@ -245,17 +301,32 @@ function deleteNovedadesForEntity(entityId) {
 }
 
 /**
- * Delete a worker entity.
+ * Delete a generic entity.
  *
- * Without approved/paid liquidations, the entity and its novedades are removed.
+ * Workers and liquidations belong to the RRHH module and are rejected here.
  * When a closed liquidation exists the entity is logically deactivated instead,
  * so the legal payroll record remains reproducible.
  */
 export function deleteEntity(id) {
   const entities = loadEntities();
   const index = entities.findIndex((item) => item.id === id);
-  if (index === -1) return false;
+  if (index === -1) {
+    if (isLiquidacionRecord(id)) {
+      throw rrhhDeletionError(
+        'Las Liquidaciones se gestionan en RR.HH. y no se eliminan desde la pantalla genérica.',
+        'LIQUIDACION_RRHH_NO_ELIMINABLE'
+      );
+    }
+    return false;
+  }
   const entity = entities[index];
+
+  if (isTrabajadorEntity(entity)) {
+    throw rrhhDeletionError(
+      'Los Trabajadores se gestionan en RR.HH. y no se eliminan desde la pantalla genérica.',
+      'TRABAJADOR_RRHH_NO_ELIMINABLE'
+    );
+  }
 
   if (hasClosedLiquidations(entity.entity_id)) {
     const timestamp = now();
@@ -283,6 +354,11 @@ export function searchEntities(term) {
   return entities.filter((entity) =>
     Object.values(entity).some((value) => normalizeText(value ?? '').includes(query))
   );
+}
+
+export function searchGenericEntities(term) {
+  const ids = workerEntityIds();
+  return searchEntities(term).filter((entity) => !isWorkerRecord(entity, ids));
 }
 
 export function validateDocument(document = {}) {
@@ -440,6 +516,13 @@ export function updateDocument(id, updates = {}) {
 
 export function deleteDocument(id) {
   const documents = loadDocuments();
+  const target = documents.find((document) => document.id === id);
+  if ((target && isLiquidacionDocument(target)) || isLiquidacionRecord(id)) {
+    throw rrhhDeletionError(
+      'Las Liquidaciones se gestionan en RR.HH. y no se eliminan desde la pantalla genérica.',
+      'LIQUIDACION_RRHH_NO_ELIMINABLE'
+    );
+  }
   const next = documents.filter((document) => document.id !== id);
   saveDocuments(next);
   return next.length !== documents.length;

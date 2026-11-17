@@ -1,5 +1,9 @@
 /** Small DOM helpers shared by the RRHH views (no framework, no innerHTML). */
 
+import { formatMoney } from '../../utils/format.js';
+
+export { formatMoney };
+
 export function el(doc, tag, className, text) {
   const node = doc.createElement(tag);
   if (className) node.className = className;
@@ -87,14 +91,6 @@ export function statusTone(estado) {
   if (estado === 'rechazada' || estado === 'anulada' || estado === 'cerrado') return 'danger';
   if (estado === 'pendiente' || estado === 'borrador') return 'warn';
   return 'neutral';
-}
-
-export function formatMoney(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return '—';
-  const rounded = Math.round(number);
-  const sign = rounded < 0 ? '-' : '';
-  return `${sign}$${String(Math.abs(rounded)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 }
 
 export function currentPeriodoId(date = new Date()) {

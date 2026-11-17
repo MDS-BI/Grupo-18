@@ -1,5 +1,5 @@
 import { getConfig } from '../module-config.js';
-import { searchEntities, loadDocuments } from '../storage.js';
+import { searchGenericEntities, loadGenericDocuments } from '../storage.js';
 
 function qs(id) {
   return document.getElementById(id);
@@ -33,8 +33,8 @@ function addMeta(container, text, className) {
 
 /** Render search results (entities plus their related documents). */
 export function renderSearchResults(container, emptyState, term) {
-  const entities = searchEntities(term);
-  const documents = loadDocuments();
+  const entities = searchGenericEntities(term);
+  const documents = loadGenericDocuments();
   const config = getConfig();
   container.textContent = '';
 

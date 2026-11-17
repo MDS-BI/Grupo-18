@@ -30,7 +30,7 @@
 **Propósito**: Inicializar la aplicación Vite y las herramientas compartidas.
 
 - [X] T001 Crear la estructura de carpetas `src/`, `src/utils/`, `src/components/`, `src/rrhh/calculo/`, `src/rrhh/components/`, `src/rrhh/seguridad/`, `src/rrhh/utils/`, `src/rrhh/views/`, `tests/unit/`, `tests/integration/` y `tests/setup/`
-  - Nota: existen `src/`, `src/components/`, `src/rrhh/{calculo,components,seguridad,utils,views}/`, `tests/unit/` y `tests/integration/`; no se evidencian `src/utils/` ni `tests/setup/`.
+  - Evidencia: existen `src/`, `src/components/`, `src/rrhh/{calculo,components,seguridad,utils,views}/`, `tests/unit/` y `tests/integration/`; se agregaron `src/utils/format.js` (formateo CLP, fechas, porcentajes y factores, reutilizado por `src/rrhh/utils/liquidacion-data.js` y `src/rrhh/components/dom.js`) y `tests/setup/setup.js` (configuración base de Vitest registrada en `vitest.config.mjs`), con cobertura en `tests/unit/utils-format.test.js`.
 - [X] T002 [P] Configurar Vite, Vitest y jsdom con los scripts de desarrollo, prueba y compilación en `package.json` y `vitest.config.mjs`
   - Evidencia: `package.json`, `vitest.config.mjs`.
 - [X] T003 [P] Configurar linting y formateo para JavaScript ES2022 en `eslint.config.js`
@@ -64,7 +64,7 @@
 - [ ] T010 [P] Definir los campos personalizados de RR.HH. y el ciclo de vida documental de liquidaciones en `src/module-config.js`
   - Falta: no se evidencian en `module-config.js` los campos personalizados RR.HH. ni el ciclo de vida documental de liquidaciones requeridos por la tarea/spec.
 - [ ] T011 [P] Configurar el entorno de pruebas Vitest + jsdom y los fixtures compartidos en `tests/setup/jsdom.js` y `tests/setup/fixtures.js`
-  - Falta: no existe `tests/setup/`; las pruebas usan configuración distinta.
+  - Evidencia parcial: existe `tests/setup/setup.js` con configuración base registrada en `vitest.config.mjs`; faltan `tests/setup/jsdom.js` y `tests/setup/fixtures.js` dedicados.
 
 ### Núcleo append-only de auditoría (bloqueante para US1–US6)
 
@@ -109,14 +109,14 @@
 
 - [ ] T021 [P] Implementar el formulario de entidad con validación de nombre/código en `src/components/entity-form.js` (FR-001, FR-002, FR-006)
   - Evidencia parcial: `src/components/entity-form.js` existe y gestiona formulario; la validación se apoya en `src/storage.js` (`validateEntity`), pero no se verificó cumplimiento completo.
-- [ ] T022 [P] Implementar la lista de entidades con búsqueda, estado vacío y eliminación de la Entidad genérica en `src/components/entity-list.js` (FR-003, FR-005, FR-007)
-  - Evidencia parcial: existe `src/components/entity-list.js`; falta evidencia de cumplir plenamente semántica genérica/exclusiones exigidas por spec actual.
+- [X] T022 [P] Implementar la lista de entidades con búsqueda, estado vacío y eliminación de la Entidad genérica en `src/components/entity-list.js` (FR-003, FR-005, FR-007)
+  - Evidencia: `src/components/entity-list.js` (`renderEntitySelect`, `renderSearchResults`) consume `loadGenericEntities`, `searchGenericEntities` y `loadGenericDocuments`; `src/storage.js` (`workerEntityIds`, `isTrabajadorEntity`, `loadGenericEntities`, `searchGenericEntities`, `deleteEntity`) excluye Trabajadores de selectores/búsqueda y rechaza su eliminación con `TRABAJADOR_RRHH_NO_ELIMINABLE`; verificado en `tests/integration/generic-rrhh-exclusion.test.js`.
 - [ ] T023 [P] Implementar el formulario de documentos vinculados a entidad en `src/components/document-form.js` (FR-008)
   - Evidencia parcial: `src/components/document-form.js` existe.
 - [ ] T024 [P] Implementar la lista de documentos y la eliminación en cascada al eliminar la entidad en `src/components/document-list.js` (FR-009)
   - Evidencia parcial: `src/components/document-list.js` existe; la cascada se implementa en `src/storage.js` y requiere verificación contra FR-009/FR-003.
-- [ ] T025 Implementar la pantalla de gestión consolidada sin listar entidades en `src/app.js` (FR-016, FR-017, FR-018)
-  - Evidencia parcial: `src/app.js` gestiona vistas de entidades/documentos; no se verificó que cumpla exactamente la separación/consolidación exigida.
+- [X] T025 Implementar la pantalla de gestión consolidada sin listar entidades en `src/app.js` (FR-016, FR-017, FR-018)
+  - Evidencia: `src/app.js` (`refreshEntityOptions`, `refreshDocumentOptions`, `refreshDocumentEntityOptions`, `handleEntitySelection`, `handleEntityDelete`, `handleDocumentSelection`, `handleDocumentDelete`, `renderRrhhExclusionNotes`) usa `loadGenericEntities`/`loadGenericDocuments`, de modo que la gestión genérica no lista Trabajadores ni Liquidaciones y muestra retroalimentación controlada al intentar borrarlos; `index.html` agrega notas de exclusión y contenedores de error (`entities-rrhh-note`, `documents-rrhh-note`, `entity-feedback`, `document-feedback`); `src/storage.js` (`isLiquidacionDocument`, `loadGenericDocuments`, `isLiquidacionRecord`, `deleteDocument`) rechaza Liquidaciones con `LIQUIDACION_RRHH_NO_ELIMINABLE`; verificado en `tests/integration/generic-rrhh-exclusion.test.js`. Las vistas y datos de RR.HH. en `src/rrhh/...` no se modificaron.
 - [X] T026 [P] Implementar la búsqueda por nombre, código, categoría, descripción y fecha objetivo en `src/components/search-bar.js` (FR-004, FR-020, FR-021)
   - Evidencia: `src/components/search-bar.js` (`bindSearch`), `src/storage.js` (`searchEntities`), `src/components/entity-list.js` (`renderSearchResults`).
   - Falta (spec nuevo/reglas pendientes): verificar cobertura/campos exactos y reglas de búsqueda del spec vigente (implementación distribuida en rutas reales).
