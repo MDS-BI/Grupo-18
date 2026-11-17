@@ -3,7 +3,7 @@
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
 **Actualizada**: 2026-11-16  
-**Estado**: Borrador  A
+**Estado**: Borrador   
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
 **Última incorporación**: Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2), con FR-001–FR-087 y las reglas transversales de seguridad, auditoría y respaldo.
 
