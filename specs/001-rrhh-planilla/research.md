@@ -32,7 +32,7 @@
 
 ### Parámetros legales cargados manualmente
 
-**Decisión**: Los parámetros (UF, UTM, IMM, tasas, topes y tramos) se cargan y versionan manualmente por un administrador mediante formulario o archivo de configuración, con vigencia desde/hasta y fuente.
+**Decisión**: Los parámetros (UF, UTM, IMM, tasas, topes y tramos) se cargan manualmente por un administrador como conjuntos completos por mes y año, mediante formulario o archivo de configuración, con fuente. Cada conjunto se bloquea desde su primer uso.
 
 **Justificación**: Evita dependencias externas y mantiene el cálculo reproducible y auditable; el cierre congela los valores aplicados.
 
@@ -62,7 +62,7 @@
 
 ### Entidades RR.HH. definidas en el feature 001
 
-**Decisión**: Trabajador, Contrato, Novedad y Período de Remuneración se documentan como parte del modelo de 001, remitiendo el detalle de atributos a `specs/001-erp-base-module/data-model.md`.
+**Decisión**: Trabajador, Contrato, Novedad y Período de Remuneración se documentan como parte del modelo de 001, remitiendo el detalle de atributos a `specs/001-rrhh-planilla/data-model.md`.
 
 **Justificación**: Evita que el plan 001 dependa de un `spec.md` inexistente en 002 y mantiene una única fuente de verdad para el MER.
 

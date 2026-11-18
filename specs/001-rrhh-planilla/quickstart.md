@@ -33,18 +33,18 @@ Los módulos ERP personalizados adaptan la base mediante un único archivo de co
 4. Opcionalmente establezca `theme.accentColor` para remarcar los resaltados y controles principales de todo el espacio de trabajo.
 5. Añada reglas de validación específicas del módulo junto a las reglas base donde sea necesario.
 
-La generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, eliminación en cascada, navegación y búsqueda siguen siendo gestionadas por el módulo base. Sin archivo de configuración, la aplicación se ejecuta con el comportamiento predeterminado Entidad/Documento. Consulte `specs/001-erp-base-module/` para la especificación completa.
+La generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, eliminación en cascada, navegación y búsqueda siguen siendo gestionadas por el módulo base. Sin archivo de configuración, la aplicación se ejecuta con el comportamiento predeterminado Entidad/Documento. Consulte `specs/001-rrhh-planilla/` para la especificación completa.
 
 ## Flujo de RR.HH. y Planilla
 
 1. En la barra superior, seleccione el rol simulado (administrador/a de RR.HH., analista de remuneraciones, jefatura o Trabajador). No se solicitan credenciales; la sesión vive solo en memoria. Al elegir jefatura o Trabajador, seleccione el Trabajador que representa (jefatura: activo; Trabajador: activo o desvinculado). Al cambiar de rol en sesión activa, los permisos se aplican de inmediato, se vuelve a pedir el representado cuando corresponda y el cambio queda registrado en la bitácora.
-2. Con rol Administrador, cargue o actualice los parámetros legales (UF, UTM, IMM, tasas, topes y tramos) con vigencia desde/hasta y fuente. No hay integración con servicios externos.
+2. Con rol Administrador, cargue un conjunto completo de parámetros legales (UF, UTM, IMM, tasas, topes y tramos) para un mes y año, con fuente. El conjunto se bloquea desde su primer uso. No hay integración con servicios externos.
 3. Cree o abra un trabajador (Entidad) y registre su contrato con sueldo base, jornada, tipo y vigencia. Si cambia el sueldo, registre un nuevo contrato o anexo sin sobrescribir el anterior.
 4. Abra el período mensual en `Planilla` y registre las novedades del mes (horas extra, licencias médicas o ausencias). Las licencias solo guardan tipo y días, sin diagnósticos.
 5. Con rol Jefatura, apruebe o rechace las novedades pendientes. Con rol Analista no se permite aprobar; una novedad rechazada puede corregirse y reenviarse.
 6. Ejecute el cálculo del período. El sistema valida contratos vigentes, novedades aprobadas y parámetros legales vigentes, y genera una liquidación por trabajador con líneas explicables.
 7. Verifique el caso de referencia: sueldo base $1.200.000, 42 h, 5 horas extra, FONASA, AFP 11,27 %, IMM $553.553 y UTM $71.649 deben producir $1.272.908 líquidos y $1.659.456 de costo empleador.
-8. Abra la vista de liquidación, seleccione una línea para ver base, tasa o fórmula y parámetro legal con vigencia, y use Imprimir / Guardar en PDF.
+8. Abra la vista de liquidación, seleccione una línea para ver base, tasa o fórmula y parámetro legal con el mes/año del conjunto aplicado, y use Imprimir / Guardar en PDF.
 9. Cierre el período con rol Jefatura. El cierre congela UF, UTM, IMM y parámetros, y bloquea la edición o recálculo de liquidaciones y novedades.
 10. Consulte la auditoría (solo rol administrador/a de RR.HH.) para ver consultas/cambios de datos sensibles, accesos denegados, cambios de rol y operaciones de respaldo, además de cálculo, aprobación, pago y anulación.
 
@@ -53,7 +53,7 @@ La generación de identidad, marcas de tiempo, integridad referencial entre enti
 - Una liquidación no se genera para un trabajador sin contrato vigente en el período.
 - Solo las novedades aprobadas se incluyen en el cálculo; las pendientes o rechazadas se excluyen con aviso.
 - Un período cerrado no permite registrar, editar, aprobar, rechazar ni recalcular.
-- Un cambio de parámetro legal con nueva vigencia afecta solo a los períodos posteriores.
+- Un conjunto de parámetros legales cargado para otro mes/año afecta solo a los períodos posteriores; el conjunto ya usado permanece bloqueado.
 - Un trabajador con liquidaciones aprobadas o pagadas no se elimina; solo se da de baja lógica.
 - Visibilidad por rol: la jefatura ve datos básicos y gestiona novedades de su equipo (incluidas licencias médicas sin diagnóstico clínico), pero tiene ocultos/bloqueados contratos, sueldos base y liquidaciones; el Trabajador (activo o desvinculado) solo ve sus propias liquidaciones de períodos cerrados. Cada consulta sensible, acceso denegado y cambio de rol queda auditado.
 
@@ -82,8 +82,9 @@ Fecha: 2026-11-08.
   verificados.
 - US6: matriz de roles, datos sensibles, bitácora de solo inserción, auditoría
   automática de consultas y cambios, y denegaciones auditadas verificadas.
-- La bitácora rechaza edición y eliminación; no almacena montos, cuentas
-  bancarias ni cuotas sindicales, solo la acción, el actor y el registro afectado.
+- La bitácora rechaza edición y eliminación; registra valores anteriores y nuevos
+  de campos no sensibles, y para montos, cuentas bancarias, cuotas sindicales y
+  demás datos sensibles guarda el campo cambiado y `[REDACTADO]` en lugar del contenido.
 - Clarificaciones 2026-11-08: sesión simulada, parámetros manuales, retención de
   auditoría de 6 años y respaldo/restauración JSON reflejados en plan, research,
   modelo de datos, contratos y este inicio rápido.

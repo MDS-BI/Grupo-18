@@ -3,7 +3,7 @@
  *
  * Custom ERP modules tailor the base module by editing ONLY this file:
  * set `userConfig` to a ModuleConfig object (see
- * specs/001-erp-base-module/data-model.md) and leave the rest of the code
+ * specs/001-rrhh-planilla/data-model.md) and leave the rest of the code
  * untouched.
  *
  * Example (Recursos Humanos):
@@ -19,7 +19,8 @@
  *     { target: 'entity', key: 'rut', label: 'RUT', type: 'text', required: true }
  *   ],
  *   statusLifecycle: null,
- *   theme: { accentColor: '#2563eb' }
+ *   theme: { accentColor: '#2563eb' },
+ *   rrhh: { enabled: true, only: true }
  * };
  */
 export const userConfig = {
@@ -31,7 +32,7 @@ export const userConfig = {
     documents: 'Liquidaciones de Sueldo'
   },
   theme: { accentColor: '#0f766e' },
-  rrhh: { enabled: true, label: 'RRHH / Planilla', roleSelector: true },
+  rrhh: { enabled: true, label: 'RRHH / Planilla', roleSelector: true, only: true },
   empresa: {
     razonSocial: 'Empresa Demo SpA (ficticia)',
     rut: '11.111.111-1',
@@ -94,7 +95,8 @@ export const DEFAULT_CONFIG = {
   rrhh: {
     enabled: false,
     label: 'RRHH / Planilla',
-    roleSelector: true
+    roleSelector: true,
+    only: false
   },
   empresa: {
     razonSocial: '',
@@ -317,6 +319,9 @@ export function normalizeConfig(input) {
       }
       if (input.rrhh.roleSelector !== undefined) {
         config.rrhh.roleSelector = Boolean(input.rrhh.roleSelector);
+      }
+      if (input.rrhh.only !== undefined) {
+        config.rrhh.only = Boolean(input.rrhh.only);
       }
     }
   }

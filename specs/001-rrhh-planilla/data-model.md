@@ -1,13 +1,156 @@
-# Modelo de Datos: Módulo de Recursos Humanos y Planilla (Remuneraciones)
+# Modelo de Datos: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
-**Rama**: `002-rrhh-planilla` | **Fecha**: 2026-10-20 | **Plan**: [plan.md](plan.md)
-**Estructura base**: [`specs/001-erp-base-module/data-model.md`](../001-erp-base-module/data-model.md)
+## Entidad: Entity (registro de datos maestros)
 
-Este documento describe el Modelo Entidad-Relación (MER) del módulo **Recursos Humanos y Planilla** y cómo se monta sobre la estructura base del ERP (Entity + Document + ModuleConfig) **sin modificar el código central**.
+Representa el dato maestro central del módulo (p. ej., cliente, proveedor, artículo) con su identidad fiscal, contacto y condiciones comerciales.
+
+| Campo | Tipo | Descripción | Restricciones |
+|---|---|---|---|
+| id | string | Identificador interno único del registro de entidad | Obligatorio, generado automáticamente |
+| entity_id | string | Identificador público usado para vincular documentos a esta entidad | Obligatorio, generado automáticamente, único |
+| name | string | Nombre o razón social de la entidad | Obligatorio, no vacío |
+| code | string | Código o clave de negocio que identifica la entidad | Obligatorio, no vacío |
+| taxId | string | Identificación fiscal de la entidad (p. ej., RFC, NIT, CUIT) | Opcional; se almacena recortada cuando se proporciona |
+| email | string | Correo electrónico principal de contacto | Opcional; debe tener formato de correo válido si se proporciona |
+| phone | string | Teléfono de contacto | Opcional |
+| address | string | Dirección fiscal o comercial | Opcional |
+| category | string | Clasificación opcional como tipo, grupo o clase | Opcional |
+| description | string | Descripción corta o notas | Opcional |
+| targetDate | string | Fecha objetivo opcional en formato YYYY-MM-DD; los módulos personalizados definen su significado (p. ej., fecha de vencimiento, fecha de revisión) | Opcional, debe ser una fecha de calendario válida si se proporciona |
+| creditLimit | number | Límite de crédito extendido a la entidad en la moneda configurada | Opcional, debe ser un número no negativo |
+| paymentTerms | string | Condiciones de pago acordadas (p. ej., contado, neto 30) | Opcional |
+| createdAt | string | Marca de tiempo de cuándo se creó la entidad | Obligatorio |
+| updatedAt | string | Marca de tiempo de la última actualización de la entidad | Obligatorio |
+
+## Entidad: Document (registro transaccional)
+
+Representa un documento transaccional vinculado a una entidad (p. ej., pedido, factura, contrato), identificado por serie y folio y con desglose económico.
+
+| Campo | Tipo | Descripción | Restricciones |
+|---|---|---|---|
+| id | string | Identificador único del documento | Obligatorio, generado automáticamente |
+| entity_id | string | Identificador de la entidad a la que pertenece este documento | Obligatorio, debe referenciar el entity_id de una entidad existente |
+| series | string | Serie del documento (p. ej., FAC, A, NV) que agrupa folios consecutivos | Opcional |
+| folio | number | Folio consecutivo que, junto con la serie, forma el número oficial del documento | Obligatorio, debe ser un entero positivo |
+| startDate | string | Fecha de inicio en formato YYYY-MM-DD | Obligatorio, debe ser una fecha de calendario válida |
+| endDate | string | Fecha de fin en formato YYYY-MM-DD | Obligatorio, debe ser una fecha de calendario válida, debe ser igual o posterior a startDate |
+| quantity | number | Cantidad asociada al documento | Opcional, debe ser un entero positivo |
+| subtotal | number | Importe antes de descuentos e impuestos | Opcional, debe ser un número no negativo |
+| discount | number | Descuento aplicado sobre el subtotal | Opcional, debe ser un número no negativo y no puede superar el subtotal |
+| taxAmount | number | Impuesto calculado para el documento | Opcional, debe ser un número no negativo |
+| totalAmount | number | Importe total del documento en la moneda configurada | Opcional, debe ser un número no negativo |
+| currency | string | Código de moneda para los importes del documento (p. ej., MXN, USD, EUR) | Opcional |
+| paymentTerms | string | Condiciones de pago del documento (p. ej., contado, neto 30) | Opcional |
+| notes | string | Notas u observaciones libres del documento | Opcional |
+| status | string | Estado del documento como borrador, pendiente, aprobado o cancelado | Opcional |
+| createdAt | string | Marca de tiempo de cuándo se creó el documento | Obligatorio |
+| updatedAt | string | Marca de tiempo de la última actualización del documento | Obligatorio |
+
+## Entidad: ModuleConfig
+
+Objeto de configuración cargado al arrancar que adapta el módulo base en un módulo específico.
+
+| Campo | Tipo | Descripción | Restricciones |
+|---|---|---|---|
+| moduleName | string | Nombre visible del módulo adaptado | Obligatorio, no vacío |
+| labels | object | Mapeos de términos como `{ entity: "Cliente", entities: "Clientes", document: "Pedido de Venta", documents: "Pedidos de Venta" }` | Opcional; retrocede a Entidad/Documento |
+| customFields | array | Definiciones de campos por tipo de registro: `{ target: "entity"\|"document", key, label, type: "text"\|"number"\|"date"\|"select", required: boolean, options?: string[] }` | Opcional; las claves NO DEBEN chocar con nombres de campos base |
+| statusLifecycle | object | Estados ordenados y transiciones permitidas para documentos, p. ej., `{ statuses: ["cotización", "pedido", "facturado"], transitions: { cotización: ["pedido"], pedido: ["facturado"], facturado: [] } }` | Opcional |
+| theme | object | Opciones de marca, p. ej., `{ accentColor: "#0f62fe" }`; aplicado como propiedad personalizada de CSS en todo el marco del espacio de trabajo | Opcional; accentColor debe ser un color CSS válido o retrocede al predeterminado |
+
+## Reglas de ModuleConfig
+
+- La configuración se carga una vez al arrancar y se aplica en todas las pantallas.
+- Cuando la configuración está ausente, se aplican los valores predeterminados integrados: etiquetas Entidad/Documento, sin campos personalizados, estado de texto libre, color de acento predeterminado.
+- Los valores inválidos o conflictivos deben informarse con claridad en lugar de fallar silenciosamente.
+- Las claves de campos personalizados no deben chocar con los nombres de campos base (`id`, `entity_id`, `name`, `code`, `taxId`, `email`, `phone`, `address`, `category`, `description`, `targetDate`, `creditLimit`, `paymentTerms`, `series`, `folio`, `startDate`, `endDate`, `quantity`, `subtotal`, `discount`, `taxAmount`, `totalAmount`, `currency`, `notes`, `status`).
+- Los valores de campos personalizados se persisten junto a los campos base sin cambios de esquema en el almacenamiento.
+- Un ciclo de vida configurado reemplaza la entrada de estado de texto libre; sin uno, el estado permanece como texto libre.
+
+## Reglas de Validación
+
+### Entidad
+
+- Una entidad debe incluir un nombre no vacío.
+- Una entidad debe incluir un código no vacío.
+- La identificación fiscal, teléfono, dirección, categoría, descripción y condiciones de pago son opcionales pero deben almacenarse como cadenas recortadas.
+- El correo electrónico es opcional pero, cuando está presente, debe tener formato de correo válido.
+- El límite de crédito es opcional pero, cuando está presente, debe ser un número no negativo.
+- La fecha objetivo es opcional pero, cuando está presente, debe ser una fecha de calendario válida en formato YYYY-MM-DD.
+- Un entity_id debe generarse automáticamente y debe ser único entre todas las entidades.
+
+### Documento
+
+- Un documento debe referenciar una entidad existente mediante entity_id.
+- Un documento debe incluir un folio entero positivo; la serie es opcional y, cuando existe, se combina con el folio para formar el número oficial del documento (p. ej., `FAC-1001`).
+- Un documento debe incluir fechas de inicio y fin válidas; la fecha de fin debe ser igual o posterior a la fecha de inicio.
+- La cantidad es opcional y debe ser un entero positivo.
+- Subtotal, descuento, impuesto e importe total son opcionales y deben ser números no negativos; el descuento no puede superar el subtotal.
+- La aplicación debe normalizar el texto para un comportamiento de búsqueda consistente.
+
+> Nota: el cálculo automático de totales (p. ej., `total = subtotal - descuento + impuesto`) queda como punto de extensión; el módulo base valida cada importe de forma independiente para evitar sorpresas por redondeo.
+
+## Relaciones
+
+- Cada entidad se almacena independientemente y aparece como una única fila en la lista de entidades.
+- Cada entidad tiene un entity_id usado para conectarse a sus documentos.
+- Cada documento pertenece exactamente a una entidad, vinculada por el entity_id de la entidad.
+- Cuando se elimina una entidad, todos los documentos que referencian su entity_id también se eliminan.
+- Las operaciones de búsqueda se realizan sobre los registros de entidad almacenados, incluyendo identidad fiscal, contacto y condiciones comerciales.
+
+## Notas de Extensibilidad
+
+- Los módulos personalizados pueden añadir campos específicos del dominio a cualquiera de los dos tipos de registro; los campos base anteriores deben mantener sus nombres y semántica para que el almacenamiento, la validación y la integridad referencial permanezcan intactos.
+- El campo `status` es intencionadamente de texto libre a nivel base para que cada módulo personalizado pueda imponer su propio ciclo de vida (p. ej., estados de pedidos, estados de aprobación).
+- La unicidad de folio por serie, las partidas de documento (líneas con producto, cantidad y precio) y la numeración automática son puntos de extensión naturales para módulos que los requieran.
+
+## Extensión RR.HH. y Planilla
+
+El módulo de Recursos Humanos y Planilla reutiliza `Entity` como **Trabajador** y `Document` como **Liquidación de Sueldo**. Las tablas de extensión se guardan en `localStorage` con el prefijo `erp_rrhh:*` y se vinculan mediante `entity_id` (trabajador) y `periodoId` (período). El detalle completo del MER y el diccionario de datos está en el [Apéndice A](#apéndice-a--mer-y-diccionario-de-datos-rrhh) de este mismo documento, con diagramas en [mer.png](mer.png), [mer.svg](mer.svg), [mer-resumen.png](mer-resumen.png) y fuente Mermaid en [mer.mmd](mer.mmd).
+
+Trabajador, Contrato, Novedad y Período de Remuneración forman parte del modelo de este feature (001). **Trabajador no crea una tabla nueva**: es la Entidad base con campos personalizados, por lo que su clave sigue siendo `erp_base_module:entities`; las demás entidades de extensión usan `erp_rrhh:*`.
+
+| Entidad de extensión | Clave sugerida | Campos principales | Relaciones |
+|---|---|---|---|
+| TRABAJADOR | `erp_base_module:entities` (Entidad base + `customFields`) | `entity_id`, `taxId` (RUT), `fechaIngreso`, `fechaNacimiento`, `estadoLaboral`, `category` (departamento), `afp`, `sistemaSalud`, `banco`, `numeroCuenta`, `contactoEmergencia` | Reutiliza Entidad; es referenciado por contratos, novedades y liquidaciones |
+| CONTRATO | `erp_rrhh:contratos` | `id`, `entity_id`, `sueldoBase`, `jornadaSemanal`, `tipoContrato`, `fechaInicio`, `fechaTermino`, `vigenciaDesde`, `vigenciaHasta` | Pertenece a un Trabajador; origina liquidaciones |
+| PERIODO_REMUNERACION | `erp_rrhh:periodos` | `id`, `anio`, `mes`, `estado` (Abierto/Calculado/Cerrado), `cerradoPor`, `fechaCierre`, `uf`, `utm`, `imm` | Agrupa novedades y liquidaciones; congela parámetros al cerrar |
+| NOVEDAD | `erp_rrhh:novedades` | `id`, `trabajadorEntityId`, `periodoId`, `tipo`, `cantidad`, `unidad`, `fechaInicio`, `fechaFin`, `estado`, `registradoPor`, `aprobadoPor`, `fechaAprobacion`, `motivoRechazo` | Pertenece a un Trabajador y a un Período; solo las aprobadas alimentan el cálculo |
+| CONCEPTO_REMUNERACION | `erp_rrhh:conceptos` | `id`, `codigo`, `nombre`, `tipo`, `imponible`, `cuentaContable`, `esSensible` | Clasifica líneas de liquidación y novedades |
+| CONJUNTO_PARAMETROS_LEGALES | `erp_rrhh:parametros-mes` | `id`, `anio`, `mes`, `valores`, `fuente`, `cargadoPor`, `bloqueado` | Conjunto completo usado por un Período; se bloquea desde el primer uso |
+| PARAMETRO_LEGAL | `erp_rrhh:parametros` | `id`, `conjuntoId`, `codigo`, `descripcion`, `valor`, `unidad`, `fuente` | Pertenece a un conjunto por mes/año y se congela en la liquidación |
+| TRAMO_IMPUESTO | `erp_rrhh:tramos-impuesto` | `id`, `conjuntoId`, `desdeUtm`, `hastaUtm`, `factor`, `rebaja`, `vigenciaDesde` | Sustenta el impuesto único dentro del conjunto |
+| SOLICITUD_VACACION | `erp_rrhh:solicitudes-vacacion` | `id`, `entity_id`, `fechaInicio`, `fechaFin`, `diasHabiles`, `saldoDescontado`, `estado`, `auditadoPor` | US7; se recalcula si se agrega un feriado en el rango |
+| FERIADO | `erp_rrhh:feriados` | `id`, `fecha`, `nombre`, `origen`, `anio` | US7; excluye días hábiles de solicitudes y períodos |
+| CARGA_FAMILIAR | `erp_rrhh:cargas-familiares` | `id`, `entity_id`, `rut`, `nombre`, `parentesco`, `fechaNacimiento`, `vigenteDesde`, `vigenteHasta` | US8; RUT vigente único por Trabajador |
+| LINEA_LIQUIDACION | `erp_rrhh:lineas-liquidacion` | `id`, `liquidacionId`, `conceptoId`, `tipo`, `monto`, `base`, `tasaFactor`, `formula`, `parametroSnapshot`, `motivoManual` | Pertenece a una Liquidación; conserva el snapshot del cálculo |
+| REGISTRO_AUDITORIA | `erp_rrhh:auditoria` | `id`, `entidad`, `entidadId`, `accion`, `campos` (lista de `{ campo, valorAnterior, valorNuevo }`, con `[REDACTADO]` en datos sensibles), `usuario`, `rol`, `fecha`, `motivo` | Traza cálculo, aprobación, pago, anulación y consultas sensibles |
+
+### Reglas de la extensión RR.HH.
+
+- Un trabajador se identifica por el `entity_id` de la Entidad base; sus contratos, novedades y liquidaciones referencian ese mismo `entity_id`.
+- Un período agrupa una liquidación por trabajador; no se permiten duplicados para el mismo `entity_id` y `periodoId`.
+- Solo las novedades en estado Aprobada son elegibles para el cálculo; las Pendientes o Rechazadas se excluyen y se informan.
+- Al cerrar un período se congelan UF, UTM, IMM y los parámetros usados; las liquidaciones y novedades quedan de solo lectura.
+- Cada línea conserva `base`, `tasaFactor`, `formula` y `parametroSnapshot` (código, valor aplicado, vigencia, fuente) para que la explicación no dependa de parámetros posteriores.
+- Los cambios de sueldo se registran como un nuevo contrato o anexo con su vigencia, sin sobrescribir el contrato anterior.
+- Los trabajadores con liquidaciones aprobadas o pagadas no se eliminan físicamente; se aplica baja lógica (`estadoLaboral = "Desvinculado"`). La eliminación en cascada solo aplica a fichas sin liquidaciones cerradas.
+- Los datos de salud se limitan a tipo y días; se prohíbe almacenar diagnósticos, códigos CIE o texto clínico.
+- Los roles Analista y Jefatura se validan en la capa de servicio y en la interfaz; la auditoría es de solo inserción.
+- La sesión es simulada: el rol activo se mantiene en memoria y la auditoría registra ese rol, no una identidad verificada; no se almacenan credenciales.
+- La bitácora de auditoría se conserva durante la relación laboral y 6 años después del término; no se elimina desde la interfaz. Registra consultas/cambios de datos sensibles, cambios de rol, accesos denegados y operaciones de exportación/importación de respaldo.
+- El respaldo exporta las claves del espacio de trabajo en un único JSON versionado; la restauración valida el esquema y reemplaza los datos operativos solo tras confirmación explícita, sin sobrescribir ni eliminar los registros previos de auditoría (solo inserción).
+- Un conjunto de parámetros legales se carga completo para un mes/año y se bloquea desde que un Período lo usa por primera vez; las correcciones se registran como otro conjunto para un mes distinto (US12).
+- Una solicitud de vacaciones recalcula días hábiles y saldo descontado cuando se agrega un feriado en su rango, y deja constancia en auditoría (US7).
+- Las exportaciones CSV se generan solo desde períodos cerrados; no crean ni modifican registros y su formato se define en `contracts/entity-storage.md` (US11).
 
 ---
 
-## 1. Diagrama Entidad-Relación
+## Apéndice A — MER y diccionario de datos RR.HH.
+
+Contenido incorporado desde `specs/000-rrhh-planilla/data-model.md` al unificar la documentación del módulo en esta carpeta; los diagramas MER se movieron a esta misma carpeta. Es detalle de referencia del diseño RR.HH.: ante cualquier discrepancia con el cuerpo principal o con `spec.md`, prevalecen estos últimos.
+
+### 1. Diagrama Entidad-Relación
 
 - Imagen completa (con atributos): [`mer.png`](mer.png) · [`mer.svg`](mer.svg)
 - Vista resumida (solo entidades y relaciones): [`mer-resumen.png`](mer-resumen.png)
@@ -57,9 +200,7 @@ Las líneas punteadas son relaciones lógicas (se resuelven por fecha de vigenci
 
 </details>
 
----
-
-## 2. Compatibilidad con la estructura base
+### 2. Compatibilidad con la estructura base
 
 La base ofrece dos tipos de registro (Entity y Document) unidos por `entity_id`, campos personalizados (`customFields`), un ciclo de vida de estados (`statusLifecycle`) y persistencia en `localStorage`. El módulo usa esas piezas así:
 
@@ -74,7 +215,7 @@ La base ofrece dos tipos de registro (Entity y Document) unidos por `entity_id`,
 | `localStorage` | Las tablas base siguen en `erp_base_module:entities` y `erp_base_module:documents`. Las tablas de extensión usan claves propias `erp_rrhh:<tabla>` (p. ej., `erp_rrhh:contratos`), con el mismo patrón de id autogenerado y marcas `createdAt`/`updatedAt`. |
 | Puntos de extensión declarados por la base | Se usan los tres que la base deja abiertos: **partidas de documento** (LINEA_LIQUIDACION), **unicidad de folio por serie** y **cálculo automático de totales** (motor de cálculo de la planilla). |
 
-### 2.1 Reglas de compatibilidad
+#### 2.1 Reglas de compatibilidad
 
 1. **Ningún campo base se renombra ni cambia de tipo.** Cuando un campo base no aplica directamente, se le asigna un significado del dominio compatible con su tipo y validación (tabla 3.1 y 3.2).
 2. **Las claves de campos personalizados no chocan** con la lista de campos base (`id`, `entity_id`, `name`, `code`, `taxId`, …). Por eso el RUT se guarda en `taxId` y no en un campo `rut` nuevo.
@@ -83,9 +224,9 @@ La base ofrece dos tipos de registro (Entity y Document) unidos por `entity_id`,
 5. **Fórmula de totales**: la base sugiere `total = subtotal − descuento + impuesto` solo como ejemplo y no la impone. En una liquidación el impuesto **se descuenta**, así que el módulo usa `totalAmount = subtotal − discount − taxAmount`. Cada importe sigue cumpliendo las validaciones base (no negativos y `discount ≤ subtotal`).
 6. **Búsqueda**: como la búsqueda base recorre los campos de la Entity, se puede buscar trabajadores por nombre, RUT, código de ficha, correo, departamento y forma de pago sin desarrollo adicional.
 
-### 2.2 Configuración propuesta (`src/module-config.js`)
+#### 2.2 Configuración propuesta (`src/module-config.js`)
 
-> El borrador actual de la rama `feature-diseño-rrhh` (`export const config = { name: … entities: [...] }`) no sigue la forma `userConfig` que espera la base y además tiene un error de sintaxis (falta una coma después de `name`). Esta es la forma compatible:
+> Referencia histórica: el borrador original de la rama `feature-diseño-rrhh` (`export const config = { name: … entities: [...] }`) no seguía la forma `userConfig` que espera la base. Esta es la forma compatible:
 
 ```js
 export const userConfig = {
@@ -100,7 +241,6 @@ export const userConfig = {
     { target: "entity", key: "fechaIngreso", label: "Fecha de ingreso", type: "date", required: true },
     { target: "entity", key: "genero", label: "Género", type: "select",
       options: ["Femenino", "Masculino", "No binario", "Prefiere no informar"] },
-    { target: "entity", key: "nombreSocial", label: "Nombre social", type: "text" },
     { target: "entity", key: "nacionalidad", label: "Nacionalidad", type: "text" },
     { target: "entity", key: "afp", label: "AFP", type: "select", required: true,
       options: ["Capital", "Cuprum", "Habitat", "Modelo", "PlanVital", "Provida", "Uno"] },
@@ -133,16 +273,14 @@ export const userConfig = {
 };
 ```
 
----
-
-## 3. Diccionario de datos
+### 3. Diccionario de datos
 
 Convención: los campos heredados mantienen el nombre en inglés de la base; los campos nuevos del módulo usan `camelCase` en español. Las llaves foráneas hacia la base se llaman igual que en la base (`entity_id`) o `document_id` (id de la Liquidación).
 
 Clasificación de cada dato (se usa para permisos, sección 5):
 **I** = uso interno · **C** = confidencial (solo RR.HH. / el propio trabajador) · **S** = sensible según la Ley 21.719 (acceso restringido y registrado en auditoría).
 
-### 3.1 TRABAJADOR (Entity base) — clave `erp_base_module:entities`
+#### 3.1 TRABAJADOR (Entity base) — clave `erp_base_module:entities`
 
 | Campo | Origen | Tipo | Significado en RR.HH. | Restricciones | Clas. |
 |---|---|---|---|---|---|
@@ -163,7 +301,7 @@ Clasificación de cada dato (se usa para permisos, sección 5):
 | fechaNacimiento | custom | date | Para validar edad legal (≥ 18 o autorización) | Obligatorio | C |
 | fechaIngreso | custom | date | Antigüedad: vacaciones progresivas, indemnización | Obligatorio | I |
 | genero | custom | select | Solo para reportes agregados de equidad salarial | Opcional, incluye "Prefiere no informar" | **S** |
-| nombreSocial | custom | text | Nombre con el que la persona se identifica (Ley 21.120); se muestra en pantalla si existe | Opcional | **S** |
+| nombreSocial | custom | text | Referencia histórica (Ley 21.120) fuera de alcance en esta versión; no se captura ni se muestra en pantalla | No aplica | — |
 | nacionalidad | custom | text | Control del art. 19 del Código del Trabajo (proporción de trabajadores chilenos) | Opcional | C |
 | afp | custom | select | AFP de afiliación (FK lógica a INSTITUCION_PREVISIONAL tipo AFP) | Obligatorio | C |
 | sistemaSalud | custom | select | FONASA o Isapre | Obligatorio | C |
@@ -172,7 +310,7 @@ Clasificación de cada dato (se usa para permisos, sección 5):
 | contactoEmergencia | custom | text | Nombre y teléfono | Opcional | C |
 | estadoLaboral | custom | select | Activo / Con licencia / Desvinculado | Obligatorio | I |
 
-### 3.2 LIQUIDACION (Document base) — clave `erp_base_module:documents`
+#### 3.2 LIQUIDACION (Document base) — clave `erp_base_module:documents`
 
 | Campo | Origen | Tipo | Significado en Planilla | Restricciones |
 |---|---|---|---|---|
@@ -197,7 +335,7 @@ Clasificación de cada dato (se usa para permisos, sección 5):
 | totalTributable | custom | number | Base del impuesto único | ≥ 0 |
 | costoEmpleador | custom | number | Haberes + aportes patronales (no se descuenta al trabajador) | ≥ subtotal |
 
-### 3.3 CONTRATO — `erp_rrhh:contratos`
+#### 3.3 CONTRATO — `erp_rrhh:contratos`
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
@@ -215,7 +353,7 @@ Clasificación de cada dato (se usa para permisos, sección 5):
 | estado | string | `vigente`, `terminado` | **Máximo un contrato vigente por trabajador** |
 | causalTermino | string | Artículo del Código del Trabajo (159, 160, 161) | Obligatorio si `estado = terminado` |
 
-### 3.4 CARGO — `erp_rrhh:cargos`
+#### 3.4 CARGO — `erp_rrhh:cargos`
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
@@ -223,9 +361,9 @@ Clasificación de cada dato (se usa para permisos, sección 5):
 | codigo | string | Código del cargo | Único |
 | nombre | string | Nombre del cargo | Obligatorio |
 | departamento_id | string | FK → DEPARTAMENTO | Obligatorio |
-| bandaSalarialMin / bandaSalarialMax | number | Rango de sueldo base definido para el cargo | min ≤ max; min ≥ ingreso mínimo |
+| bandaSalarialMin / bandaSalarialMax | number | Referencia histórica fuera de alcance; no se captura ni valida en esta versión | No aplica |
 
-### 3.5 DEPARTAMENTO — `erp_rrhh:departamentos`
+#### 3.5 DEPARTAMENTO — `erp_rrhh:departamentos`
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
@@ -235,7 +373,7 @@ Clasificación de cada dato (se usa para permisos, sección 5):
 | centroCosto | string | Código de centro de costo **compartido con el módulo de Contabilidad** | Obligatorio |
 | jefatura_entity_id | string | FK → TRABAJADOR que dirige el área | Opcional |
 
-### 3.6 INSTITUCION_PREVISIONAL — `erp_rrhh:instituciones`
+#### 3.6 INSTITUCION_PREVISIONAL — `erp_rrhh:instituciones`
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
@@ -246,7 +384,7 @@ Clasificación de cada dato (se usa para permisos, sección 5):
 | tasa | number | % de cotización (AFP: 10 % + comisión de la administradora; FONASA: 7 %; Mutual: tasa básica + adicional) | ≥ 0 |
 | vigenciaDesde | date | Desde cuándo rige la tasa | — |
 
-### 3.7 PERIODO_REMUNERACION — `erp_rrhh:periodos`
+#### 3.7 PERIODO_REMUNERACION — `erp_rrhh:periodos`
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
@@ -257,7 +395,7 @@ Clasificación de cada dato (se usa para permisos, sección 5):
 | valorUF / valorUTM | number | Valores congelados al cierre (UF del último día del mes; UTM del mes) | > 0 |
 | ingresoMinimo | number | Ingreso mínimo mensual vigente en el período | > 0 |
 
-### 3.8 CONCEPTO_REMUNERACION — `erp_rrhh:conceptos`
+#### 3.8 CONCEPTO_REMUNERACION — `erp_rrhh:conceptos`
 
 Catálogo de haberes y descuentos. Ejemplos precargados: `SUELDO_BASE`, `HORAS_EXTRA`, `GRATIFICACION`, `BONO`, `COLACION`, `MOVILIZACION`, `ASIG_FAMILIAR`, `COT_AFP`, `COT_SALUD`, `SEG_CESANTIA`, `IMPUESTO_UNICO`, `ANTICIPO`, `CUOTA_SINDICAL`, `APORTE_EMP_AFC`, `APORTE_EMP_PREVISIONAL`, `APORTE_EMP_MUTUAL`.
 
@@ -273,7 +411,7 @@ Catálogo de haberes y descuentos. Ejemplos precargados: `SUELDO_BASE`, `HORAS_E
 | esSensible | bool | El concepto revela un dato sensible (p. ej., `CUOTA_SINDICAL` revela afiliación sindical) | Si es `true`, solo RR.HH. lo ve y su consulta queda auditada |
 | cuentaContable | string | Cuenta para el asiento de remuneraciones (**integración con Contabilidad**) | Obligatorio |
 
-### 3.9 LINEA_LIQUIDACION — `erp_rrhh:lineas`
+#### 3.9 LINEA_LIQUIDACION — `erp_rrhh:lineas`
 
 Detalle de la liquidación (punto de extensión "partidas de documento" de la base).
 
@@ -291,7 +429,7 @@ Detalle de la liquidación (punto de extensión "partidas de documento" de la ba
 
 Reglas de consistencia: `LIQUIDACION.subtotal = Σ montos de haberes`; `discount = Σ descuentos legales y voluntarios (sin IMPUESTO_UNICO)`; `taxAmount = monto de IMPUESTO_UNICO`; `costoEmpleador = subtotal + Σ aportes del empleador`.
 
-### 3.10 NOVEDAD — `erp_rrhh:novedades`
+#### 3.10 NOVEDAD — `erp_rrhh:novedades`
 
 Movimientos del mes que alteran la liquidación.
 
@@ -308,7 +446,7 @@ Movimientos del mes que alteran la liquidación.
 | estado | string | `registrada` → `aprobada` / `rechazada` → `aplicada` | Solo las aprobadas entran al cálculo |
 | observacion | string | Comentario breve | **Prohibido registrar diagnósticos médicos** |
 
-### 3.11 CARGA_FAMILIAR — `erp_rrhh:cargas` (Fase 2)
+#### 3.11 CARGA_FAMILIAR — `erp_rrhh:cargas`
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
@@ -319,11 +457,13 @@ Movimientos del mes que alteran la liquidación.
 | fechaNacimiento | date | Para verificar requisitos de edad | — |
 | vigenteDesde / vigenteHasta | date | Vigencia del reconocimiento | — |
 
-### 3.12 Tablas de parámetros legales (versionadas por vigencia)
+#### 3.12 Tablas de parámetros legales (conjuntos completos por mes/año)
 
-Los valores legales **no se escriben en el código**: se guardan con fecha de vigencia, y el motor de cálculo toma los vigentes en el período. Así un cambio de ley (como la reforma de pensiones) se resuelve agregando un registro, no programando.
+Los valores legales **no se escriben en el código**: se guardan en conjuntos completos por mes y año. El motor de cálculo toma íntegramente el conjunto del período. Así un cambio de ley (como la reforma de pensiones) se resuelve cargando otro conjunto, no programando.
 
-**PARAMETRO_LEGAL** — `erp_rrhh:parametros`: `id`, `codigo`, `descripcion`, `valor`, `unidad` (`pct`, `UF`, `UTM`, `CLP`, `horas`), `vigenciaDesde`, `vigenciaHasta`, `fuente`.
+**CONJUNTO_PARAMETROS_LEGALES** — `erp_rrhh:parametros-mes`: `id`, `anio`, `mes`, `valores` (objeto con todos los códigos obligatorios), `fuente`, `cargadoPor`, `bloqueado`, `creadoAt`. Un conjunto se bloquea desde que un Período lo usa por primera vez; no se edita y las correcciones se cargan como otro conjunto para un mes distinto (FR-105, US12).
+
+**PARAMETRO_LEGAL** — `erp_rrhh:parametros`: `id`, `conjuntoId`, `codigo`, `descripcion`, `valor`, `unidad` (`pct`, `UF`, `UTM`, `CLP`, `horas`), `fuente`. Cada fila pertenece a un conjunto completo por mes/año, hereda el mes/año del conjunto y se congela en la liquidación.
 
 Valores de referencia para la carga inicial (deben verificarse en Previred / SII / Superintendencia de Pensiones antes de la demo):
 
@@ -345,11 +485,25 @@ Valores de referencia para la carga inicial (deben verificarse en Previred / SII
 
 **TRAMO_IMPUESTO** — `erp_rrhh:tramos_impuesto`: `id`, `desdeUTM`, `hastaUTM`, `factor`, `rebajaUTM`, `vigenciaDesde`. Impuesto = base tributable × factor − rebaja (convertida a pesos con la UTM del período). Tramos de referencia (SII): exento hasta 13,5 UTM; 4 % hasta 30; 8 % hasta 50; 13,5 % hasta 70; 23 % hasta 90; 30,4 % hasta 120; 35 % hasta 310; 40 % sobre 310.
 
-**TRAMO_ASIGNACION_FAMILIAR** — `erp_rrhh:tramos_asignacion` (Fase 2): `id`, `tramo`, `ingresoDesde`, `ingresoHasta`, `montoPorCarga`, `vigenciaDesde`. Referencia vigente: tramo A hasta $649.039 → $22.601 por carga; B hasta $947.990 → $13.870; C hasta $1.478.539 → $4.382; D sobre eso → $0.
+**TRAMO_ASIGNACION_FAMILIAR** — `erp_rrhh:tramos_asignacion`: `id`, `tramo`, `ingresoDesde`, `ingresoHasta`, `montoPorCarga`, `vigenciaDesde`. Referencia vigente: tramo A hasta $649.039 → $22.601 por carga; B hasta $947.990 → $13.870; C hasta $1.478.539 → $4.382; D sobre eso → $0.
 
-### 3.13 Gobierno de datos
+#### 3.13 Vacaciones y feriados (US7)
 
-**CONSENTIMIENTO_DATOS** — `erp_rrhh:consentimientos` (Fase 2)
+**SOLICITUD_VACACION** — `erp_rrhh:solicitudes-vacacion`: `id`, `entity_id`, `fechaInicio`, `fechaFin`, `diasHabiles`, `saldoDescontado`, `estado`, `registradoPor`, `auditadoPor`. Los días hábiles excluyen sábados, domingos y feriados; al agregar un feriado dentro del rango se recalculan días y saldo, y se escribe en auditoría (FR-088–FR-091, SC-024).
+
+**FERIADO** — `erp_rrhh:feriados`: `id`, `fecha`, `nombre`, `origen`, `anio`. Los feriados se cargan manualmente y afectan solicitudes de vacaciones y conteo de días hábiles de ausentismo.
+
+#### 3.14 Cargas familiares y asignación familiar (US8)
+
+**CARGA_FAMILIAR** — `erp_rrhh:cargas-familiares`: `id`, `entity_id`, `rut`, `nombre`, `parentesco`, `fechaNacimiento`, `vigenteDesde`, `vigenteHasta`. El RUT debe ser válido y único entre cargas vigentes; al alcanzar la edad límite se genera aviso con 30 días de anticipación. El monto se calcula con `TRAMO_ASIGNACION_FAMILIAR` vigente (FR-092–FR-094, SC-025).
+
+#### 3.15 Simulador, reportes y exportaciones (US9–US11)
+
+El simulador y los reportes no requieren tablas nuevas: el primero ejecuta el motor de cálculo en modo referencial sin persistir, y los segundos se derivan de períodos cerrados, liquidaciones, novedades y conceptos. Las exportaciones CSV tampoco crean registros; solo consultan períodos cerrados y registran la acción en `erp_rrhh:auditoria`. La forma de los archivos se define en `contracts/entity-storage.md`.
+
+#### 3.16 Gobierno de datos
+
+**CONSENTIMIENTO_DATOS** — `erp_rrhh:consentimientos`
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
@@ -360,7 +514,7 @@ Valores de referencia para la carga inicial (deben verificarse en Previred / SII
 | otorgadoAt / revocadoAt | date | Fechas de otorgamiento y revocación | Si está revocado, el dato deja de usarse para esa finalidad |
 | evidencia | string | Referencia al anexo firmado | Obligatorio |
 
-**REGISTRO_AUDITORIA** — `erp_rrhh:auditoria` (MVP)
+**REGISTRO_AUDITORIA** — `erp_rrhh:auditoria`
 
 | Campo | Tipo | Descripción | Restricciones |
 |---|---|---|---|
@@ -369,14 +523,12 @@ Valores de referencia para la carga inicial (deben verificarse en Previred / SII
 | rolActor | string | Rol simulado que ejecutó la acción | — |
 | accion | string | `crear`, `editar`, `eliminar`, `ver_sensible`, `exportar`, `cambio_estado` | — |
 | tabla / registroId | string | Referencia polimórfica al registro afectado | — |
-| camposModificados | string[] | **Solo los nombres** de los campos, nunca los valores (para no copiar datos sensibles al log) | — |
+| camposModificados | array | Campos modificados como `{ campo, valorAnterior, valorNuevo }`; los valores de datos sensibles se registran como `[REDACTADO]` | — |
 | motivo | string | Justificación (obligatoria en líneas manuales y anulaciones) | — |
 
 Registro de solo inserción: la interfaz no permite editarlo ni borrarlo.
 
----
-
-## 4. Relaciones y cardinalidades
+### 4. Relaciones y cardinalidades
 
 | Relación | Cardinalidad | Llave | Regla de integridad |
 |---|---|---|---|
@@ -389,7 +541,7 @@ Registro de solo inserción: la interfaz no permite editarlo ni borrarlo.
 | Departamento → Trabajador (jefatura) | N : 0..1 | `jefatura_entity_id` | La jefatura debe estar activa |
 | Institución previsional → Trabajador | 1 : N | `afp` / `sistemaSalud` = `codigo` | La institución debe existir y estar vigente |
 | Departamento → Cargo | 1 : N | `departamento_id` | — |
-| Cargo → Contrato | 1 : N | `cargo_id` | Se avisa (no se bloquea) si el sueldo base queda fuera de la banda del cargo |
+| Cargo → Contrato | 1 : N | `cargo_id` | Sin validación de banda salarial en esta versión (referencia histórica fuera de alcance) |
 | Contrato → Liquidación | 1 : N | `contratoId` | El contrato debe estar vigente en el período |
 | Período → Liquidación | 1 : N | `periodoId` | Período cerrado = liquidaciones de solo lectura |
 | Período → Novedad | 1 : N | `periodo_id` | — |
@@ -397,13 +549,15 @@ Registro de solo inserción: la interfaz no permite editarlo ni borrarlo.
 | Concepto → Línea | 1 : N | `concepto_id` | Un concepto usado no se elimina, se desactiva |
 | Concepto → Novedad | 0..1 : N | `concepto_id` | — |
 | Novedad → Línea | 0..1 : N | `novedad_id` | Al aplicar la novedad, su estado pasa a `aplicada` |
-| Período ⇢ Parámetro legal / Tramo impuesto | lógica | por fecha | Se usa el registro cuya vigencia contiene el período |
+| Período → Conjunto de parámetros | N : 1 | `conjuntoId` | El conjunto del mes/año; bloqueado desde el primer uso |
+| Conjunto → Parámetro legal / Tramo impuesto | 1 : N | `conjuntoId` | Todos los valores obligatorios deben estar presentes |
+| Trabajador → Solicitud de vacaciones | 1 : N | `entity_id` | Recálculo al agregar feriados en el rango |
+| Feriado ⇢ Solicitud de vacaciones | lógica | `fecha` dentro de `fechaInicio`/`fechaFin` | Ajusta días hábiles y saldo |
+| Trabajador → Carga familiar | 1 : N | `entity_id` | RUT vigente único |
 | Carga familiar ⇢ Tramo asignación | lógica | por ingreso y fecha | — |
 | Auditoría ⇢ cualquier tabla | lógica | `tabla` + `registroId` | Solo inserción |
 
----
-
-## 5. Clasificación de datos y acceso por rol
+### 5. Clasificación de datos y acceso por rol
 
 El MVP es solo frontend, así que el control de acceso es **simulado** (selector de rol en la barra superior). Sirve para mostrar el diseño que tendría la versión con servidor.
 
@@ -412,12 +566,11 @@ El MVP es solo frontend, así que el control de acceso es **simulado** (selector
 | Administrador/a RR.HH. | Ver y editar | Ver y editar | Ver (queda auditado) | Período y liquidaciones |
 | Analista de remuneraciones | Ver y editar | Ver y editar (excepto banco) | No (ve solo agregados) | Calcular liquidaciones |
 | Jefatura de área | Su equipo | No ve sueldos | No | Novedades de su equipo |
-| Gerencia / Finanzas | Agregados | Totales por centro de costo | No | Cierre del período |
-| Trabajador (fase futura) | Su ficha | Sus liquidaciones | Sus propios datos | — |
+| Trabajador | Su ficha | Sus liquidaciones | Sus propios datos | — |
 
----
+Gerencia / Finanzas y Contador/a externo son actores externos sin sesión: consumen reportes y CSV desde períodos cerrados y aprueban el cierre fuera del módulo, por lo que no figuran en el selector de roles del MVP.
 
-## 6. Datos para análisis y reportes
+### 6. Datos para análisis y reportes
 
 Variables derivadas que el módulo calcula a partir del MER (base del "método de análisis" del MVP):
 
@@ -427,6 +580,6 @@ Variables derivadas que el módulo calcula a partir del MER (base del "método d
 | Dotación activa, altas y bajas | TRABAJADOR.estadoLaboral, CONTRATO.fechaInicio / fechaTermino | Panel principal |
 | Contratos a plazo fijo por vencer (30 días) | `targetDate` − hoy ≤ 30 | Alertas |
 | Horas extra por área | Σ NOVEDAD.cantidad (`horas_extra`) | Control de jornada |
-| Posición en banda salarial | (sueldoBase − bandaMin) / (bandaMax − bandaMin) | Equidad interna |
+| Posición en banda salarial | Referencia histórica fuera de alcance; no se calcula en esta versión | — |
 | **Brecha salarial de género por cargo** | Mediana del sueldo base por género dentro de cada CARGO | Detección de sesgos. Solo se muestra si cada grupo tiene ≥ 5 personas (si no, se oculta para no identificar a nadie) |
 | Ausentismo | Días de `ausencia_injustificada` / días hábiles | **Excluye licencias médicas y permisos legales**, para no castigar maternidad ni enfermedad |

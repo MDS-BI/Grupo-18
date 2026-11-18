@@ -1,6 +1,6 @@
 # Módulo de Recursos Humanos y Planilla
 
-**Funcionalidad**: `001-erp-base-module` | **Actualizado**: 2026-11-17
+**Funcionalidad**: `001-rrhh-planilla` | **Actualizado**: 2026-11-17
 **Fuentes**: `spec.md` (US1–US6, FR-040–FR-087), `plan.md`, `data-model.md`, `quickstart.md`, `tasks.md`.
 
 ## 1. Alcance y arquitectura
@@ -13,7 +13,7 @@ Extensión del ERP base sin modificar su núcleo: reutiliza la **Entidad** como 
 
 ## 2. Configuración
 
-`src/module-config.js` centraliza nombre, acento, etiquetas, campos personalizados, ciclo de vida de documentos y bloque `rrhh`/`empresa` (datos de la empresa emisora). Sin configuración se usan los valores por defecto Entidad/Documento. Un módulo adaptado no debe tocar código central (SC-008).
+`src/module-config.js` centraliza nombre, acento, etiquetas, campos personalizados, ciclo de vida de documentos y bloque `rrhh`/`empresa` (datos de la empresa emisora). Sin configuración se usan los valores por defecto Entidad/Documento. Un módulo adaptado no debe tocar código central (SC-008). Con `rrhh.only: true` (configuración actual) el navegador abre directamente en RRHH/Planilla y oculta Panel, Entidades, Documentos y Búsqueda; el código base permanece disponible para pruebas y otros módulos.
 
 ## 3. Modelo y claves de almacenamiento
 
@@ -30,7 +30,7 @@ Extensión del ERP base sin modificar su núcleo: reutiliza la **Entidad** como 
 | Línea de liquidación | `erp_rrhh:lineas-liquidacion` | Base, tasa/factor, fórmula y snapshot |
 | Auditoría | `erp_rrhh:auditoria` | Solo inserción; relación laboral + 6 años |
 
-Detalle completo: `specs/001-erp-base-module/data-model.md`.
+Detalle completo: `specs/001-rrhh-planilla/data-model.md`.
 
 ## 4. Roles y permisos
 
@@ -69,7 +69,7 @@ El cambio de rol aplica de inmediato, pide el representado cuando corresponde y 
 
 ## 8. Estado y brechas
 
-Este documento cierra T161. El estado de implementación y las brechas restantes se rastrean en `specs/001-erp-base-module/tasks.md` (T163–T169). No implica que todas las tareas estén completas.
+Este documento cierra T161. El estado de implementación y las brechas restantes se rastrean en `specs/001-rrhh-planilla/tasks.md` (T163–T169). No implica que todas las tareas estén completas.
 
 ## 9. Verificación de calidad (T162)
 
