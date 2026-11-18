@@ -349,6 +349,43 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ---
 
+### Historia de Usuario 9 - Simulador de Sueldo Líquido y Bruto (Prioridad: P3)
+
+**Como** administrador/a de RR.HH., analista de remuneraciones o Trabajador,
+**quiero** simular cuánto sueldo líquido resulta de un sueldo bruto, o qué sueldo base se necesita para pagar un líquido determinado,
+**para** preparar ofertas laborales y responder consultas sin crear fichas, contratos ni liquidaciones de prueba.
+
+**Por qué esta prioridad**: Es una herramienta de apoyo muy útil en la práctica (ofertas laborales, negociaciones, consultas de trabajadores), pero no es necesaria para pagar los sueldos del mes.
+
+**Alcance**: incluye el cálculo de líquido a partir del bruto y de bruto a partir del líquido, con su desglose. No guarda datos, no crea registros y no reemplaza el cálculo oficial de la US4.
+
+**Reglas de negocio**:
+
+- El simulador pide: mes de referencia, sueldo base (o líquido deseado), tipo de contrato, jornada semanal, modalidad de gratificación, AFP, sistema de salud (FONASA o Isapre con valor del plan en UF) y, de forma opcional, horas extra, bonos imponibles, colación y movilización.
+- Usa los parámetros legales versionados vigentes en el mes de referencia y las mismas reglas de cálculo y redondeo de la US4, de modo que, para los mismos datos, el resultado coincide al peso con una liquidación calculada.
+- El cálculo de bruto a partir del líquido busca el menor sueldo base cuyo líquido iguala o supera el líquido deseado, con una diferencia máxima de 1 peso.
+- Si el sueldo base necesario es menor que el ingreso mínimo vigente, o si la jornada supera el máximo legal, el simulador lo informa y no entrega resultado.
+- El resultado muestra el desglose completo: haberes imponibles y no imponibles, AFP, salud, seguro de cesantía, impuesto único, líquido a pagar, aportes del empleador y costo empleador.
+- Si faltan parámetros legales del mes de referencia, el simulador indica cuáles faltan y no calcula.
+- Toda simulación se marca visiblemente como "Simulación referencial: no constituye una liquidación".
+- La simulación no lee ni guarda datos de Trabajadores, por lo que no se registra en la bitácora. Está disponible para el administrador/a de RR.HH., el analista de remuneraciones y el Trabajador; la jefatura no accede.
+- El usuario puede copiar el desglose como texto para pegarlo en una oferta o un correo.
+
+**Prueba Independiente**: Con los parámetros semilla, el usuario ingresa los datos del caso de referencia de la US4 y obtiene el mismo líquido al peso; luego ingresa ese líquido en el modo inverso y obtiene el mismo sueldo base, con diferencia máxima de 1 peso. No requiere fichas, contratos ni períodos.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** los datos del caso de referencia de la US4, **cuando** el usuario simula de bruto a líquido, **entonces** cada línea y el líquido a pagar coinciden al peso con la liquidación de referencia.
+2. **Dado** un líquido deseado, **cuando** el usuario simula de líquido a bruto, **entonces** el sistema entrega el sueldo base necesario y el desglose cuyo líquido difiere del deseado en 1 peso o menos.
+3. **Dado** un líquido deseado que requiere un sueldo base inferior al ingreso mínimo vigente, **cuando** el usuario simula, **entonces** el sistema informa que el resultado sería inferior al ingreso mínimo y no entrega desglose.
+4. **Dado** un mes de referencia sin parámetros legales cargados, **cuando** el usuario simula, **entonces** el sistema indica qué parámetros faltan y no calcula.
+5. **Dado** un afiliado a Isapre con un plan de valor mayor al 7 % de su imponible, **cuando** simula, **entonces** el descuento de salud corresponde al valor del plan convertido con la UF del mes de referencia.
+6. **Dado** una simulación terminada, **cuando** el usuario presiona "Copiar desglose", **entonces** el desglose queda en el portapapeles como texto con la marca de simulación referencial.
+7. **Dado** que el usuario realiza varias simulaciones, **cuando** revisa los listados de Trabajadores, contratos y liquidaciones, **entonces** no se creó ni modificó ningún registro.
+8. **Dado** una jefatura, **cuando** intenta abrir el simulador, **entonces** el sistema lo impide e indica que no tiene autorización.
+
+---
+
 ### Historia de Usuario 12 - Parámetros Legales (Prioridad: P1)
 
 [US12]
