@@ -32,7 +32,7 @@
 
 ### Parámetros legales cargados manualmente
 
-**Decisión**: Los parámetros (UF, UTM, IMM, tasas, topes y tramos) se cargan y versionan manualmente por un administrador mediante formulario o archivo de configuración, con vigencia desde/hasta y fuente.
+**Decisión**: Los parámetros (UF, UTM, IMM, tasas, topes y tramos) se cargan manualmente por un administrador como conjuntos completos por mes y año, mediante formulario o archivo de configuración, con fuente. Cada conjunto se bloquea desde su primer uso.
 
 **Justificación**: Evita dependencias externas y mantiene el cálculo reproducible y auditable; el cierre congela los valores aplicados.
 

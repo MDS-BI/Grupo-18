@@ -34,6 +34,17 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - Q: ¿Debe el respaldo JSON incluir los registros de la bitácora de auditoría junto con los datos de negocio? → A: Opción A — sí, incluir la bitácora y fusionarla al importar sin borrar ni duplicar registros, usando su identificador.
 - Q: ¿Cómo se divide la cantidad de una novedad cuyo rango de fechas cruza meses entre los períodos resultantes? → A: Opción A — prorratear según los días del rango que caen en cada mes (p. ej., 10 días: 6 en enero y 4 en febrero).
 - Q: ¿Qué feedback visual debe mostrar la interfaz mientras se ejecuta el cálculo masivo de un período? → A: Opción A — indicador de progreso con porcentaje o número de Trabajadores procesados.
+- Q: ¿Cómo deben organizarse las versiones de los parámetros legales —UF, UTM, tasas, topes y tramos— para que cada período use los valores correctos? → A: Opción A — un conjunto completo por mes y año, cargado por el administrador y aplicado íntegramente a ese período.
+- Q: ¿Qué formato y contenido deben tener las exportaciones contables y de pago de un período cerrado? → A: Opción A — dos CSV: resumen contable por cuenta/centro de costo y nómina de pago por Trabajador.
+- Q: ¿Qué historias de usuario forman parte de la versión inicial que debe planificarse e implementarse? → A: Opción A — todas las historias US1–US12.
+- Q: ¿Qué debe ocurrir con los días y el saldo de una solicitud de vacaciones ya aprobada cuando se agrega al calendario un feriado dentro de su rango? → A: Opción A — recalcular automáticamente los días hábiles y ajustar el saldo descontado, registrando el cambio en bitácora.
+- Q: ¿Qué debe ocurrir con el saldo de vacaciones de un Trabajador desvinculado? → A: Opción A — congelar el saldo solo para consulta histórica, sin pago ni ejercicio en esta versión.
+- Q: ¿Qué debe ocurrir cuando un administrador modifica un conjunto de parámetros legales que ya fue usado por un período abierto o calculado? → A: Opción A — bloquear toda modificación desde que el conjunto se usa por primera vez; las correcciones requieren otro conjunto para un mes distinto.
+- Q: ¿Cómo debe obtener el sistema la cuenta contable y el centro de costo para el resumen CSV de exportaciones? → A: Opción A — mapear cuentas por concepto de liquidación en la configuración del módulo y usar el centro de costo de la ficha del Trabajador.
+- Q: ¿De dónde deben salir el banco, la cuenta y la fecha de pago incluidos en la nómina CSV? → A: Opción A — añadir banco y cuenta a la ficha del Trabajador, exigirlos al exportar y usar una fecha de pago registrada en el período cerrado.
+- Q: ¿Deben completarse los requisitos y criterios declarados pero ausentes en la spec (FR-088–FR-100, FR-102–FR-104, FR-106–FR-107 y SC-024–SC-029) antes de continuar? → A: Opción A — completarlos con reglas verificables derivadas de las historias US7–US12 antes de continuar.
+- Q: ¿Qué formato técnico deben tener los dos CSV de exportación? → A: Opción A — UTF-8 con BOM, separador punto y coma, encabezados sin acentos y nombres `resumen_contable_YYYYMM.csv` y `nomina_pago_YYYYMM.csv`.
+- Q: ¿Qué significa “cero modificaciones en archivos fuente centrales” durante la construcción inicial del módulo RR.HH.? → A: Opción A — sin cambios al núcleo de Entidad/Documento ni a la lógica compartida; la declaración inicial de la configuración y las exclusiones de presentación acordadas no se consideran modificaciones del núcleo.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
@@ -55,6 +66,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - La jefatura directa, si se informa, debe corresponder a un Trabajador existente y activo; el equipo de una jefatura son los Trabajadores que la tienen como jefatura directa.
 - Si la jefatura directa de un equipo es desvinculada, ese equipo pasa a tratarse como "sin jefatura directa" hasta que se asigne otra.
 - El RUT identifica a una persona: dos fichas no pueden compartir el mismo RUT, comparado sin puntos, guiones ni espacios y sin distinguir mayúsculas.
+- La ficha DEBE permitir registrar el banco y la cuenta de pago del Trabajador; ambos son obligatorios para exportar la nómina de pago, pero no para crear la ficha.
 - El código del trabajador es único: no pueden existir dos fichas con el mismo código, comparado sin distinguir mayúsculas ni acentos e ignorando espacios al inicio y al final.
 - Cada ficha conserva un identificador interno que no cambia al actualizarla, de modo que contratos, novedades y liquidaciones sigan apuntando a la misma persona.
 - Desactivar una ficha no la elimina ni borra su historia: se pide la fecha de desvinculación, la ficha pasa a estado laboral "Desvinculado" y conserva sus datos y sus referencias para liquidaciones anteriores.
@@ -254,7 +266,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 **Reglas de negocio**:
 
 - El analista de remuneraciones y el administrador/a de RR.HH. pueden ver las liquidaciones de cualquier Trabajador; el Trabajador solo puede ver las suyas y solo las de períodos cerrados; la jefatura no accede a liquidaciones.
-- Cada línea de la liquidación muestra su base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con su fecha de vigencia; el monto explicado coincide con el de la línea.
+- Cada línea de la liquidación muestra su base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con el mes/año del conjunto aplicado; el monto explicado coincide con el de la línea.
 - Si una línea no dispone de fórmula o parámetro legal asociado, se muestra igualmente e indica claramente esa carencia.
 - La liquidación de un período cerrado se explica con los valores congelados del período; la de un período abierto o calculado se explica con los parámetros del período y se marca visiblemente como "borrador", también en la vista imprimible.
 - La vista imprimible no incluye menús, botones de edición ni controles de navegación, y muestra los datos sensibles solo a los roles autorizados. El comprobante imprimible incluye la identificación del Trabajador, el período, las líneas con sus montos, los totales, el líquido a pagar y la marca de "borrador" cuando corresponda.
@@ -264,7 +276,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 **Escenarios de Aceptación**:
 
-1. **Dado** una liquidación (en borrador o cerrada), **cuando** el usuario selecciona una línea (p. ej., gratificación o impuesto), **entonces** se muestra la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con su fecha de vigencia, y el monto explicado coincide con el de la línea.
+1. **Dado** una liquidación (en borrador o cerrada), **cuando** el usuario selecciona una línea (p. ej., gratificación o impuesto), **entonces** se muestra la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con el mes/año del conjunto aplicado, y el monto explicado coincide con el de la línea.
 2. **Dado** una línea sin fórmula o parámetro legal asociado, **cuando** el usuario la consulta, **entonces** la línea se muestra e indica claramente que no dispone de fórmula o parámetro.
 3. **Dado** una liquidación de un período cerrado, **cuando** el usuario consulta una línea, **entonces** la explicación muestra los valores congelados del período y no los parámetros vigentes actuales.
 4. **Dado** una liquidación en borrador, **cuando** el usuario la consulta o la imprime, **entonces** se marca visiblemente como "borrador".
@@ -294,7 +306,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - Permisos y visibilidad por rol: el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5 y 7 a 12, cierra períodos, consulta la bitácora de auditoría, exporta e importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo. La jefatura ve de su equipo únicamente los datos básicos (nombre, código, cargo, departamento, centro de costo y estado laboral) y gestiona las novedades de su equipo (incluidas licencias médicas sin diagnóstico clínico), pudiendo aprobar o rechazar las que no haya registrado ella misma; en listados, detalles, búsquedas y vistas imprimibles tiene ocultos o bloqueados los contratos, los sueldos base y las liquidaciones de su equipo, y no puede operar sobre Trabajadores ajenos a su equipo. El Trabajador solo ve sus propias liquidaciones de períodos cerrados; el resto de la información sensible permanece oculta o inaccesible para él.
 - Cambiar de rol durante la sesión aplica de inmediato los permisos del nuevo rol, vuelve a pedir el Trabajador que se representa cuando el rol es jefatura o Trabajador, y queda registrado en la bitácora.
 - Las restricciones se aplican en la interfaz y en la capa de datos, por lo que un enlace directo no permite eludirlas; cuando se deniega una acción, el sistema lo informa sin revelar el contenido protegido.
-- La bitácora de auditoría registra toda consulta, creación, modificación o desactivación de información sensible, los cambios de rol, los accesos denegados y las operaciones de exportación e importación de respaldo, con al menos usuario, rol, fecha y hora, acción y registro afectado, y los campos modificados cuando corresponda; es de solo inserción y se conserva mientras dure la relación laboral y 6 años después. Al importar un respaldo, nunca se sobrescriben ni se eliminan los registros previos de la bitácora.
+- La bitácora de auditoría registra toda consulta, creación, modificación o desactivación de información sensible, los cambios de rol, los accesos denegados y las operaciones de exportación e importación de respaldo, con al menos usuario, rol, fecha y hora, acción y registro afectado, y los campos modificados cuando corresponda, con valores anteriores y nuevos para campos no sensibles y marcadores de cambio para datos sensibles; es de solo inserción y se conserva mientras dure la relación laboral y 6 años después. Al importar un respaldo, nunca se sobrescriben ni se eliminan los registros previos de la bitácora.
 - Si la bitácora no puede escribirse, la operación no se completa.
 
 **Prueba Independiente**: Al simular cada rol, la interfaz muestra y permite solo lo que corresponde; con el rol Jefatura se ocultan los sueldos, y cada consulta o cambio sensible, junto con cada acceso denegado, aparece en la bitácora.
@@ -337,9 +349,9 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - Aprueba o rechaza la jefatura directa del Trabajador; si no tiene jefatura directa, lo hace el administrador/a de RR.HH. Nadie puede aprobar ni rechazar una solicitud que haya registrado. Un rechazo requiere un motivo.
 - Una solicitud "Pendiente" puede editarse o anularse; una "Aprobada" solo puede anularse antes de su fecha de inicio, y entonces los días vuelven al saldo.
 - Las vacaciones no pueden superponerse con otra solicitud de vacaciones aprobada o pendiente ni con licencias o ausencias registradas (US3) del mismo Trabajador.
-- Solo un Trabajador activo con contrato vigente en las fechas solicitadas puede tener vacaciones.
+- Solo un Trabajador activo con contrato vigente en las fechas solicitadas puede tener vacaciones. Al desvincular a un Trabajador, su saldo de vacaciones queda congelado para consulta histórica, sin pago ni ejercicio en esta versión.
 - Las vacaciones aprobadas no descuentan días en la liquidación: el Trabajador recibe su remuneración íntegra (art. 71 del Código del Trabajo).
-- El administrador/a de RR.HH. mantiene el calendario de feriados (fecha y nombre); un feriado no puede repetirse en la misma fecha.
+- El administrador/a de RR.HH. mantiene el calendario de feriados (fecha y nombre); un feriado no puede repetirse en la misma fecha. Si se agrega un feriado dentro del rango de una solicitud aprobada, el sistema recalcula sus días hábiles, ajusta el saldo descontado en consecuencia y registra el cambio en la bitácora.
 
 **Prueba Independiente**: Con Trabajadores, contratos y feriados precargados como datos semilla, un Trabajador ve su saldo, solicita días, su jefatura los aprueba y el saldo se descuenta; una solicitud que supera el saldo o que se superpone con una licencia es rechazada. No requiere ejecutar el cálculo de planilla.
 
@@ -474,51 +486,107 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ---
 
+### Historia de Usuario 11 - Exportaciones Contables y de Pago (Prioridad: P2)
+
+**Como** administrador/a de RR.HH.,
+**quiero** exportar desde un período cerrado un resumen contable y una nómina de pago en CSV,
+**para** entregar la información de remuneraciones a Contabilidad y Tesorería sin copiar datos manualmente.
+
+**Por qué esta prioridad**: Cierra el ciclo de la planilla con los entregables que otros módulos del ERP necesitan, sin introducir integraciones externas ni cálculos nuevos.
+
+**Alcance**: incluye los dos archivos CSV, su formato, las validaciones de datos de ficha y período, los permisos y el registro en bitácora. No incluye contabilización automática, envío por correo ni generación de archivos bancarios.
+
+**Reglas de negocio**:
+
+- Solo se exporta desde períodos cerrados; los estados Abierto y Calculado bloquean la acción.
+- El resumen contable agrega montos por `cuentaContable` y centro de costo; la cuenta se obtiene del mapeo configurable por concepto de liquidación y el centro de costo de la ficha del Trabajador. Sus totales deben cuadrar con las liquidaciones del período.
+- La nómina de pago incluye Trabajador, banco, cuenta, líquido a pagar y `fechaPago`. Banco y cuenta se toman de la ficha y se exigen antes de exportar; `fechaPago` se registra en el período cerrado.
+- Ambos CSV usan UTF-8 con BOM, separador `;`, encabezados sin acentos y nombres `resumen_contable_YYYYMM.csv` y `nomina_pago_YYYYMM.csv`.
+- Solo el rol administrador/a de RR.HH. puede exportar; cada exportación queda registrada en la bitácora de auditoría.
+
+**Prueba Independiente**: Con un período cerrado y datos semilla completos, el administrador/a descarga ambos CSV, verifica totales cuadrados y campos obligatorios, y confirma el registro en bitácora. Con un Trabajador sin banco o cuenta, la exportación se bloquea y no se genera ningún archivo.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un período cerrado con cuentas y centros de costo configurados, **cuando** el administrador/a exporta el resumen contable, **entonces** obtiene `resumen_contable_YYYYMM.csv` con totales que cuadran con las liquidaciones.
+2. **Dado** un período cerrado con banco, cuenta y fecha de pago completos, **cuando** el administrador/a exporta la nómina, **entonces** obtiene `nomina_pago_YYYYMM.csv` con Trabajador, banco, cuenta, líquido y fecha de pago.
+3. **Dado** un Trabajador sin banco o cuenta, **cuando** se intenta exportar la nómina, **entonces** el sistema bloquea la exportación, indica el dato faltante y no descarga archivos.
+4. **Dado** un período Abierto o Calculado, **cuando** cualquier usuario intenta exportar, **entonces** el sistema lo impide.
+5. **Dado** un analista, una jefatura o un Trabajador, **cuando** intenta exportar CSV, **entonces** el sistema lo impide sin revelar contenido.
+6. **Dado** una exportación correcta, **cuando** se consulta la bitácora, **entonces** aparece la acción de exportación con el rol administrador/a y la marca de tiempo.
+
+---
+
 ### Historia de Usuario 12 - Parámetros Legales (Prioridad: P1)
 
-[US12]
+**Como** administrador/a de RR.HH.,
+**quiero** cargar y bloquear conjuntos completos de parámetros legales por mes y año,
+**para** que cada período use reglas oficiales trazables y no cambien después de haberse aplicado.
+
+**Por qué esta prioridad**: Evita que cambios posteriores de UF, UTM, IMM, tasas o tramos alteren liquidaciones ya calculadas o cerradas.
+
+**Alcance**: incluye la carga manual del conjunto completo, la validación de campos obligatorios, el bloqueo desde el primer uso y el congelamiento en liquidaciones. No incluye sincronización externa ni corrección de conjuntos ya usados.
+
+**Reglas de negocio**:
+
+- Los parámetros legales (UF, UTM, ingreso mínimo, jornada máxima, tasas, topes y tramos) se versionan como un conjunto completo por mes y año; el administrador/a de RR.HH. los carga manualmente y el sistema exige todos los valores obligatorios antes de permitir crear un período o ejecutar un cálculo para ese mes.
+- Cada período aplica íntegramente el conjunto de parámetros de su mes y año; al cerrarlo, esos valores quedan congelados en las liquidaciones y no se ven afectados por versiones posteriores.
+- Un conjunto queda bloqueado para edición desde que un Período lo usa por primera vez, aunque el Período esté abierto o calculado; una corrección requiere cargar otro conjunto completo para un mes distinto.
+
+**Prueba Independiente**: Se carga un conjunto completo, se crea un período y se intenta editar el conjunto; la edición se rechaza. Luego se cierra el período, se carga otro conjunto para otro mes y la liquidación cerrada conserva los valores originales.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un conjunto completo para un mes, **cuando** se crea un período, **entonces** el período queda asociado a ese conjunto.
+2. **Dado** un conjunto incompleto, **cuando** se intenta crear o calcular un período, **entonces** el sistema indica qué parámetros faltan y no continúa.
+3. **Dado** un conjunto ya usado por un Período Abierto o Calculado, **cuando** se intenta editarlo, **entonces** el sistema lo impide.
+4. **Dado** un Período Cerrado, **cuando** se carga una versión posterior de parámetros, **entonces** sus liquidaciones conservan el snapshot original.
+5. **Dado** un error detectado en un conjunto usado, **cuando** se carga la corrección, **entonces** debe hacerse como otro conjunto completo para un mes distinto y el conjunto original permanece intacto.
 
 ---
 
 ### Casos Límite
 
-- ¿Qué ocurre cuando un usuario intenta guardar una entidad sin nombre o código obligatorio?
-- ¿Cómo gestiona el sistema una búsqueda que no devuelve coincidencias?
-- ¿Qué ocurre si un usuario intenta editar o eliminar una entidad que ya no existe?
-- ¿Qué ocurre cuando un usuario introduce una fecha objetivo que no es una fecha de calendario válida?
-- ¿Qué ocurre con los documentos de una entidad cuando esta se elimina?
-- ¿Qué ocurre cuando un usuario introduce una fecha final anterior a la fecha inicial en un documento?
-- ¿Qué ocurre cuando la configuración declara un campo personalizado cuya clave choca con un nombre de campo base?
-- ¿Qué ocurre cuando la configuración referencia un tipo de campo desconocido o una definición de transición de ciclo de vida inválida?
-- ¿Qué ocurre cuando los registros almacenados contienen valores de campos personalizados que ya no están declarados en la configuración?
-- ¿Qué ocurre cuando un usuario abre la aplicación directamente en la pantalla de gestión o búsqueda (p. ej., vía enlace profundo o recarga del navegador) sin pasar por el panel de inicio?
-- ¿Qué ocurre cuando un usuario pulsa el botón atrás del navegador estando en la pantalla de gestión o búsqueda?
-- ¿Qué ocurre si un usuario navega fuera de la pantalla de gestión mientras un formulario aún tiene cambios sin guardar?
-- ¿Permanecen intactas las entidades y los documentos al navegar entre el panel, la gestión y la búsqueda?
-- ¿Qué ocurre cuando el panel se abre con cero entidades o cero documentos (valores estadísticos)?
-- ¿Qué ocurre cuando el color de acento configurado no es un valor de color válido?
-- ¿Cómo mantiene la barra lateral contraída las etiquetas de módulo accesibles en ventanas gráficas estrechas?
-- ¿Qué ocurre cuando el usuario selecciona una línea de liquidación registrada manualmente que no tiene fórmula asociada?
-- ¿Qué ocurre cuando la línea seleccionada referencia un parámetro legal que no está vigente para el período liquidado?
-- ¿Qué ocurre cuando la liquidación aún está en borrador o no ha sido calculada y el usuario intenta ver el desglose o imprimirla?
-- ¿Qué ocurre si faltan datos de identificación del trabajador o de la empresa emisora al generar el comprobante?
-- ¿Qué ocurre cuando los valores mostrados en el desglose son redondeados y la suma de las líneas debe seguir cuadrando con el total?
-- ¿Qué ocurre cuando la liquidación tiene tantas líneas que el comprobante supera una página?
-- ¿Qué ocurre si el usuario cancela el diálogo de impresión o guarda el comprobante como PDF?
-- ¿Qué ocurre cuando un usuario no tiene rol asignado o su rol no es reconocido?
-- ¿Qué ocurre cuando un usuario intenta acceder directamente a un dato sensible mediante un enlace directo o una petición no autorizada?
-- ¿Qué ocurre cuando un usuario cambia de rol mientras mantiene una sesión activa?
-- ¿Qué ocurre cuando se selecciona el rol Jefatura o el rol Trabajador sin elegir el Trabajador que representa?
-- ¿Qué ocurre cuando se intenta registrar una novedad cuyo rango cruza meses y uno de los períodos no está activo?
-- ¿Qué ocurre al intentar crear un período de remuneración sin parámetros legales obligatorios?
-- ¿Qué ocurre al importar un respaldo JSON respecto a la bitácora de auditoría existente?
-- ¿Qué ocurre cuando la bitácora de auditoría no puede escribirse por un fallo del sistema?
-- ¿Qué ocurre cuando alguien intenta editar o eliminar un registro de auditoría?
-- ¿Qué ocurre cuando un usuario autorizado consulta datos sensibles de un trabajador que no pertenece a su equipo?
-- ¿Qué ocurre cuando el rol de jefatura intenta imprimir o exportar una liquidación?
-- ¿Se registran en la auditoría también los accesos denegados o fallidos?
-- ¿Qué ocurre si una solicitud de vacaciones incluye un feriado agregado al calendario después de aprobarla?
-- ¿Qué ocurre con el saldo de vacaciones de un Trabajador desvinculado?
+- Si un usuario guarda una entidad sin nombre o código obligatorio, el sistema rechaza el guardado y marca los campos faltantes.
+- Si una búsqueda no devuelve coincidencias, el sistema muestra un estado vacío explicativo y mantiene la consulta.
+- Si un usuario intenta editar o eliminar una entidad que ya no existe, la operación se rechaza sin cambios y se informa.
+- Si una fecha objetivo no es válida en el calendario, el sistema rechaza el valor y muestra el formato esperado.
+- Si se elimina una Entidad genérica, sus documentos se eliminan en cascada; los Trabajadores con liquidaciones cerradas solo se desactivan.
+- Si la fecha final de un documento es anterior a la inicial, el sistema rechaza el rango.
+- Si la configuración declara una clave de campo personalizado que choca con un campo base, la configuración se marca inválida y se informa.
+- Si la configuración referencia un tipo de campo desconocido o una transición inválida, la configuración se marca inválida y se informa.
+- Si existen valores de campos personalizados que ya no están declarados, se conservan sin mostrarse como campos activos y no bloquean la carga.
+- Si se abre una pantalla mediante enlace profundo o recarga, el router restaura la vista y aplica los permisos vigentes.
+- Si se usa el botón atrás del navegador, la vista mostrada es coherente con la ruta y los datos permanecen intactos.
+- Si se navega fuera de un formulario con cambios sin guardar, el sistema solicita confirmación antes de descartarlos.
+- Si se navega entre panel, gestión y búsqueda, las entidades y documentos almacenados permanecen intactos.
+- Si el panel se abre con cero entidades o documentos, las estadísticas muestran 0.
+- Si el color de acento configurado no es válido, el sistema aplica el valor predeterminado.
+- Si la ventana es estrecha, la barra lateral se contrae a iconos con etiquetas accesibles.
+- Si una línea manual no tiene fórmula, el sistema la muestra indicando “sin fórmula” y el motivo registrado.
+- Si una línea referencia un parámetro que no estaba vigente en el período, el sistema muestra una advertencia y no lo presenta como valor vigente.
+- Si una liquidación está en borrador o no calculada, el desglose se marca visiblemente como borrador y no se presenta como definitivo.
+- Si faltan datos de identificación del Trabajador o de la empresa emisora, el sistema bloquea la impresión e indica los datos ausentes.
+- Si los valores del desglose están redondeados, los totales se obtienen de las líneas redondeadas y cuadran con la liquidación.
+- Si una liquidación supera el espacio de una página, el comprobante se adapta a un máximo de dos páginas o bloquea la impresión con un mensaje.
+- Si se cancela el diálogo de impresión o se guarda como PDF, el contenido de la liquidación no se modifica.
+- Si no hay rol asignado o el rol no es reconocido, el sistema no concede acceso a datos protegidos.
+- Si se intenta acceder a un dato sensible mediante enlace directo o vía no autorizada, el sistema deniega el acceso sin revelar contenido.
+- Si cambia el rol durante una sesión activa, los permisos se aplican de inmediato y el cambio queda auditado.
+- Si se selecciona Jefatura o Trabajador sin elegir el representado, el sistema no muestra datos ajenos y solicita la selección.
+- Si una novedad cruza meses y alguno de los períodos no está activo, la operación completa se rechaza sin registros parciales.
+- Si se crea un período sin parámetros legales obligatorios, el sistema rechaza la creación e indica los parámetros faltantes.
+- Si se importa un respaldo JSON, la bitácora existente se fusiona por identificador sin sobrescribirla ni duplicarla.
+- Si la bitácora no puede escribirse, la operación sensible no se completa.
+- Si se intenta editar o eliminar un registro de auditoría, el sistema lo rechaza.
+- Si un usuario autorizado consulta datos sensibles fuera de su equipo, el sistema lo deniega y registra el intento.
+- Si la jefatura intenta imprimir o exportar una liquidación, el sistema lo deniega sin revelar montos.
+- Si un acceso es denegado o fallido, el sistema lo registra en la bitácora de auditoría.
+- Si una solicitud de vacaciones aprobada incluye un feriado agregado al calendario después de aprobarla, el sistema recalcula sus días hábiles, ajusta el saldo descontado y registra el cambio en la bitácora.
+- El saldo de vacaciones de un Trabajador desvinculado queda congelado para consulta histórica, sin pago ni ejercicio en esta versión.
+- Un conjunto de parámetros legales usado por un Período no se modifica; las correcciones se cargan como otro conjunto completo para un mes distinto.
+- El resumen contable usa el centro de costo de la ficha del Trabajador y cuentas configuradas por concepto de liquidación.
+- Si faltan el banco o la cuenta del Trabajador o la fecha de pago del período, la exportación de nómina se bloquea e indica los datos faltantes.
 
 ## Requisitos *(obligatorio)*
 
@@ -555,7 +623,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - **FR-029**: El sistema DEBE derivar todas las etiquetas visibles para el usuario de la configuración del módulo en lugar de texto fijo en el código.
 - **FR-030**: El sistema DEBE aplicar las transiciones de estado configuradas en los documentos independientemente de cómo se envíe un cambio.
 - **FR-031**: El sistema DEBE mantener el estado del documento como texto libre cuando no hay ciclo de vida configurado.
-- **FR-032**: El sistema DEBE mantener el renderizado de listas y la búsqueda ágiles y correctos para conjuntos de datos de al menos 500 registros de entidad.
+- **FR-032**: El sistema DEBE mantener el renderizado de listas y la búsqueda correctos para al menos 500 registros de entidad, con respuesta de 10 segundos o menos desde la acción del usuario hasta mostrar resultados (SC-004).
 - **FR-033**: El panel DEBE ofrecer al menos cuatro botones de acción rápida: nueva entidad, nuevo documento, abrir gestión de entidades y buscar registros.
 - **FR-034**: Activar la acción rápida de nueva entidad o nuevo documento DEBE abrir el área de gestión correspondiente con un formulario vacío listo para introducir datos.
 - **FR-035**: El panel DEBE mostrar tarjetas de estadísticas con el número de entidades y documentos almacenados, actualizadas cada vez que se muestra el panel.
@@ -564,7 +632,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura a los valores integrados cuando esté ausente o sea inválido.
 - **FR-039**: En ventanas gráficas estrechas, la barra lateral DEBE contraerse a una columna de iconos manteniéndose operable.
 - **FR-040**: El sistema DEBE presentar cada liquidación (en borrador o cerrada) como una lista de líneas con su concepto y monto, permitiendo seleccionar cada línea para ver su explicación (Historia de Usuario 5).
-- **FR-041**: Al seleccionar una línea, el sistema DEBE mostrar la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con su fecha de vigencia, y el monto explicado DEBE coincidir con el de la línea (Historia de Usuario 5).
+- **FR-041**: Al seleccionar una línea, el sistema DEBE mostrar la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con el mes/año del conjunto aplicado, y el monto explicado DEBE coincidir con el de la línea (Historia de Usuario 5).
 - **FR-042**: Si una línea no dispone de fórmula o parámetro legal asociado, el sistema DEBE mostrarla igualmente e indicar claramente esa carencia (Historia de Usuario 5).
 - **FR-043**: La explicación de una liquidación de un período cerrado DEBE mostrar los valores congelados del período, y la de un período abierto o calculado DEBE mostrar los parámetros del período y marcarse visiblemente como "borrador", también en la vista imprimible (Historia de Usuario 5).
 - **FR-044**: El sistema DEBE ofrecer una acción de imprimir que genere una vista limpia del comprobante, sin menús, botones de edición ni controles de navegación, y consultar, explicar o imprimir una liquidación NO DEBE modificar su contenido (Historia de Usuario 5).
@@ -586,22 +654,22 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - **FR-060**: El sistema DEBE permitir exportar e importar un respaldo completo de los datos en formato JSON para respaldo y restauración, incluyendo también los registros de la bitácora de auditoría. Estas operaciones DEBEN quedar registradas en la bitácora de auditoría y, al importar un respaldo, el sistema DEBE fusionar los registros importados de la bitácora con los existentes usando su identificador, sin sobrescribirlos, eliminarlos ni duplicarlos (la bitácora se mantiene de solo inserción).
 - **FR-061**: El sistema DEBE impedir que dos fichas de trabajador compartan el mismo RUT, comparándolo normalizado (sin puntos, guiones ni espacios) y sin distinguir mayúsculas.
 - **FR-062**: El sistema DEBE impedir que dos fichas de trabajador compartan el mismo código, comparándolo sin distinguir mayúsculas ni acentos e ignorando espacios al inicio y al final.
-- **FR-063**: El sistema DEBE permitir crear, consultar y actualizar fichas de Trabajador con nombre, código y RUT obligatorios, validando el dígito verificador del RUT y los formatos de correo y fecha de ingreso cuando se informen (Historia de Usuario 1).
+- **FR-063**: El sistema DEBE permitir crear, consultar y actualizar fichas de Trabajador con nombre, código y RUT obligatorios, validando el dígito verificador del RUT y los formatos de correo y fecha de ingreso cuando se informen; la ficha DEBE permitir registrar banco y cuenta de pago, exigidos al exportar la nómina (Historias de Usuario 1 y 11).
 - **FR-064**: El sistema DEBE gestionar los catálogos de cargo, departamento y centro de costo, permitiendo crear, editar, ocultar y reactivar opciones (sin eliminarlas), impidiendo asignar opciones desactivadas a nuevas fichas y mostrando la etiqueta "desactivado" en fichas existentes (Historia de Usuario 1).
-- **FR-065**: El sistema DEBE permitir desactivar un Trabajador activo solo con confirmación explícita, bloqueando la operación si tiene novedades en estado "Pendiente"; al desvincular DEBE terminar automáticamente su contrato vigente o vencido con la fecha de desvinculación, mantener el estado activo/inactivo, registrar la fecha de desvinculación, conservar la ficha para consulta histórica sin eliminarla ni reactivarla en esta versión, y si el Trabajador era jefatura directa, dejar a su equipo como "sin jefatura directa" con sus novedades pendientes a cargo del administrador/a de RR.HH. (Historias de Usuario 1 y 2).
-- **FR-066**: El sistema DEBE permitir asignar una jefatura directa opcional a cada Trabajador, restringida a Trabajadores activos, impidiendo la autoasignación y ocultando Trabajadores inactivos del selector de jefatura (Historia de Usuario 1).
-- **FR-067**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización y desactivación de fichas de Trabajador y de catálogos base, con usuario, rol, fecha y hora, y valores anteriores y nuevos de los campos modificados (Historia de Usuario 1).
+- **FR-065**: El sistema DEBE permitir desactivar un Trabajador activo solo con confirmación explícita, bloqueando la operación si tiene novedades en estado "Pendiente"; al desvincular DEBE terminar automáticamente su contrato vigente o vencido con la fecha de desvinculación, mantener el estado laboral Activo/Desvinculado, registrar la fecha de desvinculación, conservar la ficha para consulta histórica sin eliminarla ni reactivarla en esta versión, y si el Trabajador era jefatura directa, dejar a su equipo como "sin jefatura directa" con sus novedades pendientes a cargo del administrador/a de RR.HH. (Historias de Usuario 1 y 2).
+- **FR-066**: El sistema DEBE permitir asignar una jefatura directa opcional a cada Trabajador, restringida a Trabajadores activos, impidiendo la autoasignación y ocultando Trabajadores Desvinculados del selector de jefatura (Historia de Usuario 1).
+- **FR-067**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización y desactivación de fichas de Trabajador y de catálogos base, con usuario, rol, fecha y hora, y valores anteriores y nuevos de los campos modificados, salvo datos sensibles, cuyos valores se registran como `[REDACTADO]` (Historia de Usuario 1).
 - **FR-068**: El sistema DEBE gestionar contratos por Trabajador con sueldo base, jornada, tipo de contrato y vigencia, manteniendo sus estados (vigente, vencido, terminado) y el historial de vigencias (Historia de Usuario 2).
 - **FR-069**: El sistema DEBE garantizar que cada Trabajador tenga como máximo un contrato vigente a la vez y que las vigencias de sus contratos no se superpongan; un Trabajador puede no tener contratos (Historia de Usuario 2).
 - **FR-070**: El sistema DEBE aplicar las transiciones de estado de contratos: marcar como vencido al superar la fecha de fin sin terminación, permitir terminar un contrato vigente o vencido (incluido el indefinido) y no permitir eliminar contratos lógica ni físicamente; el estado "cancelado" no se admite en esta versión (Historia de Usuario 2).
 - **FR-071**: El sistema DEBE impedir la edición directa de los campos de vigencia de un contrato existente; los cambios de vigencia DEBEN materializarse creando un nuevo registro y el sistema ajusta la fecha de fin del anterior sin superposición (Historia de Usuario 2).
 - **FR-072**: El sistema DEBE generar alertas de contratos próximos a vencer (30 días o menos) y vencidos, y exigir que el Trabajador cuente con un contrato cuya vigencia incluya la fecha de la novedad para registrarla, o al menos un día del período para ser incluido en el cálculo de remuneraciones (Historia de Usuario 2).
-- **FR-073**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización y cambios de estado de contratos con usuario, fecha y hora, y valores anteriores y nuevos de los campos modificados (Historia de Usuario 2).
+- **FR-073**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización y cambios de estado de contratos con usuario, fecha y hora, y valores anteriores y nuevos de los campos modificados, salvo datos sensibles, cuyos valores se registran como `[REDACTADO]` (Historia de Usuario 2).
 - **FR-074**: El sistema DEBE permitir registrar novedades de horas extra, licencia médica y ausencia asociadas a un Trabajador y al período de su fecha, exigiendo que el período se encuentre activo; las licencias médicas no DEBEN registrar diagnóstico clínico (Historia de Usuario 3).
 - **FR-075**: Cuando el rango de una novedad cruza meses, el sistema DEBE dividirla automáticamente por mes calendario, prorrateando la cantidad según los días del rango que caen en cada mes (p. ej., 10 días: 6 en enero y 4 en febrero); si alguno de los períodos no está activo, la operación completa DEBE rechazarse sin crear registros parciales (Historia de Usuario 3).
 - **FR-076**: El sistema DEBE gestionar los estados de las novedades (pendiente, aprobada, rechazada, anulada), impidiendo registrar o modificar novedades de períodos cerrados y excluyendo del cálculo las novedades cuyo período no esté activo (Historia de Usuario 3).
 - **FR-077**: El sistema DEBE aplicar la segregación de funciones en novedades: la jefatura puede registrar, aprobar o rechazar las de su equipo, pero no las que ella misma registró; el administrador/a de RR.HH. puede aprobar o rechazar las de Trabajadores sin jefatura directa y las registradas por la jefatura de ese equipo; el analista de remuneraciones puede registrar y ver novedades, pero no aprobarlas ni rechazarlas; ningún rol puede aprobar o rechazar una novedad que haya registrado. Solo una novedad "Pendiente" puede editarse o anularse; las "Aprobadas" y "Rechazadas" no se modifican y una corrección se registra como una novedad nueva (Historia de Usuario 3).
-- **FR-078**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización, aprobación, rechazo y anulación de novedades con usuario, fecha y hora, y valores anteriores y nuevos de los campos modificados (Historia de Usuario 3).
+- **FR-078**: El sistema DEBE registrar en la bitácora de auditoría la creación, actualización, aprobación, rechazo y anulación de novedades con usuario, fecha y hora, y valores anteriores y nuevos de los campos modificados, salvo datos sensibles, cuyos valores se registran como `[REDACTADO]` (Historia de Usuario 3).
 - **FR-079**: El sistema DEBE permitir crear períodos de remuneración por mes y año con parámetros legales obligatorios y estado inicial "abierto", impidiendo períodos duplicados o con mes calendario inválido (Historia de Usuario 4).
 - **FR-080**: El sistema DEBE ejecutar el cálculo de remuneraciones de un período considerando únicamente los contratos cuya vigencia comprenda al menos un día del período (incluidos los terminados o vencidos con vigencia dentro del período) y las novedades aprobadas del período, calculando de forma proporcional por los días de vigencia dentro del período sobre los días naturales del mes (p. ej., 17/31 para un contrato que cubre 17 de 31 días), dejando el período en estado "calculado" y permitiendo recalcular mientras esté abierto o calculado (Historia de Usuario 4).
 - **FR-081**: El sistema DEBE marcar como desactualizada la liquidación de un Trabajador cuando, tras el último cálculo, se apruebe una novedad o cambie su contrato, obligando a recalcular antes del cierre (Historia de Usuario 4).
@@ -611,6 +679,26 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - **FR-085**: El sistema DEBE aplicar los permisos detallados por rol de la sesión identificada (simulada), en complemento a FR-051–FR-054 (Historia de Usuario 6): el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5 y 7 a 12 y es el único rol que cierra períodos, consulta la bitácora de auditoría, exporta/importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo; jefatura y Trabajador según las restricciones de visibilidad de FR-052/FR-054, con segregación de FR-053/FR-077.
 - **FR-086**: Al cambiar de rol durante una sesión activa, el sistema DEBE aplicar de inmediato los permisos del nuevo rol, volver a solicitar el Trabajador que se representa cuando el rol sea jefatura o Trabajador, y registrar el cambio en la bitácora de auditoría (Historia de Usuario 6).
 - **FR-087**: La consulta de la bitácora de auditoría DEBE estar disponible exclusivamente para el rol administrador/a de RR.HH., quien puede visualizar y reconstruir los accesos y modificaciones registrados (Historia de Usuario 6).
+- **FR-088**: El sistema DEBE devengar 1,25 días hábiles de vacaciones por cada mes completo trabajado, limitar el saldo acumulado a 30 días hábiles y mostrar una alerta cuando se alcance ese máximo (Historia de Usuario 7).
+- **FR-089**: El sistema DEBE contar los días de vacaciones como días hábiles de lunes a viernes excluyendo feriados, recalcular las solicitudes aprobadas cuando se agregue un feriado en su rango, ajustar el saldo descontado y registrar el cambio en la bitácora (Historia de Usuario 7).
+- **FR-090**: El sistema DEBE gestionar solicitudes de vacaciones en estados Pendiente, Aprobada, Rechazada o anulada, exigir motivo de rechazo, impedir aprobaciones del mismo usuario que registró la solicitud, permitir anular solo antes de la fecha de inicio y bloquear superposiciones con vacaciones, licencias o ausencias (Historia de Usuario 7).
+- **FR-091**: El sistema DEBE congelar el saldo de vacaciones de un Trabajador desvinculado para consulta histórica, sin pago ni ejercicio en esta versión (Historia de Usuario 7).
+- **FR-092**: El sistema DEBE registrar cargas familiares con Trabajador, nombre, RUT válido, parentesco, fecha de nacimiento, tipo de carga, resolución de reconocimiento y vigencia, avisar 30 días antes de la edad límite y exceptuar de ella a las cargas de invalidez (Historia de Usuario 8).
+- **FR-093**: El sistema DEBE impedir que un mismo RUT de carga esté vigente para dos Trabajadores o repetido vigente para uno mismo, y DEBE terminar las cargas con fecha de término sin eliminarlas (Historia de Usuario 8).
+- **FR-094**: El sistema DEBE calcular la asignación familiar con la tabla de tramos vigente, contar doble una carga de invalidez y agregar la línea `ASIG_FAMILIAR` como haber no imponible y no tributable con su explicación (Historia de Usuario 8).
+- **FR-095**: El sistema DEBE simular bruto a líquido usando los parámetros del mes de referencia y las mismas reglas y redondeo de la US4, sin crear ni modificar registros ni generar auditoría, y permitir copiar el desglose como texto con la marca de simulación referencial (Historia de Usuario 9).
+- **FR-096**: El sistema DEBE simular líquido a bruto buscando el menor sueldo base cuyo líquido iguale o supere el deseado con diferencia máxima de 1 peso, respetando ingreso mínimo y jornada máxima, marcar el resultado como simulación referencial y permitir copiar el desglose como texto con esa marca (Historia de Usuario 9).
+- **FR-097**: El sistema DEBE generar reportes de dotación, costo por centro de costo, horas extra y ausentismo únicamente sobre períodos cerrados, excluyendo licencias, vacaciones y permisos legales del ausentismo (Historia de Usuario 10).
+- **FR-098**: El sistema DEBE calcular la brecha salarial de género por cargo mediante la mediana del sueldo base y ocultar el resultado de cualquier cargo con menos de 5 personas en alguno de sus grupos (Historia de Usuario 10).
+- **FR-099**: El sistema DEBE tratar el género como dato sensible opcional usado solo en el reporte de brecha, sin mostrarlo en listados, búsquedas ni filtros de Trabajadores (Historia de Usuario 10).
+- **FR-100**: El sistema DEBE aplicar permisos por rol a los reportes, mostrar un estado vacío cuando no haya períodos cerrados y registrar en la bitácora la consulta de brecha de género (Historia de Usuario 10).
+- **FR-101**: El sistema DEBE permitir exportar, solo desde períodos cerrados, dos archivos CSV —`resumen_contable_YYYYMM.csv` y `nomina_pago_YYYYMM.csv`— con UTF-8 con BOM, separador `;` y encabezados sin acentos (Historia de Usuario 11).
+- **FR-102**: El sistema DEBE restringir la exportación de archivos CSV al rol administrador/a de RR.HH. y registrar cada exportación en la bitácora de auditoría (Historia de Usuario 11).
+- **FR-103**: El resumen contable DEBE agregar los montos por cuenta contable y centro de costo, obtener la cuenta de un mapeo configurable por concepto de liquidación y el centro de costo de la ficha del Trabajador, y sus totales DEBEN cuadrar con las liquidaciones del período cerrado (Historia de Usuario 11).
+- **FR-104**: La nómina de pago DEBE incluir Trabajador, banco, cuenta, líquido a pagar y fecha de pago, tomar banco y cuenta de la ficha, exigirlos antes de exportar, registrar la fecha de pago en el período cerrado y bloquearse si falta alguno de esos datos (Historia de Usuario 11).
+- **FR-105**: El sistema DEBE versionar los parámetros legales como un conjunto completo por mes y año, cargado manualmente por el administrador/a de RR.HH.; un conjunto usado por un Período NO DEBE modificarse y las correcciones DEBEN cargarse como otro conjunto completo para un mes distinto (Historia de Usuario 12).
+- **FR-106**: El sistema DEBE impedir crear o calcular un Período cuando el conjunto de parámetros del mes esté incompleto e indicar qué parámetros faltan (Historia de Usuario 12).
+- **FR-107**: Al cerrar un Período, el sistema DEBE conservar en las liquidaciones los valores del conjunto usado, sin que versiones posteriores puedan alterarlos (Historia de Usuario 12).
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -627,16 +715,16 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Entidad**: Un registro de datos maestros gestionado por el módulo, que incluye su nombre, código de negocio, detalles descriptivos, categoría de clasificación, una fecha objetivo opcional y un entity_id autogenerado. Los módulos personalizados definen qué representa una Entidad en el mundo real (p. ej., cliente, producto, activo).
 - **Documento**: Detalles transaccionales adjuntos a una entidad, vinculados a ella por el entity_id de la entidad. Los módulos personalizados definen qué representa un Documento (p. ej., pedido, factura, contrato).
 - **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados y el ciclo de vida de estados de documentos. Consulte data-model.md para su forma completa.
-- **Catálogo**: Opción maestra de cargo, departamento o centro de costo, con tipo, código único dentro de su tipo, nombre y estado activo/inactivo; se desactiva sin eliminarse y se conserva en las fichas que ya la usaban.
+- **Catálogo**: Opción maestra de cargo, departamento o centro de costo, con tipo, código único dentro de su tipo, nombre y estado Activo/Inactivo del catálogo; se desactiva sin eliminarse y se conserva en las fichas que ya la usaban.
 - **Liquidación**: Documento que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales y líquido a pagar, junto con el estado del cálculo y la fecha de emisión del comprobante.
 - **Línea de Liquidación**: Cada concepto que compone una liquidación (haber, descuento o impuesto), con su monto, la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal que la respalda; las líneas manuales registran un motivo en lugar de una fórmula.
-- **Parámetro Legal**: Valor normativo vigente en una fecha determinada (tasa, tope, tramo o monto fijo) que sustenta el cálculo de una línea y que se conserva congelado para los períodos ya calculados.
+- **Parámetro Legal**: Valor normativo incluido en un `CONJUNTO_PARAMETROS_LEGALES` completo por mes y año (tasa, tope, tramo o monto fijo) que sustenta el cálculo de una línea; el conjunto se bloquea desde su primer uso y el valor queda conservado en las liquidaciones de los períodos cerrados.
 - **Rol**: Perfil que determina las funciones y los datos a los que puede acceder un usuario en la sesión simulada; los roles son administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador.
 - **Permiso de Acceso**: Regla que asocia un rol con la capacidad de consultar o modificar un tipo de información sensible.
 - **Dato Sensible**: Información personal o financiera protegida (sueldos, liquidaciones y licencias médicas) cuyo acceso está restringido según el rol.
 - **Registro de Auditoría**: Entrada inmutable que documenta quién consultó o modificó información sensible, cuándo, con qué rol y sobre qué registro.
 - **Bitácora de Auditoría**: Colección de solo inserción de registros de auditoría, conservada para efectos de trazabilidad y cumplimiento normativo.
-- **Trabajador**: Entidad que representa a una persona empleada; reutiliza la Entidad (nombre, código y RUT como identificación fiscal), se vincula a su perfil de RR.HH. por entity_id y puede tener una jefatura directa opcional.
+- **Trabajador**: Entidad que representa a una persona empleada; reutiliza la Entidad (nombre, código y RUT como identificación fiscal), se vincula a su perfil de RR.HH. por entity_id, puede tener una jefatura directa opcional y registra banco y cuenta de pago para la exportación de nómina.
 - **Contrato**: Condiciones laborales de un Trabajador (sueldo base, jornada y tipo de contrato) con historial por vigencia y alertas de vencimiento; pertenece a un Trabajador.
 - **Novedad**: Evento de un período (horas extra, licencia médica o ausencia) asociado a un Trabajador y a un Período de Remuneración, con estado Pendiente/Aprobada/Rechazada/anulada y sin diagnóstico clínico.
 - **Período de Remuneración**: Mes y año de liquidación con estado Abierto/Calculado/Cerrado; al cerrarse congela UF, UTM, ingreso mínimo y parámetros legales, y agrupa Novedades y Liquidaciones.
@@ -652,11 +740,11 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-001**: Los usuarios pueden crear una nueva entidad y verla en la lista en menos de 2 minutos.
 - **SC-002**: Los usuarios pueden encontrar una entidad existente mediante la búsqueda en menos de 10 segundos tras introducir un término relevante.
 - **SC-003**: Al menos el 90% de los usuarios de prueba pueden completar tareas de crear, editar, eliminar y buscar sin ayuda.
-- **SC-004**: El sistema sigue siendo utilizable para un conjunto de datos de al menos 500 registros de entidad sin pérdida de funcionalidad central.
+- **SC-004**: El sistema mantiene el listado, la búsqueda y las acciones centrales operativos con al menos 500 registros de entidad, con respuesta de 10 segundos o menos y sin pérdida de funcionalidad.
 - **SC-005**: Un usuario puede alcanzar las pantallas de gestión y búsqueda desde el panel o la barra lateral en menos de 10 segundos en el primer uso.
 - **SC-006**: Toda la funcionalidad existente de gestión de entidades y documentos sigue operativa tras el rediseño del marco ERP y el panel (sin regresiones).
 - **SC-007**: Los usuarios pueden navegar entre las pantallas de panel, gestión y búsqueda sin perder ninguna entidad ni documento almacenado.
-- **SC-008**: Un desarrollador puede producir un módulo adaptado usando solo el archivo de configuración, con cero modificaciones en archivos fuente centrales.
+- **SC-008**: Un desarrollador puede producir un módulo adaptado usando solo el archivo de configuración, sin modificar el núcleo de Entidad/Documento ni la lógica compartida; la declaración inicial de la configuración y las exclusiones de presentación acordadas no se consideran modificaciones del núcleo.
 - **SC-009**: Cada pantalla presenta el mismo marco con marca, y los usuarios pueden identificar en qué módulo están de un vistazo.
 - **SC-010**: Las estadísticas de registros mostradas en el panel siempre coinciden con el número de entidades y documentos almacenados.
 - **SC-011**: Al seleccionar cada línea de una liquidación calculada (evento de foco o clic), el 100% de las líneas muestra base, tasa o factor y fórmula en menos de 1 segundo, medido desde el evento de selección hasta que el desglose queda visible en la interfaz.
@@ -672,13 +760,19 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-021**: Al menos el 95% de las pruebas de acceso con distintos roles confirma que los datos ocultos no pueden recuperarse desde la interfaz ni mediante enlaces directos.
 - **SC-022**: Un usuario puede exportar un respaldo completo y restaurarlo sin pérdida de entidades, documentos, novedades, períodos ni liquidaciones en menos de 5 minutos.
 - **SC-023**: El cálculo masivo de un período con hasta 500 Trabajadores y sus novedades aprobadas genera todas las liquidaciones en 10 segundos o menos en el entorno de uso previsto.
+- **SC-024**: El 100% de las solicitudes de vacaciones aprobadas recalcula sus días hábiles y su saldo descontado cuando se agrega un feriado en su rango, con registro en bitácora.
+- **SC-025**: El 100% de las cargas familiares con RUT duplicado vigente es rechazado y el 100% de las cargas que alcanzan la edad límite genera aviso con 30 días de anticipación.
+- **SC-026**: El simulador coincide al peso con la liquidación de referencia en el 100% de los casos probados y no crea ni modifica registros.
+- **SC-027**: El 100% de los reportes excluye períodos abiertos o calculados y oculta resultados de grupos con menos de 5 personas.
+- **SC-028**: El 100% de las exportaciones desde períodos cerrados genera los dos CSV con totales cuadrados y deja registro en bitácora.
+- **SC-029**: El 100% de los conjuntos de parámetros usados por un Período permanece bloqueado contra modificación y las liquidaciones cerradas conservan sus valores originales.
 
 ## Suposiciones
 
 - El módulo base gestiona datos para un único espacio de trabajo en lugar de una base de datos multiinquilino compartida.
 - La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales.
 - Cada entidad incluye información básica suficiente para identificación y seguimiento; los módulos personalizados aportan los campos específicos del dominio.
-- La versión inicial incluye la gestión de fichas de trabajadores y catálogos base (US1), la gestión de contratos y alertas de plazo (US2), el registro y aprobación de novedades (US3), el cálculo y cierre de períodos de remuneración (US4), la vista explicativa e impresión de liquidaciones (US5) y la seguridad, roles y gobierno de datos (US6). Quedan fuera capacidades ERP avanzadas como contabilidad general, informes financieros y planificación presupuestaria.
+- La versión inicial incluye todas las historias de usuario US1–US12: fichas y catálogos base (US1), contratos y alertas de plazo (US2), registro y aprobación de novedades (US3), cálculo y cierre de períodos (US4), explicación e impresión de liquidaciones (US5), seguridad y gobierno de datos (US6), vacaciones (US7), cargas familiares y asignación familiar (US8), simulador de sueldo (US9), reportes de gestión y equidad salarial (US10), exportaciones contables y de pago (US11) y parámetros legales versionados (US12). Quedan fuera capacidades ERP avanzadas como contabilidad general, informes financieros y planificación presupuestaria.
 - La búsqueda se realiza sobre los registros de entidad almacenados.
 - La pantalla de gestión consolida los formularios de añadir/editar entidad y añadir/editar documento en una sola pantalla de gestión.
 - La navegación entre áreas ocurre mediante una barra lateral persistente; la pantalla de gestión aloja ambos paneles de gestión y no muestra la lista de entidades.
