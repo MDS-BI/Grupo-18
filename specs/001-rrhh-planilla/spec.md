@@ -4,10 +4,10 @@
 
 **Rama de la funcionalidad**: 001-rrhh-planilla  
 **Creada**: 2026-07-08  
-**Actualizada**: 2026-11-17  
+**Actualizada**: 2026-11-18  
 **Estado**: Borrador  
 **Entrada**: Descripción del usuario: "Construir el módulo de Recursos Humanos y Planilla de un ERP que gestione las fichas de los trabajadores, sus contratos y las novedades del mes, calcule las remuneraciones según la legislación chilena y emita liquidaciones explicables, con control de acceso por rol y bitácora de auditoría."  
-**Última incorporación**: Historias de Usuario 1 a 12 (US1–US4, US6 y US12 con prioridad P1; US5, US7, US8, US10 y US11 con prioridad P2; US9 con prioridad P3), con FR-040–FR-107, SC-011–SC-029 y las reglas transversales de seguridad, auditoría y respaldo. Las Historias 7 a 12 agregan vacaciones (FR-088–FR-091), cargas familiares y asignación familiar (FR-092–FR-094), simulador de sueldo (FR-095–FR-096), reportes de gestión y equidad salarial (FR-097–FR-100), exportaciones contables y de pago (FR-101–FR-104) y parámetros legales versionados (FR-105–FR-107). Los identificadores FR-001–FR-039, SC-001–SC-010 y XR-001–XR-005 pertenecían al módulo base genérico (entidades y documentos), que se retiró del alcance por no corresponder a Recursos Humanos y Planilla; esos números no se reutilizan.
+**Última incorporación**: Historias de Usuario 1 a 12 (US1–US4, US6 y US12 con prioridad P1; US5, US7, US8, US10 y US11 con prioridad P2; US9 con prioridad P3), con FR-040–FR-112, SC-011–SC-031 y las reglas transversales de seguridad, auditoría y respaldo. Las Historias 7 a 12 agregan vacaciones (FR-088–FR-091), cargas familiares y asignación familiar (FR-092–FR-094), simulador de sueldo (FR-095–FR-096), reportes de gestión y equidad salarial (FR-097–FR-100), exportaciones contables y de pago (FR-101–FR-104) y parámetros legales versionados (FR-105–FR-107). Los identificadores FR-001–FR-039, SC-001–SC-010 y XR-001–XR-005 pertenecían al módulo base genérico (entidades y documentos), que se retiró del alcance por no corresponder a Recursos Humanos y Planilla; esos números no se reutilizan.
 
 ## Propósito
 
@@ -40,6 +40,24 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - Q: ¿De dónde deben salir el banco, la cuenta y la fecha de pago incluidos en la nómina CSV? → A: Opción A — añadir banco y cuenta a la ficha del Trabajador, exigirlos al exportar y usar una fecha de pago registrada en el período cerrado.
 - Q: ¿Deben completarse los requisitos y criterios declarados pero ausentes en la spec (FR-088–FR-100, FR-102–FR-104, FR-106–FR-107 y SC-024–SC-029) antes de continuar? → A: Opción A — completarlos con reglas verificables derivadas de las historias US7–US12 antes de continuar.
 - Q: ¿Qué formato técnico deben tener los dos CSV de exportación? → A: Opción A — UTF-8 con BOM, separador punto y coma, encabezados sin acentos y nombres `resumen_contable_YYYYMM.csv` y `nomina_pago_YYYYMM.csv`.
+
+### Session 2026-11-18
+
+- Q: ¿Cómo se debe comprobar que cada escenario de aceptación de las historias de usuario funciona? → A: Opción A — cada escenario Dado/cuando/entonces tiene una prueba automatizada en Vitest, y cada pantalla de RR.HH. se revisa además con una lista de chequeo visual manual.
+- Q: ¿En qué tamaños de pantalla debe verse bien la página para considerarla terminada? → A: Opción A — escritorio y tablet, de 768 px a 1920 px de ancho, sin desplazamiento horizontal.
+- Q: ¿Cómo deben mostrarse los listados largos (por ejemplo, 500 Trabajadores o todas las liquidaciones de un período)? → A: Opción A — paginación de 25 filas con anterior/siguiente y total de registros, conservando búsqueda y filtros, ordenados alfabéticamente por nombre.
+- Q: ¿Cómo debe avisar la página el resultado de una acción (guardar, aprobar, rechazar, calcular) y los errores de validación? → A: Opción A — un aviso visible arriba del formulario o listado (éxito o error) anunciado a lectores de pantalla, y los errores de validación junto a cada campo.
+- Q: ¿Qué debe revisar la lista de chequeo visual que se aplica a cada pantalla antes de dar por terminada su historia? → A: Opción A — una guía de estilo común: mismos colores, tipografía y espaciados de `src/styles.css`, título y acciones principales en la misma ubicación, tablas con encabezado, textos sin cortes ni desbordes y contraste AA.
+- Q: ¿Cuándo se registra la fecha de pago que exige la nómina de pago (US11)? → A: Opción A — es un dato obligatorio al cerrar el período (US4) y queda congelada con él.
+- Q: ¿Cómo carga el administrador/a el conjunto de parámetros legales de un mes en la página (US12)? → A: Opción A — un formulario en pantalla con todos los valores y una acción "Copiar mes anterior" que lo rellena para modificar solo lo que cambió, indicando los campos faltantes.
+- Q: ¿Cómo deben presentarse los reportes de gestión en pantalla (US10)? → A: Opción A — cada reporte muestra una tabla con las cifras y un gráfico de barras simple, sin librerías externas, con título y descripción accesibles.
+- Q: ¿Se pueden pedir vacaciones por medio día o solo por días completos (US7)? → A: Opción A — solo días hábiles completos; el saldo se muestra con dos decimales y solo se puede solicitar su parte entera.
+- Q: ¿Dónde se gestionan las vacaciones y las cargas familiares de un Trabajador dentro de la página (US7 y US8)? → A: Opción A — cada una tiene su propia pantalla en la barra lateral, y la ficha del Trabajador muestra un resumen con un enlace a esa pantalla filtrada por la persona.
+- Q: Si la remuneración imponible queda exactamente en el límite entre dos tramos de asignación familiar, ¿a qué tramo corresponde (US8)? → A: Opción A — al tramo inferior: el tope de cada tramo es inclusivo.
+- Q: En el reporte de brecha salarial de género, ¿qué se hace con quienes eligieron "No binario" o "Prefiere no informar", o no registraron género (US10)? → A: Opción A — la brecha se calcula entre Femenino y Masculino; las demás opciones se muestran solo como un conteo agregado por cargo, oculto si es menor a 5.
+- Q: Al validar si una solicitud de vacaciones cabe en el saldo, ¿se cuentan los días que se devengarán entre hoy y la fecha de inicio (US7)? → A: Opción A — sí, el saldo se proyecta a la fecha de inicio; la pantalla muestra el saldo de hoy y el proyectado.
+- Q: Si el equipo de una jefatura es pequeño, ¿se aplica también el mínimo de 5 personas a sus reportes de horas extra y ausentismo (US10)? → A: Opción A — sí, si el equipo o departamento del reporte tiene menos de 5 personas, las cifras se ocultan con una explicación.
+- Q: ¿La tabla de tramos de asignación familiar es un dato obligatorio del conjunto de parámetros legales de cada mes (US8 y US12)? → A: Opción A — sí; sin ella no se puede crear ni calcular el período.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
@@ -218,7 +236,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - Las cotizaciones de AFP y salud, y el seguro de cesantía, se calculan sobre la remuneración imponible con los topes vigentes del período, expresados en UF; el impuesto único se determina restando las cotizaciones obligatorias de la renta tributable y aplicando la tabla mensual en UTM del período.
 - Recalcular un período no cerrado reemplaza las liquidaciones en borrador sin duplicarlas.
 - Cada línea de la liquidación se redondea al peso entero y los totales se obtienen sumando las líneas ya redondeadas, de modo que el comprobante cuadre.
-- Cerrar un período congela la UF, la UTM y las tasas utilizadas, registra quién y cuándo lo cerró, y cambia el estado a "cerrado"; no se permite cerrar con novedades "Pendientes" ni con Trabajadores sin calcular. Se consideran "Trabajadores sin calcular" los Trabajadores con contrato en el período que no tienen liquidación, o cuya liquidación quedó desactualizada por una novedad aprobada o un cambio de contrato posterior al último cálculo; un Trabajador sin contrato en el período no impide el cierre.
+- Cerrar un período exige ingresar la fecha de pago de las remuneraciones, congela la UF, la UTM, las tasas utilizadas y la fecha de pago, registra quién y cuándo lo cerró, y cambia el estado a "cerrado"; no se permite cerrar con novedades "Pendientes" ni con Trabajadores sin calcular. Se consideran "Trabajadores sin calcular" los Trabajadores con contrato en el período que no tienen liquidación, o cuya liquidación quedó desactualizada por una novedad aprobada o un cambio de contrato posterior al último cálculo; un Trabajador sin contrato en el período no impide el cierre.
 - Un período cerrado no se reabre: sus liquidaciones no pueden modificarse, y la corrección de un período cerrado queda fuera del alcance de esta versión.
 - La consulta, la impresión y el guardado en PDF de liquidaciones se limitan a los roles autorizados por la US6.
 
@@ -238,7 +256,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 10. **Dado** un Trabajador sin contrato cuya vigencia toque el período, **cuando** se ejecuta el cálculo, **entonces** no se genera su liquidación y el resumen del cálculo lo incluye entre los Trabajadores excluidos, indicando el motivo.
 11. **Dado** un período al que le faltan la UF, la UTM, las tasas o los tramos, **cuando** el usuario ejecuta el cálculo, **entonces** el sistema lo bloquea e indica qué parámetros faltan.
 12. **Dado** un período ya calculado, **cuando** se aprueba una novedad nueva o cambia un contrato y el usuario vuelve a ejecutar el cálculo, **entonces** el sistema reemplaza las liquidaciones en borrador sin duplicarlas y refleja el cambio.
-13. **Dado** un período calculado sin errores ni novedades pendientes, **cuando** el administrador/a de RR.HH. cierra el período, **entonces** el sistema congela la UF, la UTM y las tasas utilizadas, registra quién y cuándo lo cerró, y cambia el estado del período a "cerrado".
+13. **Dado** un período calculado sin errores ni novedades pendientes, **cuando** el administrador/a de RR.HH. cierra el período indicando la fecha de pago, **entonces** el sistema congela la UF, la UTM, las tasas utilizadas y la fecha de pago, registra quién y cuándo lo cerró, y cambia el estado del período a "cerrado".
 14. **Dado** un período con novedades pendientes de aprobación, **cuando** el usuario intenta cerrarlo, **entonces** el sistema rechaza el cierre e indica qué novedades pendientes lo impiden.
 15. **Dado** un período sin novedades pendientes y con Trabajadores sin calcular (con contrato en el período y sin liquidación, o con liquidación desactualizada por una novedad aprobada o un cambio de contrato posterior al último cálculo), **cuando** el usuario intenta cerrarlo, **entonces** el sistema rechaza el cierre e indica qué Trabajadores lo impiden; un Trabajador sin contrato en el período no impide el cierre.
 16. **Dado** un período cerrado, **cuando** cualquier usuario o proceso intenta modificar o recalcular una liquidación de ese período, **entonces** el sistema bloquea la operación e indica que el período está cerrado.
@@ -338,7 +356,8 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 
 - Cada Trabajador acumula 15 días hábiles de feriado por cada año de servicio, devengados de forma proporcional: 1,25 días hábiles por cada mes completo trabajado desde su fecha de ingreso (art. 67 del Código del Trabajo).
 - Los días de vacaciones se cuentan en días hábiles: de lunes a viernes, sin contar los feriados registrados en el calendario de feriados (art. 69 del Código del Trabajo).
-- El saldo disponible es igual a los días devengados menos los días de solicitudes aprobadas. Una solicitud no puede superar el saldo disponible a la fecha de inicio de las vacaciones.
+- El saldo disponible es igual a los días devengados menos los días de solicitudes aprobadas. Para validar una solicitud se usa el saldo proyectado a su fecha de inicio: el saldo de hoy más lo que se devengará por cada mes completo hasta esa fecha, sin superar el máximo de 30 días hábiles. La pantalla muestra el saldo de hoy y, al elegir una fecha de inicio, el saldo proyectado a esa fecha.
+- Las solicitudes se expresan en días hábiles completos; no se admiten medios días. El saldo se muestra con dos decimales (p. ej., 3,75) y solo puede solicitarse su parte entera (3 días).
 - El saldo acumulado no puede superar dos períodos anuales (30 días hábiles) (art. 70 del Código del Trabajo); al alcanzar ese máximo, el sistema muestra una alerta en el panel principal.
 - El Trabajador solicita sus propias vacaciones; la jefatura y el administrador/a de RR.HH. pueden registrar una solicitud en nombre de un Trabajador de su ámbito. Toda solicitud nueva queda en estado "Pendiente".
 - Aprueba o rechaza la jefatura directa del Trabajador; si no tiene jefatura directa, lo hace el administrador/a de RR.HH. Nadie puede aprobar ni rechazar una solicitud que haya registrado. Un rechazo requiere un motivo.
@@ -347,6 +366,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - Solo un Trabajador activo con contrato vigente en las fechas solicitadas puede tener vacaciones. Al desvincular a un Trabajador, su saldo de vacaciones queda congelado para consulta histórica, sin pago ni ejercicio en esta versión.
 - Las vacaciones aprobadas no descuentan días en la liquidación: el Trabajador recibe su remuneración íntegra (art. 71 del Código del Trabajo).
 - El administrador/a de RR.HH. mantiene el calendario de feriados (fecha y nombre); un feriado no puede repetirse en la misma fecha. Si se agrega un feriado dentro del rango de una solicitud aprobada, el sistema recalcula sus días hábiles, ajusta el saldo descontado en consecuencia y registra el cambio en la bitácora.
+- Las vacaciones se gestionan en su propia pantalla de la barra lateral, con el listado de solicitudes, las pendientes de aprobación y el calendario de feriados; la ficha del Trabajador muestra un resumen (saldo disponible y próxima solicitud) con un enlace a esa pantalla filtrada por la persona.
 
 **Prueba Independiente**: Con Trabajadores, contratos y feriados precargados como datos semilla, un Trabajador ve su saldo, solicita días, su jefatura los aprueba y el saldo se descuenta; una solicitud que supera el saldo o que se superpone con una licencia es rechazada. No requiere ejecutar el cálculo de planilla.
 
@@ -363,6 +383,8 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 9. **Dado** un Trabajador con 30 días hábiles de saldo acumulado, **cuando** el administrador/a abre el panel principal, **entonces** ve una alerta de feriado acumulado al máximo para ese Trabajador.
 10. **Dado** un período con vacaciones aprobadas, **cuando** se ejecuta el cálculo de planilla (US4), **entonces** la liquidación no descuenta días por esas vacaciones.
 11. **Dado** que se crea, aprueba, rechaza o anula una solicitud, o se modifica el calendario de feriados, **cuando** la operación se completa, **entonces** la bitácora de auditoría la registra (regla transversal provista por la US6).
+12. **Dado** un Trabajador con un saldo disponible de 3,75 días hábiles, **cuando** solicita 4 días hábiles, **entonces** el sistema la rechaza e indica que puede solicitar como máximo 3 días completos.
+13. **Dado** un Trabajador con 2 días hábiles de saldo hoy, **cuando** solicita 4 días hábiles que comienzan dentro de 2 meses completos, **entonces** el sistema acepta la solicitud porque su saldo proyectado a esa fecha es de 4,5 días.
 
 ---
 ### Historia de Usuario 8 - Cargas Familiares y Asignación Familiar (Prioridad: P2)
@@ -381,11 +403,12 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - El número y la fecha de la resolución de reconocimiento son obligatorios: sin ellos la carga no se paga.
 - Un mismo RUT de carga no puede estar vigente para dos Trabajadores de la empresa al mismo tiempo, ni repetirse vigente para el mismo Trabajador.
 - Un hijo/a deja de ser carga a los 18 años, o a los 24 si se registra como estudiante; el sistema avisa 30 días antes de que una carga cumpla la edad límite. La carga de invalidez no tiene límite de edad.
-- El tramo de asignación familiar del Trabajador (A, B, C o D) se determina comparando su remuneración imponible del período con la tabla de tramos vigente en los parámetros legales versionados; el tramo D no recibe monto. (Simplificación de esta versión: la ley usa el ingreso promedio del semestre anterior.)
+- El tramo de asignación familiar del Trabajador (A, B, C o D) se determina comparando su remuneración imponible del período con la tabla de tramos del conjunto de parámetros legales del mes, que es obligatoria (US12); el tope de cada tramo es inclusivo, de modo que una remuneración igual al tope de un tramo queda en ese tramo, y el tramo D no recibe monto. (Simplificación de esta versión: la ley usa el ingreso promedio del semestre anterior.)
 - El monto mensual es igual al monto por carga del tramo multiplicado por el número de cargas vigentes en el período; una carga de invalidez cuenta doble.
 - La asignación familiar se agrega a la liquidación como haber no imponible y no tributable, con la línea `ASIG_FAMILIAR`, mostrando el tramo, el número de cargas y el monto por carga en su explicación (US5).
 - Las cargas son datos personales de terceros: solo el administrador/a de RR.HH. y el analista de remuneraciones pueden verlas; la jefatura no accede a ellas, y el Trabajador ve solo las suyas.
 - Las cargas no se eliminan: se terminan con una fecha de término de vigencia y se conservan en el historial.
+- Las cargas familiares se gestionan en su propia pantalla de la barra lateral; la ficha del Trabajador muestra, solo a los roles autorizados a ver cargas, un resumen (número de cargas vigentes y próximo aviso de edad límite) con un enlace a esa pantalla filtrada por la persona.
 
 **Prueba Independiente**: Con un Trabajador de tramo A y otro de tramo D precargados, el analista registra dos cargas al primero (una de invalidez) y una al segundo; al calcular el período, solo el primero recibe la asignación familiar por 3 cargas y el segundo no recibe monto.
 
@@ -401,6 +424,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 8. **Dado** la línea de asignación familiar de una liquidación, **cuando** el usuario consulta su explicación (US5), **entonces** ve el tramo aplicado, el número de cargas, el monto por carga y la vigencia del parámetro usado.
 9. **Dado** una jefatura, **cuando** intenta ver las cargas de un Trabajador de su equipo, **entonces** el sistema lo impide e indica que no tiene autorización.
 10. **Dado** que se registra, modifica o termina una carga, **cuando** la operación se completa, **entonces** la bitácora de auditoría la registra (regla transversal de la US6).
+11. **Dado** un Trabajador cuya remuneración imponible es exactamente igual al tope del tramo A, **cuando** se ejecuta el cálculo, **entonces** se le aplica el monto por carga del tramo A.
 
 ---
 
@@ -459,10 +483,12 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - **Horas extra**: total de horas extra aprobadas por departamento y período.
 - **Ausentismo**: días de ausencia divididos por los días hábiles del período, por departamento. Las licencias médicas, las vacaciones y los permisos legales no se cuentan como ausentismo y se muestran por separado, para no castigar enfermedad ni maternidad.
 - **Brecha salarial de género por cargo**: diferencia porcentual entre la mediana del sueldo base de cada género dentro de un mismo cargo. Si algún grupo del cargo tiene menos de 5 personas, el sistema oculta el resultado de ese cargo e indica que hay muy pocas personas para mostrarlo sin identificar a nadie.
+- En el reporte de brecha, la comparación se calcula entre los grupos Femenino y Masculino; las personas con "No binario", "Prefiere no informar" o sin género registrado no entran en la comparación y se muestran solo como un conteo agregado por cargo, que se oculta si es menor a 5.
 - El género es un campo opcional de la ficha (Femenino, Masculino, No binario, Prefiere no informar), clasificado como dato sensible; solo se usa en el reporte de brecha y nunca aparece en listados, búsquedas ni filtros de Trabajadores.
-- Los reportes muestran solo totales y nunca datos de una persona identificable.
+- Los reportes muestran solo totales y nunca datos de una persona identificable: cuando el equipo o departamento de una fila del reporte tiene menos de 5 personas, sus cifras se ocultan con un mensaje que explica que hay muy pocas personas para mostrarlas, para cualquier rol.
 - El administrador/a de RR.HH. ve todos los reportes; el analista ve todos menos la brecha de género; la jefatura ve solo horas extra y ausentismo de su equipo, sin montos; el Trabajador no accede a reportes.
 - Cada reporte puede filtrarse por rango de períodos y por departamento, y muestra un estado vacío explicativo cuando no hay períodos cerrados.
+- Cada reporte se presenta como una tabla con las cifras y un gráfico de barras simple con los mismos datos; el gráfico tiene título y una descripción accesible, y la tabla permite leer los datos aunque el gráfico no se vea.
 
 **Prueba Independiente**: Con datos semilla de tres períodos cerrados y Trabajadores de distintos cargos y géneros, el administrador/a ve la dotación, el costo por centro de costo y la brecha por cargo; un cargo con menos de 5 personas en algún grupo aparece oculto. No modifica ningún dato.
 
@@ -478,6 +504,8 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 8. **Dado** un analista de remuneraciones, **cuando** intenta abrir el reporte de brecha de género, **entonces** el sistema lo impide e indica que no tiene autorización.
 9. **Dado** que no existen períodos cerrados, **cuando** el usuario abre los reportes, **entonces** ve un estado vacío que explica que los reportes se calculan sobre períodos cerrados.
 10. **Dado** que el administrador/a consulta el reporte de brecha de género, **cuando** la consulta se completa, **entonces** la bitácora de auditoría registra la consulta de un dato sensible (regla transversal de la US6).
+11. **Dado** un cargo con 6 mujeres, 7 hombres y 2 personas con "Prefiere no informar", **cuando** el administrador/a abre el reporte de brecha, **entonces** la brecha se calcula solo con las 13 personas de los grupos Femenino y Masculino, y el conteo de las otras 2 aparece oculto por ser menor a 5.
+12. **Dado** una jefatura cuyo equipo tiene 3 personas, **cuando** abre el reporte de horas extra o de ausentismo, **entonces** las cifras de su equipo aparecen ocultas con el mensaje de que hay muy pocas personas para mostrarlas.
 
 ---
 
@@ -495,7 +523,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 
 - Solo se exporta desde períodos cerrados; los estados Abierto y Calculado bloquean la acción.
 - El resumen contable agrega montos por `cuentaContable` y centro de costo; la cuenta se obtiene del mapeo configurable por concepto de liquidación y el centro de costo de la ficha del Trabajador. Sus totales deben cuadrar con las liquidaciones del período.
-- La nómina de pago incluye Trabajador, banco, cuenta, líquido a pagar y `fechaPago`. Banco y cuenta se toman de la ficha y se exigen antes de exportar; `fechaPago` se registra en el período cerrado.
+- La nómina de pago incluye Trabajador, banco, cuenta, líquido a pagar y `fechaPago`. Banco y cuenta se toman de la ficha y se exigen antes de exportar; `fechaPago` es la fecha de pago ingresada obligatoriamente al cerrar el período (US4).
 - Ambos CSV usan UTF-8 con BOM, separador `;`, encabezados sin acentos y nombres `resumen_contable_YYYYMM.csv` y `nomina_pago_YYYYMM.csv`.
 - Solo el rol administrador/a de RR.HH. puede exportar; cada exportación queda registrada en la bitácora de auditoría.
 
@@ -524,7 +552,8 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 
 **Reglas de negocio**:
 
-- Los parámetros legales (UF, UTM, ingreso mínimo, jornada máxima, tasas, topes y tramos) se versionan como un conjunto completo por mes y año; el administrador/a de RR.HH. los carga manualmente y el sistema exige todos los valores obligatorios antes de permitir crear un período o ejecutar un cálculo para ese mes.
+- Los parámetros legales (UF, UTM, ingreso mínimo, jornada máxima, tasas, topes, tramos del impuesto único y tramos de asignación familiar) se versionan como un conjunto completo por mes y año; el administrador/a de RR.HH. los carga manualmente y el sistema exige todos los valores obligatorios antes de permitir crear un período o ejecutar un cálculo para ese mes.
+- La carga se realiza en un formulario en pantalla con todos los valores del conjunto; la acción "Copiar mes anterior" lo rellena con el último conjunto cargado para modificar solo lo que cambió, y el formulario señala los campos obligatorios que faltan. Lo copiado no se guarda ni se usa hasta que el administrador/a confirma el conjunto.
 - Cada período aplica íntegramente el conjunto de parámetros de su mes y año; al cerrarlo, esos valores quedan congelados en las liquidaciones y no se ven afectados por versiones posteriores.
 - Un conjunto queda bloqueado para edición desde que un Período lo usa por primera vez, aunque el Período esté abierto o calculado; una corrección requiere cargar otro conjunto completo para un mes distinto.
 
@@ -537,6 +566,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 3. **Dado** un conjunto ya usado por un Período Abierto o Calculado, **cuando** se intenta editarlo, **entonces** el sistema lo impide.
 4. **Dado** un Período Cerrado, **cuando** se carga una versión posterior de parámetros, **entonces** sus liquidaciones conservan el snapshot original.
 5. **Dado** un error detectado en un conjunto usado, **cuando** se carga la corrección, **entonces** debe hacerse como otro conjunto completo para un mes distinto y el conjunto original permanece intacto.
+6. **Dado** un conjunto cargado para el mes anterior, **cuando** el administrador/a usa "Copiar mes anterior" en el formulario de un mes nuevo, cambia la UF y la UTM y confirma, **entonces** se guarda un conjunto completo para el mes nuevo con esos cambios y el conjunto anterior permanece intacto.
 
 ---
 
@@ -569,7 +599,8 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - El saldo de vacaciones de un Trabajador desvinculado queda congelado para consulta histórica, sin pago ni ejercicio en esta versión.
 - Un conjunto de parámetros legales usado por un Período no se modifica; las correcciones se cargan como otro conjunto completo para un mes distinto.
 - El resumen contable usa el centro de costo de la ficha del Trabajador y cuentas configuradas por concepto de liquidación.
-- Si faltan el banco o la cuenta del Trabajador o la fecha de pago del período, la exportación de nómina se bloquea e indica los datos faltantes.
+- Si faltan el banco o la cuenta de algún Trabajador, la exportación de nómina se bloquea e indica los datos faltantes; la fecha de pago no puede faltar porque es obligatoria al cerrar el período.
+- Si la remuneración imponible de un Trabajador es exactamente igual al tope de un tramo de asignación familiar, se le aplica ese tramo (tope inclusivo).
 
 ## Requisitos *(obligatorio)*
 
@@ -619,13 +650,13 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - **FR-079**: El sistema DEBE permitir crear períodos de remuneración por mes y año con parámetros legales obligatorios y estado inicial "abierto", impidiendo períodos duplicados o con mes calendario inválido (Historia de Usuario 4).
 - **FR-080**: El sistema DEBE ejecutar el cálculo de remuneraciones de un período considerando únicamente los contratos cuya vigencia comprenda al menos un día del período (incluidos los terminados o vencidos con vigencia dentro del período) y las novedades aprobadas del período, calculando de forma proporcional por los días de vigencia dentro del período sobre los días naturales del mes (p. ej., 17/31 para un contrato que cubre 17 de 31 días), dejando el período en estado "calculado" y permitiendo recalcular mientras esté abierto o calculado (Historia de Usuario 4).
 - **FR-081**: El sistema DEBE marcar como desactualizada la liquidación de un Trabajador cuando, tras el último cálculo, se apruebe una novedad o cambie su contrato, obligando a recalcular antes del cierre (Historia de Usuario 4).
-- **FR-082**: El sistema DEBE impedir cerrar un período con novedades pendientes o con Trabajadores sin calcular (según la definición de la Historia de Usuario 4); al cerrar DEBE congelar UF, UTM y tasas, registrar quién y cuándo lo cerró y pasar el período a "cerrado" sin posibilidad de reapertura (Historia de Usuario 4).
+- **FR-082**: El sistema DEBE impedir cerrar un período con novedades pendientes o con Trabajadores sin calcular (según la definición de la Historia de Usuario 4); al cerrar DEBE exigir la fecha de pago, congelar UF, UTM, tasas y fecha de pago, registrar quién y cuándo lo cerró y pasar el período a "cerrado" sin posibilidad de reapertura (Historia de Usuario 4).
 - **FR-083**: Cada línea de liquidación DEBE redondearse al peso entero y los totales DEBEN obtenerse sumando las líneas ya redondeadas; las liquidaciones de períodos cerrados no DEBEN poder modificarse y su corrección queda fuera del alcance de esta versión (Historia de Usuario 4).
 - **FR-084**: El sistema DEBE registrar en la bitácora de auditoría la creación, cálculo, recálculo y cierre de períodos de remuneración con usuario, fecha y hora, y los datos relevantes de la operación (Historia de Usuario 4).
 - **FR-085**: El sistema DEBE aplicar los permisos detallados por rol de la sesión identificada (simulada), en complemento a FR-051–FR-054 (Historia de Usuario 6): el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5 y 7 a 12 y es el único rol que cierra períodos, consulta la bitácora de auditoría, exporta/importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo; jefatura y Trabajador según las restricciones de visibilidad de FR-052/FR-054, con segregación de FR-053/FR-077.
 - **FR-086**: Al cambiar de rol durante una sesión activa, el sistema DEBE aplicar de inmediato los permisos del nuevo rol, volver a solicitar el Trabajador que se representa cuando el rol sea jefatura o Trabajador, y registrar el cambio en la bitácora de auditoría (Historia de Usuario 6).
 - **FR-087**: La consulta de la bitácora de auditoría DEBE estar disponible exclusivamente para el rol administrador/a de RR.HH., quien puede visualizar y reconstruir los accesos y modificaciones registrados (Historia de Usuario 6).
-- **FR-088**: El sistema DEBE devengar 1,25 días hábiles de vacaciones por cada mes completo trabajado, limitar el saldo acumulado a 30 días hábiles y mostrar una alerta cuando se alcance ese máximo (Historia de Usuario 7).
+- **FR-088**: El sistema DEBE devengar 1,25 días hábiles de vacaciones por cada mes completo trabajado, validar cada solicitud contra el saldo proyectado a su fecha de inicio, limitar el saldo acumulado a 30 días hábiles y mostrar una alerta cuando se alcance ese máximo (Historia de Usuario 7).
 - **FR-089**: El sistema DEBE contar los días de vacaciones como días hábiles de lunes a viernes excluyendo feriados, recalcular las solicitudes aprobadas cuando se agregue un feriado en su rango, ajustar el saldo descontado y registrar el cambio en la bitácora (Historia de Usuario 7).
 - **FR-090**: El sistema DEBE gestionar solicitudes de vacaciones en estados Pendiente, Aprobada, Rechazada o anulada, exigir motivo de rechazo, impedir aprobaciones del mismo usuario que registró la solicitud, permitir anular solo antes de la fecha de inicio y bloquear superposiciones con vacaciones, licencias o ausencias (Historia de Usuario 7).
 - **FR-091**: El sistema DEBE congelar el saldo de vacaciones de un Trabajador desvinculado para consulta histórica, sin pago ni ejercicio en esta versión (Historia de Usuario 7).
@@ -635,16 +666,21 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - **FR-095**: El sistema DEBE simular bruto a líquido usando los parámetros del mes de referencia y las mismas reglas y redondeo de la US4, sin crear ni modificar registros ni generar auditoría, y permitir copiar el desglose como texto con la marca de simulación referencial (Historia de Usuario 9).
 - **FR-096**: El sistema DEBE simular líquido a bruto buscando el menor sueldo base cuyo líquido iguale o supere el deseado con diferencia máxima de 1 peso, respetando ingreso mínimo y jornada máxima, marcar el resultado como simulación referencial y permitir copiar el desglose como texto con esa marca (Historia de Usuario 9).
 - **FR-097**: El sistema DEBE generar reportes de dotación, costo por centro de costo, horas extra y ausentismo únicamente sobre períodos cerrados, excluyendo licencias, vacaciones y permisos legales del ausentismo (Historia de Usuario 10).
-- **FR-098**: El sistema DEBE calcular la brecha salarial de género por cargo mediante la mediana del sueldo base y ocultar el resultado de cualquier cargo con menos de 5 personas en alguno de sus grupos (Historia de Usuario 10).
+- **FR-098**: El sistema DEBE calcular la brecha salarial de género por cargo mediante la mediana del sueldo base de los grupos Femenino y Masculino, ocultar el resultado de cualquier cargo con menos de 5 personas en alguno de esos grupos y mostrar a las demás personas solo como un conteo agregado por cargo, oculto si es menor a 5 (Historia de Usuario 10).
 - **FR-099**: El sistema DEBE tratar el género como dato sensible opcional usado solo en el reporte de brecha, sin mostrarlo en listados, búsquedas ni filtros de Trabajadores (Historia de Usuario 10).
-- **FR-100**: El sistema DEBE aplicar permisos por rol a los reportes, mostrar un estado vacío cuando no haya períodos cerrados y registrar en la bitácora la consulta de brecha de género (Historia de Usuario 10).
+- **FR-100**: El sistema DEBE aplicar permisos por rol a los reportes, mostrar un estado vacío cuando no haya períodos cerrados, ocultar las cifras de cualquier equipo o departamento con menos de 5 personas, para todos los roles, y registrar en la bitácora la consulta de brecha de género (Historia de Usuario 10).
 - **FR-101**: El sistema DEBE permitir exportar, solo desde períodos cerrados, dos archivos CSV —`resumen_contable_YYYYMM.csv` y `nomina_pago_YYYYMM.csv`— con UTF-8 con BOM, separador `;` y encabezados sin acentos (Historia de Usuario 11).
 - **FR-102**: El sistema DEBE restringir la exportación de archivos CSV al rol administrador/a de RR.HH. y registrar cada exportación en la bitácora de auditoría (Historia de Usuario 11).
 - **FR-103**: El resumen contable DEBE agregar los montos por cuenta contable y centro de costo, obtener la cuenta de un mapeo configurable por concepto de liquidación y el centro de costo de la ficha del Trabajador, y sus totales DEBEN cuadrar con las liquidaciones del período cerrado (Historia de Usuario 11).
-- **FR-104**: La nómina de pago DEBE incluir Trabajador, banco, cuenta, líquido a pagar y fecha de pago, tomar banco y cuenta de la ficha, exigirlos antes de exportar, registrar la fecha de pago en el período cerrado y bloquearse si falta alguno de esos datos (Historia de Usuario 11).
-- **FR-105**: El sistema DEBE versionar los parámetros legales como un conjunto completo por mes y año, cargado manualmente por el administrador/a de RR.HH.; un conjunto usado por un Período NO DEBE modificarse y las correcciones DEBEN cargarse como otro conjunto completo para un mes distinto (Historia de Usuario 12).
-- **FR-106**: El sistema DEBE impedir crear o calcular un Período cuando el conjunto de parámetros del mes esté incompleto e indicar qué parámetros faltan (Historia de Usuario 12).
+- **FR-104**: La nómina de pago DEBE incluir Trabajador, banco, cuenta, líquido a pagar y fecha de pago, tomar banco y cuenta de la ficha, exigirlos antes de exportar, usar la fecha de pago ingresada al cerrar el período y bloquearse si falta el banco o la cuenta de algún Trabajador (Historia de Usuario 11).
+- **FR-105**: El sistema DEBE versionar los parámetros legales como un conjunto completo por mes y año, cargado manualmente por el administrador/a de RR.HH. en un formulario en pantalla que permite copiar el conjunto del mes anterior; un conjunto usado por un Período NO DEBE modificarse y las correcciones DEBEN cargarse como otro conjunto completo para un mes distinto (Historia de Usuario 12).
+- **FR-106**: El sistema DEBE impedir crear o calcular un Período cuando el conjunto de parámetros del mes esté incompleto (incluida la tabla de tramos de asignación familiar) e indicar qué parámetros faltan (Historia de Usuario 12).
 - **FR-107**: Al cerrar un Período, el sistema DEBE conservar en las liquidaciones los valores del conjunto usado, sin que versiones posteriores puedan alterarlos (Historia de Usuario 12).
+- **FR-108**: Los listados de RR.HH. que muestran Trabajadores o sus registros (fichas, contratos, novedades, liquidaciones, solicitudes de vacaciones y cargas familiares) DEBEN paginarse en 25 filas, ordenadas alfabéticamente por nombre del Trabajador, con controles de página anterior y siguiente y el total de registros, conservando la búsqueda y los filtros activos al cambiar de página.
+- **FR-109**: Toda pantalla de RR.HH. DEBE informar el resultado de cada acción (guardar, aprobar, rechazar, anular, calcular, cerrar o exportar) con un aviso visible sobre el formulario o listado, diferenciado como éxito o error y anunciado a los lectores de pantalla, y DEBE mostrar cada error de validación junto al campo que lo causa.
+- **FR-110**: Todas las pantallas de RR.HH. DEBEN seguir una guía de estilo común: usar únicamente los colores, la tipografía y los espaciados definidos en la hoja de estilos común del módulo; ubicar el título y las acciones principales en la misma posición; mostrar las tablas con fila de encabezado; no presentar textos cortados ni desbordados; y cumplir contraste WCAG 2.2 AA. Estos puntos conforman la lista de chequeo de revisión visual de SC-030.
+- **FR-111**: Cada reporte de gestión DEBE mostrarse como una tabla con sus cifras acompañada de un gráfico de barras simple con los mismos datos, con título y descripción accesibles (Historia de Usuario 10).
+- **FR-112**: Las vacaciones y las cargas familiares DEBEN gestionarse cada una en su propia pantalla de la barra lateral, y la ficha del Trabajador DEBE mostrar un resumen de ambas con un enlace a la pantalla correspondiente filtrada por esa persona, respetando los permisos de visualización de cada rol (Historias de Usuario 7 y 8).
 
 ### Entidades Clave *(incluir si la funcionalidad implica datos)*
 
@@ -691,6 +727,8 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - **SC-027**: El 100% de los reportes excluye períodos abiertos o calculados y oculta resultados de grupos con menos de 5 personas.
 - **SC-028**: El 100% de las exportaciones desde períodos cerrados genera los dos CSV con totales cuadrados y deja registro en bitácora.
 - **SC-029**: El 100% de los conjuntos de parámetros usados por un Período permanece bloqueado contra modificación y las liquidaciones cerradas conservan sus valores originales.
+- **SC-030**: El 100% de los escenarios de aceptación de las Historias de Usuario 1 a 12 tiene una prueba automatizada que pasa, y cada pantalla de RR.HH. aprueba la lista de chequeo de revisión visual antes de considerar terminada su historia.
+- **SC-031**: El 100% de las pantallas de RR.HH. se muestra completa y operable entre 768 px y 1920 px de ancho, sin desplazamiento horizontal de la página; solo las tablas anchas pueden desplazarse dentro de su propio contenedor.
 
 ## Suposiciones
 
@@ -703,7 +741,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - Cada línea conserva, desde el momento del cálculo, la base, la tasa o fórmula y el parámetro legal aplicado, de modo que la explicación no depende de parámetros posteriores.
 - La impresión se realiza mediante la función de impresión del navegador, que incluye la opción de guardar como PDF; no se requiere un generador de PDF dedicado.
 - Los datos de identificación de la empresa emisora están disponibles en la configuración del módulo.
-- Los parámetros legales (UF, UTM, tasas y tramos) se cargan y versionan manualmente por un administrador mediante formulario o archivo de configuración; no se integran servicios externos de indicadores previsionales.
+- Los parámetros legales (UF, UTM, tasas y tramos) se cargan y versionan manualmente por un administrador mediante un formulario en pantalla; no se integran servicios externos de indicadores previsionales.
 - Los montos se presentan en pesos chilenos con separador de miles.
 - El acceso a la explicación y al comprobante respeta los permisos vigentes del usuario.
 - Los roles de la sesión simulada son administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador, sin gestión de asignación.
