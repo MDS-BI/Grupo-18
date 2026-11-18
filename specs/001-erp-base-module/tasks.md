@@ -1,8 +1,8 @@
-﻿# Tareas: Módulo Base ERP y Módulo de Recursos Humanos y Planilla
+# Tareas: Módulo de Recursos Humanos y Planilla
 
 **Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
 **Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
-**Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 12 de `spec.md`, incluyendo FR-040–FR-107 y SC-001–SC-029 (las tareas de US8 a US12 se agregan a medida que se incorpora cada historia), la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
+**Alcance**: Historias de Usuario 1 a 12 de `spec.md`, incluyendo FR-040–FR-107 y SC-011–SC-029 (las tareas de US8 a US12 se agregan a medida que se incorpora cada historia), la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia. El módulo base genérico (FR-001–FR-039, XR-001–XR-005 y la antigua Fase 2B, tareas T018–T040) se retiró del alcance por no corresponder a Recursos Humanos y Planilla.
 **Actualizado**: 2026-11-17 (incorporada la Historia de Usuario 7, Fase 9, tareas T170–T190; revisión anterior 2026-11-16 contra código/tests actuales con rutas ajustadas a la estructura real `src/rrhh/...`)
 **Tests**: Incluidos por mandato de la constitución (Principio II) y del plan de verificación con Vitest + jsdom.
 
@@ -10,7 +10,7 @@
 
 - **[P]**: Puede ejecutarse en paralelo (archivos distintos, sin dependencias pendientes)
 - **[US1]–[US12]**: Historia de Usuario a la que pertenece la tarea
-- Las tareas de configuración, fundacionales, módulo base y pulido no llevan etiqueta de historia
+- Las tareas de configuración, fundacionales y pulido no llevan etiqueta de historia
 - Todas las rutas son explícitas y relativas a la raíz del repositorio
 
 ## Convenciones de Rutas
@@ -48,23 +48,21 @@
 
 **⚠️ CRÍTICO**: Ninguna historia de usuario puede comenzar hasta completar esta fase.
 
-- [X] T005 Implementar la capa de almacenamiento base (CRUD de entidades y documentos, identidad, marcas de tiempo, integridad referencial y eliminación en cascada de documentos al eliminar una Entidad genérica) en `src/storage.js` (FR-007, FR-009, XR-004)
+- [X] T005 Implementar la capa de almacenamiento compartida (persistencia local, identidad, marcas de tiempo e integridad referencial) que usa RR.HH. en `src/storage.js` (infraestructura compartida)
   - Evidencia: `src/storage.js` (`createId`, `now`, `addEntity`, `updateEntity`, `deleteEntity`, `addDocument`, `updateDocument`, `deleteDocument`, `deleteDocumentsForEntity`, `validateEntity`, `validateDocument`).
-  - `deleteEntity` elimina Entidades genéricas con sus documentos y rechaza Trabajadores/Liquidaciones gestionados por RR.HH., conforme a FR-003.
+  - `deleteEntity` rechaza eliminar Trabajadores y Liquidaciones gestionados por RR.HH.; los Trabajadores se desactivan según la Historia de Usuario 1.
 - [X] T006 [P] Crear los estilos compartidos y tokens de diseño (tipografía, formularios, estados vacíos y de error) en `src/styles.css`
   - Evidencia: `src/styles.css` (`:root` tokens/variables, estilos de formularios `.field*`/inputs, estados `.empty-state`, `.field-error`, `.config-errors`, `.rrhh-feedback`).
   - Falta (spec nuevo/reglas pendientes): verificar cobertura completa de todos los tokens/estados exigidos por el spec vigente.
 - [X] T007 [P] Implementar el arranque de la aplicación y la navegación de vistas en `src/main.js` y `src/app.js`
   - Evidencia: `src/main.js` (`boot`), `src/app.js` (`boot`, `initApp`, `showView`, `bindEvents`, `views`).
   - Falta (spec nuevo/reglas pendientes): verificar cumplimiento total de reglas de navegación/pantallas exigidas por el spec vigente.
-- [X] T008 [P] Construir el marco del espacio de trabajo ERP (barra superior, logotipo derivado del nombre y barra lateral) en `src/components/shell.js` (FR-011, FR-036)
+- [X] T008 [P] Construir el marco del espacio de trabajo ERP (barra superior, logotipo derivado del nombre y barra lateral) en `src/components/shell.js` (infraestructura compartida)
   - Evidencia: `src/components/shell.js` (`renderShell`, `renderLogo`, `deriveMonogram`, `applyTheme`, `renderRoleSelector`).
   - Falta (spec nuevo/reglas pendientes): verificar cumplimiento completo de todos los requisitos del marco según el spec vigente.
-- [X] T009 [P] Construir el panel de inicio con acciones rápidas y estadísticas en vivo en `src/components/dashboard.js` (FR-010)
+- [X] T009 [P] Construir el panel principal donde se muestran las alertas de RR.HH. (contratos por vencer de US2 y feriado acumulado de US7) en `src/components/dashboard.js` (FR-072, FR-088)
   - Evidencia: `src/components/dashboard.js` (`renderDashboard`, `refreshStats`, `renderContratoAlerts`).
-  - Falta (spec nuevo/reglas pendientes): verificar alineación total con FR-010/FR-033–FR-035 y reglas actuales del spec.
-- [ ] T010 [P] Definir los campos personalizados de RR.HH. y el ciclo de vida documental de liquidaciones en `src/module-config.js`
-  - Falta: no se evidencian en `module-config.js` los campos personalizados RR.HH. ni el ciclo de vida documental de liquidaciones requeridos por la tarea/spec.
+  - Falta (spec nuevo/reglas pendientes): verificar que el panel muestre las alertas de RR.HH. exigidas por US2 y US7.
 - [ ] T011 [P] Configurar el entorno de pruebas Vitest + jsdom y los fixtures compartidos en `tests/setup/jsdom.js` y `tests/setup/fixtures.js`
   - Evidencia parcial: existe `tests/setup/setup.js` con configuración base registrada en `vitest.config.mjs`; faltan `tests/setup/jsdom.js` y `tests/setup/fixtures.js` dedicados.
 
@@ -91,70 +89,6 @@
   - Evidencia parcial: existe resolución por vigencia; falta evidencia explícita de detección/reporte de parámetros faltantes para un período según FR-079/US4.
 
 **Punto de control**: La base, el núcleo de auditoría y los parámetros legales están listos; las historias de usuario pueden iniciarse y US2 puede validar sueldo mínimo y jornada máxima sin esperar a US4.
-
----
-
-## Fase 2B: Módulo Base ERP (FR-001–FR-039, XR-001–XR-005)
-
-**Propósito**: Completar las capacidades base que el `spec.md` exige y que las tareas de RR.HH. no cubren. La eliminación de FR-003 aplica solo a la Entidad genérica; los Trabajadores se desactivan en US1.
-
-### Pruebas del módulo base
-
-- [ ] T018 [P] Crear pruebas unitarias de validación y CRUD de entidades y documentos en `tests/unit/base-entidades.test.js` (FR-001, FR-002, FR-008, FR-006)
-  - Falta: no existe `tests/unit/base-entidades.test.js`; existe cobertura parcial en `tests/unit/storage.test.js`.
-- [ ] T019 [P] Crear prueba de integración de creación, búsqueda, edición, eliminación en cascada y estados vacíos en `tests/integration/base-flow.test.js` (FR-003, FR-005, FR-007, FR-009)
-  - Falta: no existe `tests/integration/base-flow.test.js`; hay pruebas de integración base dispersas (`create-entity`, `edit-delete-entity`, `search-entities`, etc.).
-- [ ] T020 [P] Crear prueba de sanitización de contenido de usuario (XSS) en listas, formularios, búsqueda y detalle en `tests/unit/base-sanitizacion.test.js` (Suposición de sanitización XSS; FR-006)
-  - Falta: no existe `tests/unit/base-sanitizacion.test.js` ni evidencia de sanitización dedicada.
-
-### Implementación del módulo base
-
-- [ ] T021 [P] Implementar el formulario de entidad con validación de nombre/código en `src/components/entity-form.js` (FR-001, FR-002, FR-006)
-  - Evidencia parcial: `src/components/entity-form.js` existe y gestiona formulario; la validación se apoya en `src/storage.js` (`validateEntity`), pero no se verificó cumplimiento completo.
-- [X] T022 [P] Implementar la lista de entidades con búsqueda, estado vacío y eliminación de la Entidad genérica en `src/components/entity-list.js` (FR-003, FR-005, FR-007)
-  - Evidencia: `src/components/entity-list.js` (`renderEntitySelect` solo renderiza la lista recibida; `renderSearchResults` consume `loadGenericEntities`, `searchGenericEntities` y `loadGenericDocuments`); el filtrado de Trabajadores ocurre en `src/app.js` (`refreshEntityOptions`, `refreshDocumentEntityOptions`) con `loadGenericEntities`; `src/storage.js` (`workerEntityIds`, `isTrabajadorEntity`, `loadGenericEntities`, `searchGenericEntities`, `deleteEntity`) excluye Trabajadores de selectores/búsqueda y rechaza su eliminación con `TRABAJADOR_RRHH_NO_ELIMINABLE`; verificado en `tests/integration/generic-rrhh-exclusion.test.js`.
-- [ ] T023 [P] Implementar el formulario de documentos vinculados a entidad en `src/components/document-form.js` (FR-008)
-  - Evidencia parcial: `src/components/document-form.js` existe.
-- [ ] T024 [P] Implementar la lista de documentos y la eliminación en cascada al eliminar la entidad en `src/components/document-list.js` (FR-009)
-  - Evidencia parcial: `src/components/document-list.js` existe; la cascada se implementa en `src/storage.js` y requiere verificación contra FR-009/FR-003.
-- [X] T025 Implementar la pantalla de gestión consolidada sin listar entidades en `src/app.js` (FR-016, FR-017, FR-018)
-  - Evidencia: `src/app.js` (`refreshEntityOptions`, `refreshDocumentOptions`, `refreshDocumentEntityOptions`, `handleEntitySelection`, `handleEntityDelete`, `handleDocumentSelection`, `handleDocumentDelete`, `renderRrhhExclusionNotes`) usa `loadGenericEntities`/`loadGenericDocuments`, de modo que la gestión genérica no lista Trabajadores ni Liquidaciones y muestra retroalimentación controlada al intentar borrarlos; `index.html` agrega notas de exclusión y contenedores de error (`entities-rrhh-note`, `documents-rrhh-note`, `entity-feedback`, `document-feedback`); `src/storage.js` (`isLiquidacionDocument`, `loadGenericDocuments`, `isLiquidacionRecord`, `deleteDocument`) rechaza Liquidaciones con `LIQUIDACION_RRHH_NO_ELIMINABLE`; verificado en `tests/integration/generic-rrhh-exclusion.test.js`. Las vistas y datos de RR.HH. en `src/rrhh/...` no se modificaron.
-- [X] T026 [P] Implementar la búsqueda por nombre, código, categoría, descripción y fecha objetivo en `src/components/search-bar.js` (FR-004, FR-020, FR-021)
-  - Evidencia: `src/components/search-bar.js` (`bindSearch`), `src/storage.js` (`searchGenericEntities`), `src/components/entity-list.js` (`renderSearchResults`).
-  - Falta (spec nuevo/reglas pendientes): verificar cobertura/campos exactos y reglas de búsqueda del spec vigente (implementación distribuida en rutas reales).
-- [X] T027 Implementar la navegación Panel/Entidades/Documentos/Buscar, incluida la pantalla de búsqueda dedicada al seleccionar Buscar, con módulo activo resaltado en `src/components/shell.js` (FR-012, FR-013, FR-014, FR-015, FR-019, FR-037)
-  - Evidencia: `src/components/shell.js` (`renderShell`), `src/app.js` (`views`, `showView`, `bindEvents`).
-  - Falta (spec nuevo/reglas pendientes): verificar resaltado activo y separación de pantallas genéricas vs RR.HH. según el spec vigente.
-- [X] T028 Implementar mensajes de validación base, estados vacíos y retroalimentación de error en `src/app.js` y `src/styles.css` (FR-005, FR-006)
-  - Evidencia: `src/app.js` (`showEntityErrors`, `showDocumentErrors`, `showConfigErrors`, manejo de errores en handlers), `src/styles.css` (`.field-error`, `.empty-state`, `.config-errors`), componentes de formulario/lista.
-  - Falta (spec nuevo/reglas pendientes): verificar cobertura completa y consistencia de mensajes/estados exigidos por el spec vigente.
-- [X] T029 [P] Implementar el renderizado y la validación de campos personalizados en `src/components/entity-form.js` y `src/components/document-form.js` (FR-026, FR-027)
-  - Evidencia: `src/components/custom-fields.js` (`renderCustomFields`, `readCustomFields`, `fillCustomFields`, `clearCustomFields`, `showCustomFieldErrors`), `src/components/entity-form.js` (`renderEntityCustomFields`, `readEntityForm`, `fillEntityForm`, `showEntityErrors`), `src/components/document-form.js` (`renderDocumentCustomFields`, `readDocumentForm`, `fillDocumentForm`, `showDocumentErrors`).
-  - Falta (spec nuevo/reglas pendientes): verificar cobertura completa de validación/comportamiento según el spec vigente.
-- [ ] T030 Implementar campos personalizados en listas, detalle y resultados de búsqueda en `src/components/entity-list.js`, `src/components/document-list.js` y `src/components/search-bar.js` (FR-028)
-  - Falta: no se verificó que se muestren/filtren en todos los lugares requeridos (ruta real de búsqueda/render difiere).
-- [ ] T031 Implementar etiquetas visibles derivadas de la configuración en `src/module-config.js` y `src/components/shell.js` (FR-029, XR-002)
-  - Evidencia parcial: `labelFor`/`module-config.js` y `renderShell` aplican etiquetas; falta verificación de cobertura total en todas las pantallas.
-- [ ] T032 Implementar transiciones de ciclo de vida y estado libre sin lifecycle en `src/module-config.js` y `src/components/document-form.js` (FR-030, FR-031)
-  - Evidencia parcial: `module-config.js` soporta `statusLifecycle` y `storage.js` valida transiciones; no se verificó UI/comportamiento completo.
-- [ ] T033 [P] Implementar color de acento con fallback y barra lateral responsive en `src/styles.css` (FR-038, FR-039)
-  - Falta: acento/fallback se aplican en `src/components/shell.js`; no se verificó responsive/estilos completos en `src/styles.css`.
-- [ ] T034 Implementar el reporte de configuración inválida/conflictiva y reglas de validación extensibles en `src/module-config.js` y `src/app.js` (FR-025, XR-003)
-  - Evidencia parcial: `normalizeConfig` reporta errores y `app.js` los muestra (`showConfigErrors`); falta verificar cobertura de reglas extensibles/conflictos exigidos.
-- [ ] T035 Implementar acciones rápidas (nueva entidad, nuevo documento, gestión, búsqueda) y tarjetas de estadísticas en `src/components/dashboard.js` (FR-033, FR-034, FR-035)
-  - Evidencia parcial: `src/components/dashboard.js` y `src/app.js` implementan acciones/estadísticas; falta verificación exacta contra FR-033–FR-035.
-- [ ] T036 Verificar que entidades y documentos permanecen intactos al navegar entre panel, gestión y búsqueda en `src/app.js` (FR-022)
-  - Falta: no hay evidencia/verificación explícita asociada a esta tarea.
-- [ ] T037 Implementar la carga de configuración al arrancar y los valores predeterminados seguros en `src/module-config.js` (FR-023, FR-024)
-  - Evidencia parcial: `loadModuleConfig`/`normalizeConfig`/defaults existen; falta verificación completa.
-- [ ] T038 [P] Crear prueba de rendimiento de listas y búsqueda con 500 registros en `tests/integration/base-rendimiento.test.js` (FR-032, SC-004)
-  - Falta: no existe `tests/integration/base-rendimiento.test.js`.
-- [ ] T039 Verificar la adaptación solo-configuración sin tocar código central en `src/module-config.js` y `tests/integration/base-adaptacion.test.js` (XR-001, XR-004, XR-005, SC-008)
-  - Falta: no existe `tests/integration/base-adaptacion.test.js`; evidencia insuficiente.
-- [ ] T040 Implementar el ayudante de escape/sanitización HTML y aplicarlo en formularios, listas, búsqueda y detalle de entidades/documentos en `src/utils/sanitize.js`, `src/components/entity-form.js`, `src/components/entity-list.js`, `src/components/document-form.js`, `src/components/document-list.js` y `src/components/search-bar.js` (Suposición de sanitización XSS)
-  - Falta: no existe `src/utils/sanitize.js` y no se evidencia una capa de sanitización/escape aplicada según lo exigido.
-
-**Punto de control**: El módulo base queda funcional, sanitizado y trazado a FR-001–FR-039 y XR-001–XR-005.
 
 ---
 
@@ -211,7 +145,7 @@
   - Falta (spec nuevo/reglas pendientes): verificar confirmación/mensajes y comportamiento completo según el spec vigente.
 - [ ] T055 [US1] Registrar creación, actualización y desactivación de fichas y catálogos en la bitácora (usuario, rol, fecha/hora y valores anterior/nuevo) en `src/rrhh/seguridad/auditoria.js`, `src/rrhh/utils/trabajadores-service.js` y `src/rrhh/utils/catalogos-service.js` (FR-067)
   - Evidencia parcial: servicios registran auditoría en varias operaciones, pero `src/rrhh/seguridad/auditoria.js` almacena `camposModificados` (nombres) y no valores anterior/nuevo; falta alineación con FR-067.
-- [ ] T056 [US1] Añadir mensajes de validación y estados vacíos de trabajadores y catálogos en `src/rrhh/components/trabajador-form.js` y `src/rrhh/views/trabajadores-view.js` (FR-006)
+- [ ] T056 [US1] Añadir mensajes de validación y estados vacíos de trabajadores y catálogos en `src/rrhh/components/trabajador-form.js` y `src/rrhh/views/trabajadores-view.js` (FR-061–FR-063)
   - Falta: no se verificó cobertura completa en vistas/componentes.
 - [X] T057 [US1] Integrar las vistas de trabajadores y catálogos en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js`
   - Evidencia: `src/rrhh/views/rrhh-router.js` (`renderRrhhRouter`, `RRHH_ROUTES`), `src/rrhh/views/workspace.js` (`RRHH_TABS`, `RENDERERS`, `RrhhWorkspace.renderTab`).
@@ -588,13 +522,13 @@
   - Evidencia parcial: existe `tests/integration/rrhh-rendimiento.test.js`; cumplimiento del umbral específico no verificado.
 - [ ] T164 [P] Validar el flujo de RR.HH. descrito en `specs/001-erp-base-module/quickstart.md`, incluidas las reglas corregidas de desvinculación, contratos, novedades, elegibilidad y auditoría
   - Falta: no validado en esta revisión.
-- [ ] T165 Revisar el endurecimiento de seguridad de datos sensibles, scoping de equipo, permisos de parámetros/respaldo, sanitización XSS en módulo base y vistas de RR.HH., y bitácora en `src/utils/sanitize.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/seguridad/auditoria.js`, `src/backup.js`, `src/rrhh/calculo/parametros.js` y `src/rrhh/views/`
+- [ ] T165 Revisar el endurecimiento de seguridad de datos sensibles, scoping de equipo, permisos de parámetros/respaldo, sanitización XSS en las vistas de RR.HH., y bitácora en `src/utils/sanitize.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/seguridad/auditoria.js`, `src/backup.js`, `src/rrhh/calculo/parametros.js` y `src/rrhh/views/`
   - Falta: faltan artefactos clave (`sanitize.js`, `permisos.js`, `backup.js`) y no se evidencia endurecimiento completo.
 - [ ] T166 Limpiar y refactorizar ayudantes compartidos en `src/rrhh/utils/common.js`
   - Falta: no existe `src/rrhh/utils/common.js`.
 - [ ] T167 [P] Revisar accesibilidad y consistencia visual en `src/rrhh/views/liquidaciones.js`, `src/rrhh/views/novedades.js`, `src/rrhh/views/auditoria.js` y `src/rrhh/components/trabajador-form.js`
   - Falta: no revisado/verificado; rutas reales ajustadas a archivos existentes.
-- [ ] T168 [P] Verificar la cobertura FR-001–FR-107, XR-001–XR-005 y SC-011/SC-015/SC-022/SC-023/SC-024–SC-029 con la matriz de trazabilidad de este archivo, y registrar brechas restantes en `docs/rrhh.md` (cierre de G18 y K1)
+- [ ] T168 [P] Verificar la cobertura FR-040–FR-107 y SC-011/SC-015/SC-022/SC-023/SC-024–SC-029 con la matriz de trazabilidad de este archivo, y registrar brechas restantes en `docs/rrhh.md` (cierre de G18 y K1)
   - Falta: no completado; persisten brechas de trazabilidad. `docs/rrhh.md` ya existe (T161) y T162 está verificado.
 - [ ] T169 [P] [US6] Ejecutar una matriz de pruebas de acceso por rol (administrador/a, analista, jefatura, Trabajador activo/desvinculado) contra vistas, búsquedas, impresión y enlaces directos, y verificar que al menos el 95% confirma que los datos ocultos no son recuperables (SC-021, FR-057)
   - Apoyarse en T118–T124, T130, T140 y T145; registrar el resultado en `docs/rrhh.md`.
@@ -607,9 +541,6 @@
 
 | Requisitos | Tareas |
 |---|---|
-| FR-001–FR-009 | T005, T018–T024, T028, T036 |
-| FR-010–FR-022, FR-033–FR-039 | T006–T009, T025–T028, T035–T037, T040 |
-| FR-023–FR-032 | T004, T010, T029–T034, T037–T040 |
 | FR-040–FR-042 | T143, T147, T148 |
 | FR-043 | T143, T149 |
 | FR-044–FR-047 | T144, T150–T153, T157–T159 |
@@ -633,7 +564,6 @@
 | FR-085 | T118, T119, T123–T128, T132, T133, T135, T140–T141, T142 |
 | FR-086 | T121, T126, T131, T136, T139 |
 | FR-087 | T120, T137, T139 |
-| XR-001–XR-005 | T005, T031, T034, T039 |
 | SC-021 | T169 |
 | FR-088 | T170, T174, T179, T185, T187, T188 |
 | FR-089 | T171, T176, T178, T187, T188 |
@@ -654,7 +584,7 @@
 | G3 — Permisos en parámetros y respaldo | T123, T132, T138, T141, T142 |
 | G4 — Parámetros legales disponibles antes de US2 | T015–T017, T067 |
 | G5 — Superposición de licencias/ausencias y tope de horas extra | T078, T086, T087 |
-| G6 — Sanitización XSS en módulo base y RR.HH. | T020, T040, T165 |
+| G6 — Sanitización XSS en las vistas de RR.HH. | T165 |
 | G7 — Filtros de auditoría y registro de intentos denegados | T120, T131, T137 |
 | G8 — Prohibición de reactivar Trabajadores | T043, T050 |
 | G9 — Recálculo idempotente sin duplicar liquidaciones | T096, T106 |
@@ -665,7 +595,7 @@
 | G14 — Motivo obligatorio de rechazo y estados de novedad | T077, T084, T088 |
 | G15 — Resumen de cálculo con exclusiones y motivo | T098, T105, T114 |
 | G16 — Entidad Catálogo explícita en el modelo | T046, T053 |
-| G17 — Árbol de archivos actualizado en el plan | T001, T040 |
+| G17 — Árbol de archivos actualizado en el plan | T001 |
 | G18 — Trazabilidad completa de tareas en la matriz | T168 |
 | K1 — Cobertura de pruebas de las correcciones y criterios de éxito | T041–T098, T118–T146, T163, T168 |
 
@@ -677,8 +607,7 @@
 
 - **Configuración (Fase 1)**: Sin dependencias; puede iniciar de inmediato.
 - **Fundacional (Fase 2)**: Depende de la Fase 1 y BLOQUEA todas las historias. Incluye el núcleo append-only de auditoría y los parámetros legales por vigencia.
-- **Módulo base (Fase 2B)**: Depende de la Fase 2; puede ejecutarse en paralelo con US1 si hay capacidad.
-- **Historias de Usuario (Fases 3–9)**: Dependen de la Fase 2 (y del módulo base para vistas que reutilizan el marco).
+- **Historias de Usuario (Fases 3–9)**: Dependen de la Fase 2.
 - **Pulido (Fase 10)**: Depende de que las historias deseadas estén completas.
 
 ### Dependencias entre Historias
@@ -752,15 +681,14 @@ Task: "Construir vista de auditoría exclusiva del administrador en src/rrhh/vie
 ### Entrega Incremental
 
 1. Configuración + Fundacional (auditoría y parámetros) → base lista.
-2. Módulo base → probar → desplegar.
-3. US1 → probar → desplegar (MVP).
-4. US2 → probar → desplegar.
-5. US3 → probar → desplegar.
-6. US4 → probar → desplegar.
-7. US6 → probar → desplegar (seguridad, scoping de equipo, auditoría y respaldo).
-8. US5 → probar → desplegar (explicación e impresión con permisos).
-9. US7 → probar → desplegar (vacaciones, saldo y calendario de feriados).
-10. Cada historia añade valor sin romper las anteriores.
+2. US1 → probar → desplegar (MVP).
+3. US2 → probar → desplegar.
+4. US3 → probar → desplegar.
+5. US4 → probar → desplegar.
+6. US6 → probar → desplegar (seguridad, scoping de equipo, auditoría y respaldo).
+7. US5 → probar → desplegar (explicación e impresión con permisos).
+8. US7 → probar → desplegar (vacaciones, saldo y calendario de feriados).
+9. Cada historia añade valor sin romper las anteriores.
 
 ### Estrategia de Equipo en Paralelo
 
@@ -768,7 +696,7 @@ Con varios desarrolladores:
 
 1. El equipo completa Configuración + Fundacional en conjunto, incluidos auditoría y parámetros.
 2. Una vez lista la base:
-   - Desarrollador A: módulo base y US1.
+   - Desarrollador A: US1.
    - Desarrollador B: US2 y US3.
    - Desarrollador C: US4.
    - Desarrollador D: US6 y, al estabilizarse las liquidaciones, US5.

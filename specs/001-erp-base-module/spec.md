@@ -1,15 +1,15 @@
-# Especificación de la Funcionalidad: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+# Especificación de la Funcionalidad: Módulo de Recursos Humanos y Planilla para un Software de Planificación de Recursos Empresariales (ERP)
 
 **Rama de la funcionalidad**: 001-erp-base-module  
 **Creada**: 2026-07-08  
 **Actualizada**: 2026-11-17  
 **Estado**: Borrador   
-**Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historias de Usuario 1 a 12 (US1–US4, US6 y US12 con prioridad P1; US5, US7, US8, US10 y US11 con prioridad P2; US9 con prioridad P3), con FR-001–FR-107, SC-001–SC-029 y las reglas transversales de seguridad, auditoría y respaldo. Las Historias 7 a 12 agregan vacaciones (FR-088–FR-091), cargas familiares y asignación familiar (FR-092–FR-094), simulador de sueldo (FR-095–FR-096), reportes de gestión y equidad salarial (FR-097–FR-100), exportaciones contables y de pago (FR-101–FR-104) y parámetros legales versionados (FR-105–FR-107).
+**Entrada**: Descripción del usuario: "Construir el módulo de Recursos Humanos y Planilla de un ERP que gestione las fichas de los trabajadores, sus contratos y las novedades del mes, calcule las remuneraciones según la legislación chilena y emita liquidaciones explicables, con control de acceso por rol y bitácora de auditoría."  
+**Última incorporación**: Historias de Usuario 1 a 12 (US1–US4, US6 y US12 con prioridad P1; US5, US7, US8, US10 y US11 con prioridad P2; US9 con prioridad P3), con FR-040–FR-107, SC-011–SC-029 y las reglas transversales de seguridad, auditoría y respaldo. Las Historias 7 a 12 agregan vacaciones (FR-088–FR-091), cargas familiares y asignación familiar (FR-092–FR-094), simulador de sueldo (FR-095–FR-096), reportes de gestión y equidad salarial (FR-097–FR-100), exportaciones contables y de pago (FR-101–FR-104) y parámetros legales versionados (FR-105–FR-107). Los identificadores FR-001–FR-039, SC-001–SC-010 y XR-001–XR-005 pertenecían al módulo base genérico (entidades y documentos), que se retiró del alcance por no corresponder a Recursos Humanos y Planilla; esos números no se reutilizan.
 
 ## Propósito
 
-Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio. Sobre esta base se construye el módulo de **Recursos Humanos y Planilla** (Historias de Usuario 1 a 12), que reutiliza la Entidad como **Trabajador** y el Documento como **Liquidación**, y añade contratos, novedades, períodos, cálculo legal, explicación e impresión de liquidaciones, gobierno de datos, vacaciones, cargas familiares y asignación familiar, simulador de sueldo, reportes de gestión y equidad salarial, exportaciones contables y de pago, y parámetros legales versionados.
+Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP (Historias de Usuario 1 a 12). Permite gestionar las fichas de los Trabajadores y los catálogos de cargos, departamentos y centros de costo, sus contratos, las novedades del mes, el cálculo de remuneraciones según la legislación chilena y el ciclo de vida de las liquidaciones, junto con su explicación e impresión, el gobierno de los datos sensibles, las vacaciones, las cargas familiares y la asignación familiar, el simulador de sueldo, los reportes de gestión y equidad salarial, las exportaciones contables y de pago, y los parámetros legales versionados.
 
 ## Clarifications
 
@@ -20,10 +20,6 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - Q: ¿Cómo se cargan y actualizan los parámetros legales (UF, UTM, tasas y tramos) para cada período? → A: Opción A — carga manual versionada por un administrador mediante formulario o archivo de configuración, sin integración con servicios externos.
 - Q: ¿Durante cuánto tiempo debe conservarse la bitácora de auditoría exigida por la Ley 21.719? → A: Opción A — mientras dure la relación laboral y 6 años después del término (validar con asesoría legal).
 - Q: ¿La versión inicial debe incluir exportación e importación de datos para respaldo y restauración? → A: Opción A — exportación e importación completa en JSON para respaldo y restauración.
-
-### Session 2026-11-16
-
-- Q: ¿La pantalla de Entidades genéricas debe excluir a los Trabajadores (y la de Documentos a las Liquidaciones), o debe mostrar todos los registros y solo bloquear su eliminación? → A: Opción A — excluir a Trabajadores y Liquidaciones de las pantallas genéricas y gestionarlos solo en las vistas de RR.HH.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
@@ -357,22 +353,6 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ### Casos Límite
 
-- ¿Qué ocurre cuando un usuario intenta guardar una entidad sin nombre o código obligatorio?
-- ¿Cómo gestiona el sistema una búsqueda que no devuelve coincidencias?
-- ¿Qué ocurre si un usuario intenta editar o eliminar una entidad que ya no existe?
-- ¿Qué ocurre cuando un usuario introduce una fecha objetivo que no es una fecha de calendario válida?
-- ¿Qué ocurre con los documentos de una entidad cuando esta se elimina?
-- ¿Qué ocurre cuando un usuario introduce una fecha final anterior a la fecha inicial en un documento?
-- ¿Qué ocurre cuando la configuración declara un campo personalizado cuya clave choca con un nombre de campo base?
-- ¿Qué ocurre cuando la configuración referencia un tipo de campo desconocido o una definición de transición de ciclo de vida inválida?
-- ¿Qué ocurre cuando los registros almacenados contienen valores de campos personalizados que ya no están declarados en la configuración?
-- ¿Qué ocurre cuando un usuario abre la aplicación directamente en la pantalla de gestión o búsqueda (p. ej., vía enlace profundo o recarga del navegador) sin pasar por el panel de inicio?
-- ¿Qué ocurre cuando un usuario pulsa el botón atrás del navegador estando en la pantalla de gestión o búsqueda?
-- ¿Qué ocurre si un usuario navega fuera de la pantalla de gestión mientras un formulario aún tiene cambios sin guardar?
-- ¿Permanecen intactas las entidades y los documentos al navegar entre el panel, la gestión y la búsqueda?
-- ¿Qué ocurre cuando el panel se abre con cero entidades o cero documentos (valores estadísticos)?
-- ¿Qué ocurre cuando el color de acento configurado no es un valor de color válido?
-- ¿Cómo mantiene la barra lateral contraída las etiquetas de módulo accesibles en ventanas gráficas estrechas?
 - ¿Qué ocurre cuando el usuario selecciona una línea de liquidación registrada manualmente que no tiene fórmula asociada?
 - ¿Qué ocurre cuando la línea seleccionada referencia un parámetro legal que no está vigente para el período liquidado?
 - ¿Qué ocurre cuando la liquidación aún está en borrador o no ha sido calculada y el usuario intenta ver el desglose o imprimirla?
@@ -399,45 +379,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 
 ### Requisitos Funcionales
 
-- **FR-001**: El sistema DEBE permitir a los usuarios crear un registro de entidad con al menos un nombre y un código.
-- **FR-002**: El sistema DEBE permitir a los usuarios editar los detalles de un registro de entidad existente.
-- **FR-003**: El sistema DEBE permitir a los usuarios eliminar un registro de entidad existente. Esta eliminación aplica a la Entidad genérica; los Trabajadores no se eliminan, se desactivan según la Historia de Usuario 1. Las pantallas de Entidades y Documentos genéricas NO DEBEN listar Trabajadores ni Liquidaciones; estos registros se gestionan exclusivamente en las vistas de RR.HH.
-- **FR-004**: El sistema DEBE permitir a los usuarios buscar registros de entidad por nombre, código, categoría u otras palabras clave descriptivas.
-- **FR-005**: El sistema DEBE mostrar una lista clara de entidades e indicar cuándo ningún resultado coincide con una búsqueda.
-- **FR-006**: El sistema DEBE presentar retroalimentación clara cuando falta información obligatoria o no se puede completar una acción.
-- **FR-007**: El sistema DEBE mantener los datos de entidad consistentes tras operaciones de creación, edición y eliminación.
-- **FR-008**: El sistema DEBE permitir a los usuarios añadir, editar y eliminar detalles de documentos de una entidad.
-- **FR-009**: El sistema DEBE asociar cada documento exactamente a una entidad y eliminar los documentos asociados cuando la entidad se elimina.
-- **FR-010**: El sistema DEBE mostrar un panel de inicio como vista inicial, con botones de acción rápida claramente etiquetados para las tareas ERP clave.
-- **FR-011**: El sistema DEBE envolver cada pantalla en un marco de espacio de trabajo persistente compuesto por una barra superior con marca y una barra lateral de navegación de módulos.
-- **FR-012**: La barra lateral DEBE proporcionar botones de módulo para Panel, Entidades, Documentos y Buscar, etiquetados desde la configuración del módulo.
-- **FR-013**: El botón de módulo Entidades DEBE mostrar el contenido de gestión de entidades.
-- **FR-014**: El botón de módulo Documentos DEBE mostrar el contenido de gestión de documentos en la pantalla de gestión.
-- **FR-015**: El botón de módulo Panel DEBE devolver al usuario al panel de inicio.
-- **FR-016**: La pantalla de gestión NO DEBE mostrar la lista de entidades.
-- **FR-017**: La pantalla de gestión DEBE proporcionar la funcionalidad de crear, editar y eliminar entidades.
-- **FR-018**: La pantalla de gestión DEBE proporcionar la funcionalidad de crear, editar y eliminar documentos.
-- **FR-019**: El sistema DEBE navegar a una pantalla de búsqueda dedicada cuando se selecciona el botón Buscar en la barra lateral.
-- **FR-020**: La pantalla de búsqueda DEBE permitir buscar entidades por nombre, código, categoría, descripción o fecha objetivo.
-- **FR-021**: La pantalla de búsqueda DEBE ser accesible tanto desde la barra lateral como desde la acción rápida de buscar registros del panel.
-- **FR-022**: El sistema DEBE mantener los datos de entidades y documentos intactos y consistentes durante la navegación entre pantallas.
-- **FR-023**: El sistema DEBE cargar la configuración del módulo al arrancar y aplicarla en todas las pantallas.
-- **FR-024**: El sistema DEBE retroceder a los valores predeterminados integrados (terminología Entidad/Documento, sin campos personalizados, sin ciclo de vida) cuando no se proporciona configuración.
-- **FR-025**: El sistema DEBE informar claramente de una configuración inválida o conflictiva en lugar de fallar silenciosamente.
-- **FR-026**: El sistema DEBE mostrar los campos personalizados declarados en los formularios de creación/edición con tipos de entrada que coincidan con sus tipos declarados.
-- **FR-027**: El sistema DEBE validar los valores de campos personalizados, incluidos los obligatorios, antes de guardar, usando la misma experiencia de retroalimentación que la validación base.
-- **FR-028**: El sistema DEBE incluir los valores de campos personalizados en los resultados de búsqueda y mostrarlos en listas y vistas de detalle.
-- **FR-029**: El sistema DEBE derivar todas las etiquetas visibles para el usuario de la configuración del módulo en lugar de texto fijo en el código.
-- **FR-030**: El sistema DEBE aplicar las transiciones de estado configuradas en los documentos independientemente de cómo se envíe un cambio.
-- **FR-031**: El sistema DEBE mantener el estado del documento como texto libre cuando no hay ciclo de vida configurado.
-- **FR-032**: El sistema DEBE mantener el renderizado de listas y la búsqueda ágiles y correctos para conjuntos de datos de al menos 500 registros de entidad.
-- **FR-033**: El panel DEBE ofrecer al menos cuatro botones de acción rápida: nueva entidad, nuevo documento, abrir gestión de entidades y buscar registros.
-- **FR-034**: Activar la acción rápida de nueva entidad o nuevo documento DEBE abrir el área de gestión correspondiente con un formulario vacío listo para introducir datos.
-- **FR-035**: El panel DEBE mostrar tarjetas de estadísticas con el número de entidades y documentos almacenados, actualizadas cada vez que se muestra el panel.
-- **FR-036**: La barra superior DEBE mostrar un logotipo derivado del nombre del módulo junto con el nombre del módulo configurado en cada pantalla.
-- **FR-037**: La barra lateral DEBE resaltar visualmente el módulo activo en cada pantalla.
-- **FR-038**: La configuración PUEDE definir un color de acento; el sistema DEBE aplicarlo consistentemente en todo el marco y retroceder de forma segura a los valores integrados cuando esté ausente o sea inválido.
-- **FR-039**: En ventanas gráficas estrechas, la barra lateral DEBE contraerse a una columna de iconos manteniéndose operable.
+> La numeración comienza en FR-040: FR-001–FR-039 correspondían al módulo base genérico, retirado del alcance.
+
 - **FR-040**: El sistema DEBE presentar cada liquidación (en borrador o cerrada) como una lista de líneas con su concepto y monto, permitiendo seleccionar cada línea para ver su explicación (Historia de Usuario 5).
 - **FR-041**: Al seleccionar una línea, el sistema DEBE mostrar la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal con su fecha de vigencia, y el monto explicado DEBE coincidir con el de la línea (Historia de Usuario 5).
 - **FR-042**: Si una línea no dispone de fórmula o parámetro legal asociado, el sistema DEBE mostrarla igualmente e indicar claramente esa carencia (Historia de Usuario 5).
@@ -491,23 +434,10 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - **FR-090**: El sistema DEBE gestionar las solicitudes de vacaciones con los estados Pendiente, Aprobada, Rechazada y anulada, aplicando las reglas de quién puede aprobar de la Historia de Usuario 7, exigiendo un motivo para rechazar y devolviendo los días al saldo al anular una solicitud aprobada antes de su inicio (Historia de Usuario 7).
 - **FR-091**: El sistema DEBE impedir solicitudes que superen el saldo disponible, que se superpongan con otras vacaciones, licencias o ausencias del mismo Trabajador o que correspondan a un Trabajador sin contrato vigente en las fechas solicitadas; NO DEBE descontar días de la liquidación por vacaciones aprobadas, y DEBE registrar en la bitácora de auditoría la creación, aprobación, rechazo y anulación de solicitudes y los cambios del calendario de feriados (Historia de Usuario 7).
 
-### Requisitos de Extensibilidad *(obligaciones del módulo base)*
-
-Los módulos personalizados construidos sobre esta base DEBEN poder:
-
-- **XR-001**: Extender los registros de entidad y documento con campos adicionales específicos del dominio sin cambiar la estructura de almacenamiento base.
-- **XR-002**: Reetiquetar pantallas, pestañas, formularios y listas con terminología específica del módulo sin alterar el comportamiento de navegación.
-- **XR-003**: Añadir reglas de validación específicas del módulo junto a las reglas de validación base.
-- **XR-004**: Apoyarse en el módulo base para generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, y eliminación en cascada.
-- **XR-005**: Remarcar el espacio de trabajo —nombre del módulo, logotipo derivado y color de acento— únicamente mediante configuración.
-
 ### Entidades Clave *(incluir si la funcionalidad implica datos)*
 
-- **Entidad**: Un registro de datos maestros gestionado por el módulo, que incluye su nombre, código de negocio, detalles descriptivos, categoría de clasificación, una fecha objetivo opcional y un entity_id autogenerado. Los módulos personalizados definen qué representa una Entidad en el mundo real (p. ej., cliente, producto, activo).
-- **Documento**: Detalles transaccionales adjuntos a una entidad, vinculados a ella por el entity_id de la entidad. Los módulos personalizados definen qué representa un Documento (p. ej., pedido, factura, contrato).
-- **ModuleConfig**: El objeto de adaptación cargado al arrancar que define el nombre del módulo, las etiquetas de terminología, las definiciones de campos personalizados y el ciclo de vida de estados de documentos. Consulte data-model.md para su forma completa.
 - **Catálogo**: Opción maestra de cargo, departamento o centro de costo, con tipo, código único dentro de su tipo, nombre y estado activo/inactivo; se desactiva sin eliminarse y se conserva en las fichas que ya la usaban.
-- **Liquidación**: Documento que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales y líquido a pagar, junto con el estado del cálculo y la fecha de emisión del comprobante.
+- **Liquidación**: Comprobante que resume la remuneración de un trabajador en un período, con el detalle de haberes, descuentos, impuestos, totales y líquido a pagar, junto con el estado del cálculo y la fecha de emisión del comprobante.
 - **Línea de Liquidación**: Cada concepto que compone una liquidación (haber, descuento o impuesto), con su monto, la base de cálculo, la tasa o factor aplicado, la fórmula utilizada y el parámetro legal que la respalda; las líneas manuales registran un motivo en lugar de una fórmula.
 - **Parámetro Legal**: Valor normativo vigente en una fecha determinada (tasa, tope, tramo o monto fijo) que sustenta el cálculo de una línea y que se conserva congelado para los períodos ya calculados.
 - **Rol**: Perfil que determina las funciones y los datos a los que puede acceder un usuario en la sesión simulada; los roles son administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador.
@@ -515,7 +445,7 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Dato Sensible**: Información personal o financiera protegida (sueldos, liquidaciones y licencias médicas) cuyo acceso está restringido según el rol.
 - **Registro de Auditoría**: Entrada inmutable que documenta quién consultó o modificó información sensible, cuándo, con qué rol y sobre qué registro.
 - **Bitácora de Auditoría**: Colección de solo inserción de registros de auditoría, conservada para efectos de trazabilidad y cumplimiento normativo.
-- **Trabajador**: Entidad que representa a una persona empleada; reutiliza la Entidad (nombre, código y RUT como identificación fiscal), se vincula a su perfil de RR.HH. por entity_id y puede tener una jefatura directa opcional.
+- **Trabajador**: Persona empleada, identificada por nombre, código y RUT como identificación fiscal, con su perfil de RR.HH. (cargo, departamento, centro de costo y estado laboral) y una jefatura directa opcional.
 - **Contrato**: Condiciones laborales de un Trabajador (sueldo base, jornada y tipo de contrato) con historial por vigencia y alertas de vencimiento; pertenece a un Trabajador.
 - **Novedad**: Evento de un período (horas extra, licencia médica o ausencia) asociado a un Trabajador y a un Período de Remuneración, con estado Pendiente/Aprobada/Rechazada/anulada y sin diagnóstico clínico.
 - **Período de Remuneración**: Mes y año de liquidación con estado Abierto/Calculado/Cerrado; al cerrarse congela UF, UTM, ingreso mínimo y parámetros legales, y agrupa Novedades y Liquidaciones.
@@ -528,16 +458,8 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 
 ### Resultados Medibles
 
-- **SC-001**: Los usuarios pueden crear una nueva entidad y verla en la lista en menos de 2 minutos.
-- **SC-002**: Los usuarios pueden encontrar una entidad existente mediante la búsqueda en menos de 10 segundos tras introducir un término relevante.
-- **SC-003**: Al menos el 90% de los usuarios de prueba pueden completar tareas de crear, editar, eliminar y buscar sin ayuda.
-- **SC-004**: El sistema sigue siendo utilizable para un conjunto de datos de al menos 500 registros de entidad sin pérdida de funcionalidad central.
-- **SC-005**: Un usuario puede alcanzar las pantallas de gestión y búsqueda desde el panel o la barra lateral en menos de 10 segundos en el primer uso.
-- **SC-006**: Toda la funcionalidad existente de gestión de entidades y documentos sigue operativa tras el rediseño del marco ERP y el panel (sin regresiones).
-- **SC-007**: Los usuarios pueden navegar entre las pantallas de panel, gestión y búsqueda sin perder ninguna entidad ni documento almacenado.
-- **SC-008**: Un desarrollador puede producir un módulo adaptado usando solo el archivo de configuración, con cero modificaciones en archivos fuente centrales.
-- **SC-009**: Cada pantalla presenta el mismo marco con marca, y los usuarios pueden identificar en qué módulo están de un vistazo.
-- **SC-010**: Las estadísticas de registros mostradas en el panel siempre coinciden con el número de entidades y documentos almacenados.
+> La numeración comienza en SC-011: SC-001–SC-010 correspondían al módulo base genérico, retirado del alcance.
+
 - **SC-011**: Al seleccionar cada línea de una liquidación calculada (evento de foco o clic), el 100% de las líneas muestra base, tasa o factor y fórmula en menos de 1 segundo, medido desde el evento de selección hasta que el desglose queda visible en la interfaz.
 - **SC-012**: Un usuario puede abrir una liquidación y obtener su comprobante impreso o en PDF en menos de 30 segundos.
 - **SC-013**: Al menos el 90% de los usuarios de prueba comprende de dónde proviene cada monto sin ayuda adicional.
@@ -549,26 +471,17 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-019**: Un intento de editar o eliminar un registro de auditoría es rechazado en el 100% de los casos.
 - **SC-020**: La bitácora permite reconstruir la trazabilidad completa de accesos y modificaciones a datos sensibles de un usuario o período en menos de 5 minutos.
 - **SC-021**: Al menos el 95% de las pruebas de acceso con distintos roles confirma que los datos ocultos no pueden recuperarse desde la interfaz ni mediante enlaces directos.
-- **SC-022**: Un usuario puede exportar un respaldo completo y restaurarlo sin pérdida de entidades, documentos, novedades, períodos ni liquidaciones en menos de 5 minutos.
+- **SC-022**: Un usuario puede exportar un respaldo completo y restaurarlo sin pérdida de Trabajadores, catálogos, contratos, novedades, períodos ni liquidaciones en menos de 5 minutos.
 - **SC-023**: El cálculo masivo de un período con hasta 500 Trabajadores y sus novedades aprobadas genera todas las liquidaciones en 10 segundos o menos en el entorno de uso previsto.
 - **SC-024**: Un Trabajador puede consultar su saldo y registrar una solicitud de vacaciones en menos de 1 minuto, y el saldo calculado coincide con el devengo legal en el 100 % de los casos de prueba.
 
 ## Suposiciones
 
-- El módulo base gestiona datos para un único espacio de trabajo en lugar de una base de datos multiinquilino compartida.
-- La adaptación a un módulo específico se realiza mediante un archivo de configuración del módulo en lugar de editando archivos fuente centrales.
-- Cada entidad incluye información básica suficiente para identificación y seguimiento; los módulos personalizados aportan los campos específicos del dominio.
+- El módulo gestiona los datos de una única empresa en un único espacio de trabajo, sin una base de datos multiinquilino compartida.
 - La versión inicial incluye la gestión de fichas de trabajadores y catálogos base (US1), la gestión de contratos y alertas de plazo (US2), el registro y aprobación de novedades (US3), el cálculo y cierre de períodos de remuneración (US4), la vista explicativa e impresión de liquidaciones (US5) y la seguridad, roles y gobierno de datos (US6). Quedan fuera capacidades ERP avanzadas como contabilidad general, informes financieros y planificación presupuestaria.
-- La búsqueda se realiza sobre los registros de entidad almacenados.
-- La pantalla de gestión consolida los formularios de añadir/editar entidad y añadir/editar documento en una sola pantalla de gestión.
-- La navegación entre áreas ocurre mediante una barra lateral persistente; la pantalla de gestión aloja ambos paneles de gestión y no muestra la lista de entidades.
-- El logotipo se deriva del nombre del módulo como un monograma; no se requieren recursos de imagen externos.
-- Se puede configurar un color de acento opcional para la marca; el resto de la paleta base permanece fija.
-- Solo se muestra una pantalla a la vez; no hay diseño lado a lado del contenido de gestión y búsqueda.
-- La navegación entre pantallas se maneja dentro de la aplicación (p. ej., cambio de vistas), y el botón atrás del navegador debe comportarse de forma predecible.
+- La navegación entre las pantallas de RR.HH. se maneja dentro de la aplicación, y el botón atrás del navegador debe comportarse de forma predecible.
 - Los datos persisten localmente en el navegador y no se ven afectados por la navegación entre pantallas.
-- La pantalla de búsqueda se centra en encontrar y ver entidades; la edición permanece en la pantalla de gestión.
-- El contenido introducido por el usuario (nombres, descripciones, notas de documentos) DEBE sanitizarse antes de mostrarse para prevenir ataques de inyección de scripts (XSS).
+- El contenido introducido por el usuario (nombres, observaciones, motivos de rechazo y otros textos libres) DEBE sanitizarse antes de mostrarse para prevenir ataques de inyección de scripts (XSS).
 - Las liquidaciones y sus líneas existen como resultado del motor de cálculo de la Historia de Usuario 4; la Historia de Usuario 5 cubre únicamente su explicación e impresión, no las reglas de cálculo ni la generación de la planilla.
 - Cada línea conserva, desde el momento del cálculo, la base, la tasa o fórmula y el parámetro legal aplicado, de modo que la explicación no depende de parámetros posteriores.
 - La impresión se realiza mediante la función de impresión del navegador, que incluye la opción de guardar como PDF; no se requiere un generador de PDF dedicado.
