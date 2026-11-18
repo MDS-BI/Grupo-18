@@ -1,9 +1,9 @@
 # ERP Software Base Module (Vite + Vanilla JS)
 
-> **Grupo 18 — Módulo de Recursos Humanos y Planilla.** El diseño de nuestro módulo está en [`specs/002-rrhh-planilla/`](specs/002-rrhh-planilla/):
+> **Grupo 18 — Módulo de Recursos Humanos y Planilla.** El diseño de nuestro módulo está en [`specs/001-rrhh-planilla/`](specs/001-rrhh-planilla/):
 >
-> - [Plan de trabajo (`plan.md`)](specs/002-rrhh-planilla/plan.md)
-> - [Modelo Entidad-Relación y diccionario de datos (`data-model.md`)](specs/002-rrhh-planilla/data-model.md) · [imagen del MER](specs/002-rrhh-planilla/mer.png) · [MER resumido](specs/002-rrhh-planilla/mer-resumen.png)
+> - [Plan de trabajo (`plan.md`)](specs/001-rrhh-planilla/plan.md)
+> - [Modelo Entidad-Relación y diccionario de datos (`data-model.md`)](specs/001-rrhh-planilla/data-model.md) · [imagen del MER](specs/001-rrhh-planilla/mer.png) · [MER resumido](specs/001-rrhh-planilla/mer-resumen.png)
 
 Minimal single-page app serving as an Enterprise Resource Planning (ERP) software base module. It provides the common foundation for building custom ERP modules: master data management (Entities) and linked transactional documents (Documents) with create/edit/delete/search, validation, and browser localStorage persistence — using Vite and vanilla HTML, CSS, and JavaScript.
 
@@ -61,7 +61,7 @@ Custom ERP modules built on this base define:
 - What a **Document** represents (e.g., order, invoice, contract).
 - Module-specific labels and validation rules.
 
-The base module handles identity generation, timestamps, referential integrity between entities and documents, cascade deletion, navigation, and search. See `specs/001-erp-base-module/` for the full specification.
+The base module handles identity generation, timestamps, referential integrity between entities and documents, cascade deletion, navigation, and search. See `specs/001-rrhh-planilla/` for the full specification.
 
 ## Tailoring via Configuration
 
@@ -69,9 +69,10 @@ All tailoring lives in one place: the `userConfig` object at the top of `src/mod
 
 - `moduleName` — display name shown in the top bar, dashboard, and document title; also derives the logo monogram.
 - `labels` — rename Entity/Document terms across every screen, including sidebar buttons, quick actions, forms, and messages. Spanish articles and agreements (el/la, seleccionado/a) are derived from the first word of each configured term.
-- `customFields` — declare extra fields per record type with `target` (`entity` or `document`), `key`, `label`, `type` (`text`, `number`, `date`, or `select`), optional `required`, and `options` for selects. Keys must not collide with base field names (see `specs/001-erp-base-module/data-model.md`). Values persist alongside records and appear in search results.
+- `customFields` — declare extra fields per record type with `target` (`entity` or `document`), `key`, `label`, `type` (`text`, `number`, `date`, or `select`), optional `required`, and `options` for selects. Keys must not collide with base field names (see `specs/001-rrhh-planilla/data-model.md`). Values persist alongside records and appear in search results.
 - `statusLifecycle` — restrict document statuses to a configured list of `statuses` with permitted `transitions` between them. Without it, status stays a free-form field.
 - `theme.accentColor` — a hex color (e.g., `"#0f62fe"`) applied across the shell as highlights and primary controls. Invalid values fall back to the default.
+- `rrhh` — enables the RRHH/Planilla workspace (`enabled`), sets its `label` and `roleSelector`, and with `only: true` the browser starts directly in RRHH and hides the generic Entities/Documents/Search screens. The base code stays available to tests and other modules.
 
 If the configuration is invalid (unknown types, bad keys, transitions referencing unknown statuses, non-hex accent colors), the app shows the problems in a banner and falls back to defaults instead of breaking...
 

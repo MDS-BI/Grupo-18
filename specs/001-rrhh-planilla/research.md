@@ -62,7 +62,7 @@
 
 ### Entidades RR.HH. definidas en el feature 001
 
-**Decisión**: Trabajador, Contrato, Novedad y Período de Remuneración se documentan como parte del modelo de 001, remitiendo el detalle de atributos a `specs/001-erp-base-module/data-model.md`.
+**Decisión**: Trabajador, Contrato, Novedad y Período de Remuneración se documentan como parte del modelo de 001, remitiendo el detalle de atributos a `specs/001-rrhh-planilla/data-model.md`.
 
 **Justificación**: Evita que el plan 001 dependa de un `spec.md` inexistente en 002 y mantiene una única fuente de verdad para el MER.
 

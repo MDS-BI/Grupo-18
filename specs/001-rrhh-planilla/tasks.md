@@ -1,15 +1,15 @@
 ﻿# Tareas: Módulo Base ERP y Módulo de Recursos Humanos y Planilla
 
-**Entrada**: Documentos de diseño desde `/specs/001-erp-base-module/`
+**Entrada**: Documentos de diseño desde `/specs/001-rrhh-planilla/`
 **Prerrequisitos**: `plan.md` (obligatorio), `spec.md` (obligatorio para las historias de usuario), `research.md`, `data-model.md`, `contracts/` y `quickstart.md`
-**Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 6 de `spec.md`, incluyendo FR-040–FR-087, la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
-**Actualizado**: 2026-11-16 (revisado contra código/tests actuales; rutas ajustadas a la estructura real `src/rrhh/...`)
+**Alcance**: Módulo base (FR-001–FR-039, XR-001–XR-005) y Historias de Usuario 1 a 12 de `spec.md`, incluyendo FR-040–FR-107 y SC-001–SC-029 (las tareas de US8 a US12 se agregan a medida que se incorpora cada historia), la bitácora inmutable y el respaldo JSON sin sobrescritura de auditoría. Incluye el cierre de las brechas G1–G18 y K1 detectadas en la auditoría de consistencia.
+**Actualizado**: 2026-11-17 (incorporada la Historia de Usuario 10, Fase 10, tareas T191–T216; incorporada la Historia de Usuario 7, Fase 9, tareas T170–T190; revisión anterior 2026-11-16 contra código/tests actuales con rutas ajustadas a la estructura real `src/rrhh/...`)
 **Tests**: Incluidos por mandato de la constitución (Principio II) y del plan de verificación con Vitest + jsdom.
 
 ## Formato: `[ID] [P?] [Historia] Descripción con ruta de archivo`
 
 - **[P]**: Puede ejecutarse en paralelo (archivos distintos, sin dependencias pendientes)
-- **[US1]–[US6]**: Historia de Usuario a la que pertenece la tarea
+- **[US1]–[US12]**: Historia de Usuario a la que pertenece la tarea
 - Las tareas de configuración, fundacionales, módulo base y pulido no llevan etiqueta de historia
 - Todas las rutas son explícitas y relativas a la raíz del repositorio
 
@@ -68,7 +68,7 @@
 - [ ] T011 [P] Configurar el entorno de pruebas Vitest + jsdom y los fixtures compartidos en `tests/setup/jsdom.js` y `tests/setup/fixtures.js`
   - Evidencia parcial: existe `tests/setup/setup.js` con configuración base registrada en `vitest.config.mjs`; faltan `tests/setup/jsdom.js` y `tests/setup/fixtures.js` dedicados.
 
-### Núcleo append-only de auditoría (bloqueante para US1–US6)
+### Núcleo append-only de auditoría (bloqueante para US1–US12)
 
 > **NOTA: Escribir T012 antes de implementar T013–T014 y verificar que falle.**
 
@@ -518,7 +518,133 @@
 
 ---
 
-## Fase 9: Pulido y Preocupaciones Transversales
+## Fase 9: Historia de Usuario 7 – Vacaciones: Solicitud, Aprobación y Saldo (Prioridad: P2)
+
+**Objetivo**: Calcular el saldo de vacaciones por devengo proporcional, registrar solicitudes en días hábiles según el calendario de feriados, aprobarlas o rechazarlas con segregación de funciones, impedir excesos de saldo y superposiciones, y alertar del feriado acumulado al máximo, sin descontar días en la liquidación.
+
+**Prueba Independiente**: Con Trabajadores, contratos y feriados precargados como datos semilla, un Trabajador ve su saldo, solicita días, su jefatura los aprueba y el saldo se descuenta; una solicitud que supera el saldo o que se superpone con una licencia es rechazada. No requiere ejecutar el cálculo de planilla.
+
+### Pruebas de la Historia de Usuario 7
+
+- [ ] T170 [P] [US7] Crear pruebas unitarias del devengo de 1,25 días hábiles por mes completo desde la fecha de ingreso, del saldo disponible (devengados menos aprobados) y del máximo acumulado de 30 días hábiles en `tests/unit/rrhh-vacaciones-saldo.test.js` (FR-088, SC-024)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-vacaciones-saldo.test.js`.
+- [ ] T171 [P] [US7] Crear pruebas unitarias del conteo de días hábiles (excluye sábados, domingos y feriados del calendario) y de la unicidad de feriados por fecha en `tests/unit/rrhh-vacaciones-dias-habiles.test.js` (FR-089)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-vacaciones-dias-habiles.test.js`.
+- [ ] T172 [P] [US7] Crear pruebas unitarias de estados Pendiente/Aprobada/Rechazada/anulada, quién aprueba (jefatura directa o, sin ella, administrador/a), prohibición de aprobar lo que se registró, motivo obligatorio de rechazo y anulación de Aprobadas solo antes de su inicio en `tests/unit/rrhh-vacaciones-aprobacion.test.js` (FR-090)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-vacaciones-aprobacion.test.js`.
+- [ ] T173 [P] [US7] Crear pruebas unitarias de rechazo por saldo insuficiente, superposición con otras vacaciones o con licencias/ausencias (US3) y Trabajador sin contrato vigente en las fechas en `tests/unit/rrhh-vacaciones-validaciones.test.js` (FR-091)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-vacaciones-validaciones.test.js`.
+- [ ] T174 [P] [US7] Crear prueba de integración del flujo completo (consulta de saldo, solicitud, aprobación, rechazo con motivo, anulación con devolución de días, alerta de feriado acumulado al máximo y auditoría) en `tests/integration/rrhh-vacaciones-flow.test.js` (FR-088–FR-091)
+  - Falta: historia nueva; no existe `tests/integration/rrhh-vacaciones-flow.test.js`.
+- [ ] T175 [P] [US7] Crear prueba de integración que verifique que las vacaciones aprobadas no descuentan días en la liquidación al ejecutar el cálculo de planilla (US4) en `tests/integration/rrhh-vacaciones-liquidacion.test.js` (FR-091)
+  - Falta: historia nueva; no existe `tests/integration/rrhh-vacaciones-liquidacion.test.js`.
+
+### Implementación de la Historia de Usuario 7
+
+- [ ] T176 [P] [US7] Definir el esquema y la clave de almacenamiento del calendario de feriados (fecha y nombre, sin fechas repetidas) con su CRUD exclusivo del administrador/a de RR.HH. en `src/rrhh/utils/feriados-service.js` y `src/rrhh/storage-rrhh.js` (FR-089)
+  - Falta: historia nueva; no existe `src/rrhh/utils/feriados-service.js`.
+- [ ] T177 [P] [US7] Definir el esquema de solicitud de vacaciones (Trabajador, fechas, días hábiles, estado, quién la registró y quién la resolvió, motivo de rechazo) y su clave de almacenamiento en `src/rrhh/utils/vacaciones-service.js` y `src/rrhh/storage-rrhh.js` (FR-090)
+  - Falta: historia nueva; no existe `src/rrhh/utils/vacaciones-service.js`.
+- [ ] T178 [US7] Implementar el conteo de días hábiles entre dos fechas excluyendo fines de semana y feriados del calendario en `src/rrhh/utils/vacaciones-service.js` (FR-089)
+  - Falta: historia nueva; depende de T176.
+- [ ] T179 [US7] Implementar el cálculo del saldo: devengo de 1,25 días hábiles por mes completo desde la fecha de ingreso, menos días aprobados, con máximo acumulado de 30 días hábiles, en `src/rrhh/utils/vacaciones-service.js` (FR-088)
+  - Falta: historia nueva.
+- [ ] T180 [US7] Implementar el registro de solicitudes en estado "Pendiente" (el Trabajador para sí; jefatura y administrador/a en nombre de un Trabajador de su ámbito) y la edición/anulación de Pendientes en `src/rrhh/utils/vacaciones-service.js` (FR-090)
+  - Falta: historia nueva; reutilizar el alcance de equipo de `src/rrhh/utils/jefatura.js`.
+- [ ] T181 [US7] Implementar las validaciones de saldo suficiente a la fecha de inicio, superposición con vacaciones Aprobadas/Pendientes y con licencias o ausencias de `src/rrhh/utils/novedades-service.js`, y contrato vigente en las fechas en `src/rrhh/utils/vacaciones-service.js` (FR-091)
+  - Falta: historia nueva; depende de US2 (contratos) y US3 (novedades).
+- [ ] T182 [US7] Implementar la aprobación y el rechazo con segregación de funciones (jefatura directa o, sin ella, administrador/a; nadie resuelve lo que registró), motivo obligatorio de rechazo y anulación de Aprobadas solo antes de su inicio con devolución de días al saldo en `src/rrhh/utils/vacaciones-service.js` (FR-090)
+  - Falta: historia nueva.
+- [ ] T183 [US7] Agregar los permisos de vacaciones y feriados a la matriz de roles (Trabajador: solo las suyas; jefatura: su equipo; administrador/a: todas y el calendario) en `src/rrhh/seguridad/roles.js` (FR-090; regla transversal de la US6)
+  - Falta: historia nueva.
+- [ ] T184 [US7] Registrar en la bitácora la creación, edición, aprobación, rechazo y anulación de solicitudes y los cambios del calendario de feriados con valores anterior/nuevo en `src/rrhh/utils/vacaciones-service.js`, `src/rrhh/utils/feriados-service.js` y `src/rrhh/seguridad/auditoria.js` (FR-091)
+  - Falta: historia nueva.
+- [ ] T185 [US7] Agregar la alerta de feriado acumulado al máximo (30 días hábiles) en el panel principal en `src/rrhh/utils/alertas-service.js` (FR-088)
+  - Falta: historia nueva; reutilizar el mecanismo de alertas de contratos de US2.
+- [ ] T186 [US7] Garantizar que el cálculo de planilla no descuente días por vacaciones aprobadas (no se tratan como ausencia) en `src/rrhh/calculo/motor.js` y `src/rrhh/utils/liquidacion-service.js` (FR-091)
+  - Falta: historia nueva; verificar con T175.
+- [ ] T187 [P] [US7] Construir el formulario de solicitud de vacaciones con fechas, días hábiles calculados y saldo disponible en `src/rrhh/components/vacacion-form.js` (FR-088, FR-089)
+  - Falta: historia nueva.
+- [ ] T188 [P] [US7] Construir la vista de vacaciones con el saldo por Trabajador, el listado de solicitudes con acciones de aprobar/rechazar/anular según rol y la gestión del calendario de feriados en `src/rrhh/views/vacaciones.js` (FR-088–FR-090)
+  - Falta: historia nueva.
+- [ ] T189 [US7] Integrar la vista de vacaciones en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js` y `src/rrhh/views/workspace.js`
+  - Falta: historia nueva.
+- [ ] T190 [US7] Agregar feriados y solicitudes de vacaciones a los datos semilla para la prueba independiente en `src/rrhh/data/seed.js`
+  - Falta: historia nueva.
+
+**Punto de control**: Las Historias de Usuario 1 a 7 deben funcionar de forma independiente.
+
+---
+
+## Fase 10: Historia de Usuario 10 – Reportes de Gestión y Equidad Salarial (Prioridad: P2)
+
+**Objetivo**: Generar reportes de solo lectura sobre períodos cerrados (dotación, costo por centro de costo, horas extra, ausentismo y brecha salarial de género por cargo), con filtros, gráficos y un campo de género sensible usado solo en agregados, sin exponer información individual ni exportar archivos (US11).
+
+**Prueba Independiente**: Con datos semilla de tres períodos cerrados y Trabajadores de distintos cargos y géneros, el administrador/a ve la dotación, el costo por centro de costo y la brecha por cargo; un cargo con menos de 5 personas en algún grupo aparece oculto. No modifica ningún dato.
+
+### Pruebas de la Historia de Usuario 10
+
+- [ ] T191 [P] [US10] Crear pruebas unitarias de dotación (Trabajadores activos al último día del período, altas y bajas por departamento) en `tests/unit/rrhh-reportes-dotacion.test.js` (US10-E2)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-dotacion.test.js`.
+- [ ] T192 [P] [US10] Crear pruebas unitarias de costo empleador por centro de costo con variación porcentual respecto del período anterior en `tests/unit/rrhh-reportes-costo.test.js` (US10-E1)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-costo.test.js`.
+- [ ] T193 [P] [US10] Crear pruebas unitarias de horas extra aprobadas por departamento y período en `tests/unit/rrhh-reportes-horas-extra.test.js` (US10-E7)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-horas-extra.test.js`.
+- [ ] T194 [P] [US10] Crear pruebas unitarias de ausentismo (solo ausencias; licencias médicas, vacaciones y permisos legales por separado) en `tests/unit/rrhh-reportes-ausentismo.test.js` (US10-E3)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-ausentismo.test.js`.
+- [ ] T195 [P] [US10] Crear pruebas unitarias de brecha salarial (mediana por género dentro del cargo, diferencia porcentual y ocultamiento si algún grupo tiene menos de 5 personas) en `tests/unit/rrhh-reportes-brecha.test.js` (US10-E4, US10-E5)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-brecha.test.js`.
+- [ ] T196 [P] [US10] Crear pruebas unitarias de que solo se incluyen períodos Cerrados y quedan fuera los Abiertos y Calculados en `tests/unit/rrhh-reportes-periodos-cerrados.test.js` (US10-E6)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-periodos-cerrados.test.js`.
+- [ ] T197 [P] [US10] Crear pruebas unitarias de permisos por rol (administrador/a: todos; analista: todos menos brecha; jefatura: solo horas extra y ausentismo de su equipo sin montos; Trabajador: ninguno) en `tests/unit/rrhh-reportes-permisos.test.js` (US10-E7, US10-E8)
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-permisos.test.js`.
+- [ ] T198 [P] [US10] Crear pruebas unitarias de que el campo `genero` nunca aparece en listados, búsquedas ni filtros de Trabajadores en `tests/unit/rrhh-reportes-genero-oculto.test.js`
+  - Falta: historia nueva; no existe `tests/unit/rrhh-reportes-genero-oculto.test.js`.
+- [ ] T199 [P] [US10] Crear prueba de integración del flujo completo de reportes, incluido el estado vacío sin períodos cerrados y los filtros por rango de períodos y departamento, en `tests/integration/rrhh-reportes-flow.test.js` (US10-E1–US10-E6, US10-E9)
+  - Falta: historia nueva; no existe `tests/integration/rrhh-reportes-flow.test.js`.
+- [ ] T200 [P] [US10] Crear prueba de integración de que consultar la brecha de género registra la consulta sensible en la bitácora (US6) y de que los reportes no modifican ningún dato en `tests/integration/rrhh-reportes-auditoria.test.js` (US10-E10)
+  - Falta: historia nueva; no existe `tests/integration/rrhh-reportes-auditoria.test.js`.
+
+### Implementación de la Historia de Usuario 10
+
+- [ ] T201 [P] [US10] Agregar el campo opcional sensible `genero` (Femenino, Masculino, No binario, Prefiere no informar) en la ficha en `src/rrhh/utils/trabajadores-service.js` y `src/rrhh/components/trabajador-form.js`
+  - Falta: historia nueva; agregar el campo y sus valores permitidos en `src/rrhh/utils/trabajadores-service.js` y `src/rrhh/components/trabajador-form.js`.
+- [ ] T202 [US10] Ocultar `genero` en listados, búsquedas y filtros de Trabajadores apoyándose en `src/rrhh/seguridad/acceso-datos.js` y ajustando `src/rrhh/views/trabajadores-view.js`
+  - Falta: historia nueva; depende de T201 y de la regla de dato sensible de US6.
+- [ ] T203 [P] [US10] Crear funciones puras de mediana y variación porcentual en `src/rrhh/calculo/estadisticas.js`
+  - Falta: historia nueva; no existe `src/rrhh/calculo/estadisticas.js`.
+- [ ] T204 [P] [US10] Crear el esqueleto de `src/rrhh/utils/reportes-service.js` con el filtro de períodos cerrados y la estructura común de reportes, reutilizando `src/rrhh/utils/periodos-service.js`
+  - Falta: historia nueva; depende de US4 (períodos cerrados) y, para el ausentismo, de US7 (días hábiles y vacaciones: T176–T179).
+- [ ] T205 [US10] Implementar el reporte de dotación en `src/rrhh/utils/reportes-service.js`, reutilizando `src/rrhh/utils/contratos-service.js`
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204.
+- [ ] T206 [US10] Implementar el reporte de costo empleador por centro de costo y su variación porcentual en `src/rrhh/utils/reportes-service.js`, reutilizando `src/rrhh/utils/liquidacion-service.js`, `src/rrhh/utils/costo-empleador.js` y T203
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204.
+- [ ] T207 [US10] Implementar el reporte de horas extra aprobadas por departamento y período en `src/rrhh/utils/reportes-service.js`, reutilizando `src/rrhh/utils/novedades-service.js`
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204.
+- [ ] T208 [US10] Implementar el reporte de ausentismo (solo ausencias; licencias, vacaciones y permisos legales por separado) en `src/rrhh/utils/reportes-service.js`, reutilizando `src/rrhh/utils/novedades-service.js` y US7 (días hábiles y vacaciones: T176–T179)
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204.
+- [ ] T209 [US10] Implementar el reporte de brecha salarial de género por cargo (mediana por género, diferencia porcentual y ocultamiento de grupos con menos de 5 personas) en `src/rrhh/utils/reportes-service.js`, usando T201 y T203
+  - Falta: historia nueva; ampliar `src/rrhh/utils/reportes-service.js` creado en T204 y respetar el carácter sensible del campo `genero`.
+- [ ] T210 [P] [US10] Agregar los permisos de reportes por rol (administrador/a: todos; analista: todos menos brecha; jefatura: solo horas extra y ausentismo de su equipo sin montos; Trabajador: ninguno) en `src/rrhh/seguridad/roles.js`
+  - Falta: historia nueva; extender la matriz de roles de US6 en `src/rrhh/seguridad/roles.js`.
+- [ ] T211 [P] [US10] Aplicar el alcance de equipo de la jefatura para horas extra y ausentismo en `src/rrhh/utils/jefatura.js`
+  - Falta: historia nueva; reutilizar el alcance existente de `src/rrhh/utils/jefatura.js` sin incluir montos.
+- [ ] T212 [P] [US10] Registrar en la bitácora la consulta de brecha de género como dato sensible en `src/rrhh/seguridad/auditoria.js`
+  - Falta: historia nueva; registrar usuario, rol, fecha y hora según la regla transversal de US6.
+- [ ] T213 [P] [US10] Crear el componente de gráficos sin librerías externas (SVG/CSS) en `src/rrhh/components/grafico-reporte.js`
+  - Falta: historia nueva; no existe `src/rrhh/components/grafico-reporte.js`.
+- [ ] T214 [US10] Crear la vista de reportes con filtros por rango de períodos y departamento, estado vacío explicativo y gráficos en `src/rrhh/views/reportes.js`
+  - Falta: historia nueva; no existe `src/rrhh/views/reportes.js`; depende de T204–T213.
+- [ ] T215 [US10] Integrar la vista de reportes en la navegación de RR.HH. en `src/rrhh/views/rrhh-router.js` y `src/rrhh/views/workspace.js`
+  - Falta: historia nueva; agregar entrada y ruta en `src/rrhh/views/rrhh-router.js` y `src/rrhh/views/workspace.js` (depende de T214).
+- [ ] T216 [US10] Agregar tres períodos cerrados, Trabajadores de distintos cargos y géneros y un cargo con menos de 5 personas en algún grupo a los datos semilla en `src/rrhh/data/seed.js`
+  - Falta: historia nueva; T190 también edita `src/rrhh/data/seed.js`, coordinar el merge.
+
+**Punto de control**: Las Historias de Usuario 1 a 7 y 10 deben funcionar de forma independiente.
+
+---
+
+## Fase 11: Pulido y Preocupaciones Transversales
 
 **Propósito**: Mejoras que afectan a varias historias y cierre de la entrega.
 
@@ -528,7 +654,7 @@
   - Evidencia: 2026-11-17; `npm run lint` OK, sin errores ni advertencias; `npm run format:check` OK; `npm run test:run` 46/46 archivos y 338/338 pruebas. Registro en `docs/rrhh.md` §9.
 - [ ] T163 [P] Verificar el rendimiento de cálculo de 500 trabajadores en 10 segundos o menos en `src/rrhh/calculo/motor.js` y `tests/integration/rrhh-rendimiento.test.js` (SC-023)
   - Evidencia parcial: existe `tests/integration/rrhh-rendimiento.test.js`; cumplimiento del umbral específico no verificado.
-- [ ] T164 [P] Validar el flujo de RR.HH. descrito en `specs/001-erp-base-module/quickstart.md`, incluidas las reglas corregidas de desvinculación, contratos, novedades, elegibilidad y auditoría
+- [ ] T164 [P] Validar el flujo de RR.HH. descrito en `specs/001-rrhh-planilla/quickstart.md`, incluidas las reglas corregidas de desvinculación, contratos, novedades, elegibilidad y auditoría
   - Falta: no validado en esta revisión.
 - [ ] T165 Revisar el endurecimiento de seguridad de datos sensibles, scoping de equipo, permisos de parámetros/respaldo, sanitización XSS en módulo base y vistas de RR.HH., y bitácora en `src/utils/sanitize.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/seguridad/auditoria.js`, `src/backup.js`, `src/rrhh/calculo/parametros.js` y `src/rrhh/views/`
   - Falta: faltan artefactos clave (`sanitize.js`, `permisos.js`, `backup.js`) y no se evidencia endurecimiento completo.
@@ -536,7 +662,7 @@
   - Falta: no existe `src/rrhh/utils/common.js`.
 - [ ] T167 [P] Revisar accesibilidad y consistencia visual en `src/rrhh/views/liquidaciones.js`, `src/rrhh/views/novedades.js`, `src/rrhh/views/auditoria.js` y `src/rrhh/components/trabajador-form.js`
   - Falta: no revisado/verificado; rutas reales ajustadas a archivos existentes.
-- [ ] T168 [P] Verificar la cobertura FR-001–FR-087, XR-001–XR-005 y SC-011/SC-015/SC-022/SC-023 con la matriz de trazabilidad de este archivo, y registrar brechas restantes en `docs/rrhh.md` (cierre de G18 y K1)
+- [ ] T168 [P] Verificar la cobertura FR-001–FR-107, XR-001–XR-005 y SC-011/SC-015/SC-022/SC-023/SC-024–SC-029 con la matriz de trazabilidad de este archivo, y registrar brechas restantes en `docs/rrhh.md` (cierre de G18 y K1)
   - Falta: no completado; persisten brechas de trazabilidad. `docs/rrhh.md` ya existe (T161) y T162 está verificado.
 - [ ] T169 [P] [US6] Ejecutar una matriz de pruebas de acceso por rol (administrador/a, analista, jefatura, Trabajador activo/desvinculado) contra vistas, búsquedas, impresión y enlaces directos, y verificar que al menos el 95% confirma que los datos ocultos no son recuperables (SC-021, FR-057)
   - Apoyarse en T118–T124, T130, T140 y T145; registrar el resultado en `docs/rrhh.md`.
@@ -577,6 +703,13 @@
 | FR-087 | T120, T137, T139 |
 | XR-001–XR-005 | T005, T031, T034, T039 |
 | SC-021 | T169 |
+| FR-088 | T170, T174, T179, T185, T187, T188 |
+| FR-089 | T171, T176, T178, T187, T188 |
+| FR-090 | T172, T174, T177, T180, T182, T183, T188 |
+| FR-091 | T173–T175, T181, T184, T186 |
+| SC-024 | T170, T174 |
+| FR-097–FR-100 (reportes de gestión y equidad salarial, US10) | T191–T200, T204–T209, T213, T214 |
+| US10-E1–US10-E10 y reglas de negocio (períodos cerrados, agregación, género sensible y permisos) | T191–T202, T210–T212, T216 |
 
 ---
 
@@ -615,8 +748,8 @@
 - **Configuración (Fase 1)**: Sin dependencias; puede iniciar de inmediato.
 - **Fundacional (Fase 2)**: Depende de la Fase 1 y BLOQUEA todas las historias. Incluye el núcleo append-only de auditoría y los parámetros legales por vigencia.
 - **Módulo base (Fase 2B)**: Depende de la Fase 2; puede ejecutarse en paralelo con US1 si hay capacidad.
-- **Historias de Usuario (Fases 3–8)**: Dependen de la Fase 2 (y del módulo base para vistas que reutilizan el marco).
-- **Pulido (Fase 9)**: Depende de que las historias deseadas estén completas.
+- **Historias de Usuario (Fases 3–10)**: Dependen de la Fase 2 (y del módulo base para vistas que reutilizan el marco).
+- **Pulido (Fase 11)**: Depende de que las historias deseadas estén completas.
 
 ### Dependencias entre Historias
 
@@ -626,6 +759,8 @@
 - **US4 (P1)**: Integra US1, US2, US3 y los parámetros legales fundacionales; es la historia de mayor acoplamiento.
 - **US6 (P1)**: El núcleo de auditoría ya existe desde la Fase 2; la implementación de roles, scoping de equipo y permisos se aplica después de US1–US4 para restringir servicios y vistas existentes, y antes de US5 para que la explicación/impresión respete permisos desde el inicio.
 - **US5 (P2)**: Depende de las liquidaciones de US4 y de los permisos/auditoría de US6.
+- **US7 (P2)**: Depende de US1 (fecha de ingreso y jefatura directa), US2 (contrato vigente en las fechas) y US3 (superposición con licencias y ausencias), y aplica los permisos/auditoría de US6. Solo la verificación de que las vacaciones no descuentan en la liquidación (T175, T186) toca US4.
+- **US10 (P2)**: Depende de US4 (períodos cerrados y costo empleador), US1 (ficha y desvinculación), US3 (horas extra y ausencias), US6 (roles y auditoría) y US7 (vacaciones y días hábiles para el ausentismo).
 
 ### Dentro de Cada Historia
 
@@ -695,7 +830,9 @@ Task: "Construir vista de auditoría exclusiva del administrador en src/rrhh/vie
 6. US4 → probar → desplegar.
 7. US6 → probar → desplegar (seguridad, scoping de equipo, auditoría y respaldo).
 8. US5 → probar → desplegar (explicación e impresión con permisos).
-9. Cada historia añade valor sin romper las anteriores.
+9. US7 → probar → desplegar (vacaciones, saldo y calendario de feriados).
+10. US10 → probar → desplegar (reportes de gestión, equidad salarial y campo de género sensible).
+11. Cada historia añade valor sin romper las anteriores.
 
 ### Estrategia de Equipo en Paralelo
 
@@ -725,3 +862,139 @@ Con varios desarrolladores:
 - Evitar tareas vagas, conflictos sobre el mismo archivo y dependencias entre historias que rompan la independencia.
 - Rutas reales observadas que difieren de la versión anterior: `src/rrhh/seguridad/session.js` (no `sesion.js`), `src/rrhh/views/liquidacion.js`, `src/rrhh/views/liquidaciones.js`, `src/rrhh/views/planilla.js`, `src/rrhh/views/periodos.js`, `src/rrhh/views/novedades.js`, `src/rrhh/views/auditoria.js`, `src/rrhh/utils/liquidacion-service.js` y `src/rrhh/utils/liquidacion-estados.js`.
 - No se evidencian en el código actual: `src/utils/sanitize.js`, `src/backup.js`, `src/rrhh/seguridad/permisos.js`, `src/rrhh/calculo/redondeo.js`, `src/rrhh/components/parametros-form.js`, `src/rrhh/views/parametros-view.js`, `src/rrhh/views/liquidacion-impresion.js`, `src/rrhh/views/liquidacion-impresion.css`, `src/rrhh/components/linea-explicacion.js`, `tests/setup/`, ni varios archivos de prueba nombrados en las tareas.
+
+---
+
+## Apéndice A — División de trabajo grupal del módulo RR.HH.
+
+Contenido incorporado desde `specs/000-rrhh-planilla/tasks.md` al unificar la documentación en esta carpeta. Es el plan de coordinación original del equipo: sus identificadores `T0xx`/`T1xx` son propios de este apéndice y **no deben confundirse** con los identificadores `Txxx` del plan vigente más arriba. En caso de discrepancia prevalece el plan vigente y `spec.md`.
+
+**Formato original**: `[ID] [P?] [Historia] [Responsable] Descripción`
+
+- **[P]**: puede ejecutarse en paralelo con otra tarea de otra historia.
+- **[Historia]**: código de la historia asignada (ej. US1, US2, US3).
+- **[Responsable]**: persona o subequipo encargado.
+- Los archivos de implementación se indican en la descripción.
+
+### A.1 Configuración compartida y base del módulo
+
+**Propósito**: Preparar la base del ERP para RR.HH. y dejar la estructura común lista para todas las historias.
+
+- [ ] T001 [P] [BASE] [Equipo] Revisar y dejar documentado el entorno base ERP y confirmar que la capa de `Entity`/`Document` y `localStorage` soporta la extensión del módulo en `src/storage.js` y `src/app.js`
+- [ ] T002 [P] [BASE] [Equipo] Ajustar `src/module-config.js` con los nombres y etiquetas del dominio RR.HH. (`Trabajador`, `Liquidación de Sueldo`, etc.)
+- [ ] T003 [P] [BASE] [Equipo] Validar el almacenamiento, campos personalizados y ciclo de vida del módulo para la persistencia de trabajadores, contratos y liquidaciones
+
+**Checkpoint**: La base del módulo está lista y todas las historias pueden seguir en paralelo sin reescribir la misma capa.
+
+### A.2 US1 — Ficha del trabajador (P1)
+
+**Objetivo**: Crear y mantener la ficha del trabajador con datos básicos y búsquedas funcionales.
+
+**Prueba Independiente**: Un usuario puede crear un trabajador, verlo en la lista y buscarlo por nombre o identificador.
+
+- [ ] T010 [P] [US1] [Persona 1] Diseñar y validar el modelo del trabajador sobre la estructura base en `src/storage.js`
+- [ ] T011 [P] [US1] [Persona 1] Crear el formulario de trabajador y los campos requeridos en `src/components/entity-form.js`
+- [ ] T012 [US1] [Persona 1] Conectar la persistencia y la validación de creación/edición en `src/app.js`
+- [ ] T013 [US1] [Persona 1] Mostrar la lista y la búsqueda del trabajador en `src/components/entity-list.js` y `src/components/search-bar.js`
+
+**Punto de control**: US1 queda validada como un entregable independiente del resto del módulo.
+
+### A.3 US2 — Gestión de contratos y alertas de plazo (P1)
+
+**Enunciado**: Como analista de remuneraciones, quiero registrar los contratos de trabajo (sueldo base, jornada y tipo de contrato) y recibir alertas de vencimiento para controlar las condiciones vigentes del personal.
+
+**Por qué esta prioridad**: El contrato define los parámetros fundamentales del cálculo de sueldos y previene riesgos laborales por contratos vencidos.
+
+**Prueba Independiente**: Se asocia un contrato a un trabajador y el panel advierte sobre contratos a plazo fijo que vencen dentro de los próximos 30 días. Al registrar un nuevo contrato o anexo por un cambio de sueldo, se conserva el registro anterior y cada condición queda asociada a su período de vigencia.
+
+**Criterios de aceptación para US2**
+
+1. Dado un contrato a plazo fijo cercano a vencer, cuando faltan 30 días o menos, entonces el panel principal muestra una alerta visual.
+2. Dado que se modifica el sueldo base, cuando se registra un nuevo contrato o anexo, entonces el sistema lo asocia al período correspondiente de forma histórica.
+
+**Pruebas para US2**
+
+- [ ] T020 [P] [US2] [Persona 2] Añadir pruebas unitarias de validación del contrato, asociación obligatoria al trabajador y fechas de vigencia en `tests/unit/contracts.test.js`
+- [ ] T021 [P] [US2] [Persona 2] Añadir pruebas unitarias de alertas: vencimiento dentro de 30 días inclusive, más de 30 días, contrato indefinido y contrato vencido en `tests/unit/contracts.test.js`
+- [ ] T022 [P] [US2] [Persona 2] Añadir pruebas unitarias para registrar un cambio de sueldo como nuevo contrato o anexo, conservar el sueldo anterior y asociar ambos registros a sus períodos en `tests/unit/contracts.test.js`
+- [ ] T023 [P] [US2] [Persona 2] Añadir pruebas de integración para crear un contrato asociado a un trabajador y visualizar la alerta de vencimiento en el panel principal en `tests/integration/contracts.test.js`
+
+**Implementación para US2**
+
+- [ ] T024 [P] [US2] [Persona 2] Definir y validar el modelo persistente del contrato, incluyendo trabajador, sueldo base, jornada, tipo de contrato y período de vigencia, en `src/storage.js`
+- [ ] T025 [P] [US2] [Persona 2] Crear el formulario de contrato con sueldo base, jornada, tipo de contrato, fecha de inicio y fecha de término en `src/components/contract-form.js`
+- [ ] T026 [US2] [Persona 2] Conectar la creación, edición y persistencia de contratos vinculados al trabajador en `src/app.js`
+- [ ] T027 [US2] [Persona 2] Implementar la selección de contratos a plazo fijo cuya fecha de término ocurre entre hoy y los próximos 30 días, excluyendo contratos ya vencidos, en `src/contract-alerts.js`
+- [ ] T028 [US2] [Persona 2] Registrar cambios de sueldo como un nuevo contrato o anexo con su período de vigencia, sin sobrescribir los registros históricos, en `src/storage.js`
+- [ ] T029 [US2] [Persona 2] Mostrar las alertas de vencimiento de contratos en el panel principal usando el resultado de `src/contract-alerts.js` en `src/components/dashboard.js`
+
+**Punto de control**: US2 funciona de forma independiente y puede entregarse sin depender de US3/US4.
+
+### A.4 US3 — Parámetros legales y vigencias (P1)
+
+**Objetivo**: Registrar parámetros legales versionados por fecha de vigencia para calcular la remuneración con reglas actualizadas.
+
+**Prueba Independiente**: Un cambio de ley se registra como una nueva versión de parámetro sin romper la vigencia histórica anterior.
+
+- [ ] T030 [P] [US3] [Persona 3] Diseñar y persistir los parámetros legales y sus vigencias en `src/storage.js`
+- [ ] T031 [US3] [Persona 3] Crear la interfaz de configuración de parámetros legales en `src/components/legal-params-form.js`
+- [ ] T032 [US3] [Persona 3] Integrar la validación por vigencia y su uso en el cálculo de planilla en `src/app.js`
+
+**Punto de control**: La configuración legal queda separada del cálculo y puede cambiar en el tiempo sin romper registros anteriores.
+
+### A.5 US4 — Período de remuneraciones y novedades (P1)
+
+**Objetivo**: Abrir períodos, registrar novedades y mantener el proceso de aprobación para la liquidación.
+
+**Prueba Independiente**: El sistema abre un período, acepta novedades por trabajador y puede diferenciar lo aprobado de lo pendiente.
+
+- [ ] T040 [P] [US4] [Persona 4] Definir la entidad de período y novedades en `src/storage.js`
+- [ ] T041 [P] [US4] [Persona 4] Crear el formulario de novedades y el flujo de aprobación en `src/components/payroll-form.js`
+- [ ] T042 [US4] [Persona 4] Conectar el ciclo de vida del período y la validación de novedades en `src/app.js`
+
+**Punto de control**: El flujo de novedades queda funcional y disponible para la parte de cálculo.
+
+### A.6 US5 — Liquidaciones y cálculo de remuneración (P1)
+
+**Objetivo**: Generar liquidaciones con cálculos explicables y totales por período.
+
+**Prueba Independiente**: El sistema calcula una liquidación con bases, descuentos e impuestos desde los parámetros vigentes del período.
+
+- [ ] T050 [P] [US5] [Persona 5] Definir la estructura de liquidación y líneas de cálculo en `src/storage.js`
+- [ ] T051 [US5] [Persona 5] Implementar el motor de cálculo de remuneración en `src/app.js` o en un módulo dedicado `src/payroll-calculator.js`
+- [ ] T052 [US5] [Persona 5] Crear la vista de detalle de liquidación y estados en `src/components/payroll-summary.js`
+
+### A.7 US6 — Panel principal, auditoría y reportes (P2)
+
+**Objetivo**: Entregar una vista operativa con alertas globales, auditoría y resúmenes del módulo.
+
+**Prueba Independiente**: Desde el panel principal, el usuario identifica contratos por vencer, liquidaciones pendientes y cambios con trazabilidad.
+
+- [ ] T060 [P] [US6] [Persona 6] Diseñar el panel principal y tarjetas de resumen en `src/components/dashboard.js`
+- [ ] T061 [US6] [Persona 6] Integrar auditoría y trazabilidad de cambios en `src/app.js` y `src/storage.js`
+- [ ] T062 [US6] [Persona 6] Validar reportes y estado general del módulo en `src/components/report-panel.js`
+
+### A.8 Polish y validación final del equipo
+
+**Propósito**: Revisión cruzada, corrección de inconsistencias y preparación de entrega.
+
+- [ ] T100 [P] [CROSS] [Equipo] Revisar coherencia entre trabajadores, contratos, parámetros y liquidaciones
+- [ ] T101 [P] [CROSS] [Equipo] Validar pruebas unitarias e integración de las historias principales
+- [ ] T102 [CROSS] [Equipo] Revisar UX, mensajes visibles y estados de error del módulo
+- [ ] T103 [CROSS] [Equipo] Preparar entrega final y checklist de cierre para el proyecto grupal
+
+### A.9 Dependencias y recomendaciones originales
+
+- **Fase 1**: no depende de ninguna historia.
+- **US1**: puede arrancar en paralelo con la base compartida.
+- **US2**: depende de la base y puede avanzar en paralelo con US1.
+- **US3 / US4 / US5**: dependen de la base y del flujo principal del módulo, pero cada una puede entregarse en paralelo si el equipo está distribuido.
+- **US6**: depende de que existan datos reales en la aplicación.
+- **Fase 8**: depende de que todas las historias principales estén integradas.
+
+- Asignar una historia principal por persona.
+- Mantener cada historia como un entregable independiente.
+- Usar esta estructura para reuniones de equipo, revisión de PR y control de avance.
+- No se debe “editar el archivo completo” salvo para integrar una historia terminada o cambiar la coordinación general del proyecto.
+
+**MVP recomendado original**: 1) US1 — Ficha del trabajador; 2) US2 — Contratos y alertas de plazo; 3) US3 — Parámetros legales; 4) US4 — Períodos y novedades; 5) US5 — Liquidaciones. El panel y la auditoría quedan como cierre de la fase final.

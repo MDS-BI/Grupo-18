@@ -1,7 +1,9 @@
 # Plan de Implementación: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
-**Rama**: `001-erp-base-module` | **Fecha**: 2026-07-08 | **Actualizado**: 2026-11-16 | **Especificación**: [spec.md](spec.md)
-**Entrada**: Especificación de la funcionalidad desde `/specs/001-erp-base-module/spec.md`
+**Rama**: `001-rrhh-planilla` | **Fecha**: 2026-07-08 | **Actualizado**: 2026-11-17 | **Especificación**: [spec.md](spec.md)
+**Entrada**: Especificación de la funcionalidad desde `/specs/001-rrhh-planilla/spec.md`
+
+> **Enfoque de la funcionalidad**: este plan describe el módulo de **Recursos Humanos y Planilla (RR.HH.)** construido sobre la base ERP reutilizable. El ERP base (Entidad/Documento) se conserva como contexto y capa de soporte; el dominio funcional, las historias de usuario y los entregables son de RR.HH. El diseño original de RR.HH. se incorporó en el [Apéndice A](#apéndice-a--diseño-original-del-módulo-rrhh) junto con los [diagramas MER](mer.png) y [MER resumido](mer-resumen.png).
 
 ## Resumen
 
@@ -21,14 +23,14 @@ El plan cubre la especificación vigente completa:
 
 ### Módulo de Recursos Humanos y Planilla
 
-La extensión de RR.HH. y Planilla reutiliza la **Entidad** como **Trabajador** y el **Documento** como **Liquidación de Sueldo**, sin modificar el código central; lo específico vive en `src/rrhh/` y en `src/module-config.js`, y las tablas propias usan el prefijo `erp_rrhh:*`. El detalle de atributos y relaciones se documenta en `specs/001-erp-base-module/data-model.md` (documento vigente).
+La extensión de RR.HH. y Planilla reutiliza la **Entidad** como **Trabajador** y el **Documento** como **Liquidación de Sueldo**, sin modificar el código central; lo específico vive en `src/rrhh/` y en `src/module-config.js`, y las tablas propias usan el prefijo `erp_rrhh:*`. El detalle de atributos y relaciones se documenta en `specs/001-rrhh-planilla/data-model.md` (documento vigente).
 
 Incluye: fichas y catálogos; contratos con historial, vigencia y alertas; parámetros legales versionados por vigencia y cargados manualmente por administrador/a; períodos con apertura, cálculo y cierre; novedades con segregación de funciones y aprobación; motor de cálculo con líneas explicables y parámetros congelados al cierre; ciclo de vida de liquidaciones y comprobante imprimible; sesión simulada por rol; bitácora de auditoría de solo inserción; y exportación/importación completa en JSON para respaldo y restauración. El motor calcula, para cada trabajador con un contrato cuya vigencia comprenda al menos un día del período (incluidos terminados o vencidos con vigencia en el período), haberes/descuentos/impuestos y costo empleador de forma proporcional a los días de vigencia, usando parámetros vigentes y topes legales, conservando por línea base, tasa/fórmula y snapshot del parámetro aplicado; los totales se obtienen de líneas redondeadas al peso.
 
 ## Clarificaciones y Decisiones
 
 **2026-11-08 (clarify inicial)**:
-- Entidades RR.HH. definidas en 001 con detalle en `specs/001-erp-base-module/data-model.md`; Trabajador reutiliza Entidad y Liquidación reutiliza Documento.
+- Entidades RR.HH. definidas en 001 con detalle en `specs/001-rrhh-planilla/data-model.md`; Trabajador reutiliza Entidad y Liquidación reutiliza Documento.
 - Sesión simulada con selector de rol, sin autenticación real ni credenciales.
 - Parámetros legales cargados y versionados manualmente; sin integración externa de indicadores.
 - Bitácora conservada durante la relación laboral y 6 años después del término (Ley 21.719).
@@ -85,7 +87,7 @@ Antes de las historias de usuario se implementan el núcleo append-only de audit
 ### Documentación (esta funcionalidad)
 
 ```text
-specs/001-erp-base-module/
+specs/001-rrhh-planilla/
 ├── plan.md
 ├── research.md
 ├── data-model.md
@@ -137,3 +139,180 @@ No se introdujeron violaciones de diseño. **Deuda explícita** rastreada:
 | Violación / Deuda | Por qué es necesaria | Alternativa simple rechazada | Mitigación |
 |---|---|---|---|
 | Documentación `docs/rrhh.md` pendiente | Quality Standards exige documentar comportamiento, configuración y contratos antes de release | Publicar sin documentación | Completar antes de la release; seguimiento en `tasks.md` |
+
+---
+
+## Apéndice A — Diseño original del módulo RR.HH.
+
+Contenido incorporado desde `specs/000-rrhh-planilla/plan.md` al unificar la documentación del módulo en esta carpeta. Es material de referencia histórica del diseño de RR.HH.; en caso de discrepancia prevalecen el cuerpo principal de este plan y [`spec.md`](spec.md). Las rutas se actualizaron a `specs/001-rrhh-planilla/`.
+
+### A.1 Problema y propuesta de valor
+
+**Problema.** En muchas Pymes o Empresas las remuneraciones se calculan en planillas Excel: fórmulas copiadas mes a mes, parámetros legales escritos a mano (que cambian varias veces al año), sin historial de quién modificó qué, y con datos personales y de salud guardados sin control de acceso. Los errores de cálculo generan multas, reclamos de trabajadores y diferencias con la contabilidad.
+
+**Propuesta.** Un módulo que:
+
+1. Centraliza la ficha del trabajador y su contrato vigente.
+2. Recoge las novedades del mes con un flujo de aprobación (jefatura → RR.HH.).
+3. Calcula las liquidaciones de todo un período con un clic, mostrando cada línea y su fórmula (cálculo explicable).
+4. Congela el período al cerrarlo (UF, UTM, ingreso mínimo y parámetros quedan fijos) para que una liquidación pagada no cambie después.
+5. Entrega a otros módulos del ERP el costo de la planilla por centro de costo y la nómina de pago.
+6. Protege los datos sensibles por diseño (Ley 21.719 de Protección de Datos Personales, vigente desde el 1 de diciembre de 2026).
+
+### A.2 Cliente y usuarios
+
+**Cliente objetivo**: Pyme chilena de 20 a 200 trabajadores (por ejemplo, una empresa de servicios o comercio en el Gran Concepción) que hoy calcula sueldos en Excel o terceriza todo en un contador externo.
+
+| Usuario | Necesidad principal | Qué hace en el módulo |
+|---|---|---|
+| **Administrador/a de RR.HH.** (usuario principal) | Mantener los datos del personal al día y pagar a tiempo y sin errores | Fichas, contratos, catálogos, parámetros legales, apertura y cierre del período |
+| **Analista de remuneraciones** | Calcular la planilla rápido y poder explicar cada monto | Registra novedades, calcula y revisa liquidaciones, corrige líneas manuales con motivo |
+| **Jefatura de área** | Que las horas extra y ausencias de su equipo se paguen bien | Ingresa o aprueba las novedades de su equipo (no ve sueldos) |
+| **Gerencia / Finanzas** | Controlar el costo de personal | Revisa los totales por centro de costo y aprueba el cierre |
+| **Contador/a externo** | Hacer el asiento contable y las declaraciones | Exporta el resumen contable y el libro de remuneraciones |
+| **Trabajador/a** (fase futura) | Ver su liquidación y sus datos | Portal de autoservicio de solo lectura |
+
+### A.3 Pantallas, menús y herramientas
+
+El formato exigido (página principal, acciones/menús/herramientas, documentación, análisis de escalabilidad) se cubre así:
+
+#### A.3.1 Página principal (Panel de RR.HH.)
+
+- **Tarjetas**: dotación activa · costo de la planilla del último período cerrado · horas extra del mes · contratos por vencer en 30 días · liquidaciones pendientes de aprobar.
+- **Acciones rápidas**: Nuevo trabajador · Registrar novedad · Calcular período · Ver liquidaciones · Buscar trabajador.
+- **Alertas**: período abierto con novedades sin aprobar · trabajadores sin contrato vigente · sueldo base fuera de la banda del cargo · parámetro legal sin vigencia para el período.
+
+#### A.3.2 Menú lateral
+
+`Panel` · `Trabajadores` · `Contratos` · `Novedades` · `Planilla` (períodos y liquidaciones) · `Reportes` · `Configuración` (catálogos y parámetros legales) · `Auditoría`.
+
+#### A.3.3 Herramientas clave
+
+| Herramienta | Descripción |
+|---|---|
+| Asistente de cálculo del período | Valida requisitos (contratos vigentes, novedades aprobadas, parámetros vigentes), calcula todas las liquidaciones y muestra un resumen antes de confirmar |
+| Vista "¿de dónde sale este monto?" | Cada línea de la liquidación muestra su base, su tasa o fórmula y el parámetro legal usado |
+| Simulador de sueldo | Calcula líquido ↔ bruto para una oferta laboral sin guardar datos |
+| Validador de RUT | Comprueba el dígito verificador al ingresar el RUT |
+| Selector de rol | Cambia entre roles para mostrar qué datos ve cada uno (MVP simulado) |
+
+### A.4 Método de cálculo (motor de planilla)
+
+Para cada trabajador con contrato vigente en el período (mes comercial de 30 días):
+
+| Paso | Cálculo | Parámetro / tabla |
+|---|---|---|
+| 1 | Sueldo proporcional = sueldoBase × díasTrabajados / 30 | CONTRATO, NOVEDAD (licencias y ausencias restan días) |
+| 2 | Valor hora extra = sueldoBase / 30 × 7 / jornadaSemanal × 1,5 | JORNADA, RECARGO_HORA_EXTRA |
+| 3 | Gratificación (art. 50) = mín(25 % × haberes imponibles; 4,75 × IMM / 12) | TOPE_GRATIF_ANUAL_IMM, IMM |
+| 4 | Total imponible = sueldo + horas extra + gratificación + bonos imponibles | CONCEPTO.imponible |
+| 5 | Base de cotización = mín(imponible; 90 UF) — seguro de cesantía: mín(imponible; 135,2 UF) | TOPE_IMPONIBLE_*, valorUF del período |
+| 6 | AFP = base × (10 % + comisión de la AFP) | INSTITUCION_PREVISIONAL |
+| 7 | Salud = base × 7 % (FONASA) o el mayor entre 7 % y el plan Isapre en UF | TASA_SALUD_LEGAL, planIsapreUF |
+| 8 | Seguro de cesantía del trabajador = 0,6 % (indefinido) o 0 % (plazo fijo) | TASA_AFC_* |
+| 9 | Base tributable = imponible − AFP − salud (tope 7 %) − cesantía | — |
+| 10 | Impuesto único = base × factor − rebaja, según el tramo en UTM | TRAMO_IMPUESTO, valorUTM |
+| 11 | Descuentos voluntarios (anticipos, cuota sindical, etc.), con tope del 15 % de la remuneración | TOPE_DESC_VOLUNTARIOS |
+| 12 | **Líquido** = haberes − descuentos − impuesto | — |
+| 13 | Aportes del empleador = cesantía (2,4 % / 3,0 %) + aporte previsional de la reforma (3,5 % desde agosto 2026) + mutual | APORTE_EMP_*, MUTUAL |
+| 14 | Costo empleador = haberes + aportes | — |
+
+**Caso de prueba de referencia**. Contrato indefinido, sueldo base $1.200.000, jornada de 42 h, 5 horas extra, colación $50.000, movilización $40.000, AFP con comisión de 1,27 % (ejemplo), FONASA, IMM $553.553, UTM $71.649:
+
+| Concepto | Monto |
+|---|---|
+| Sueldo base | 1.200.000 |
+| Horas extra (5 × 10.000) | 50.000 |
+| Gratificación (tope 4,75 IMM / 12) | 219.115 |
+| **Total imponible** | **1.469.115** |
+| Colación + movilización (no imponibles) | 90.000 |
+| **Total haberes** (`subtotal`) | **1.559.115** |
+| AFP 11,27 % | −165.569 |
+| Salud 7 % | −102.838 |
+| Seguro de cesantía 0,6 % | −8.815 |
+| **Total descuentos** (`discount`) | **−277.222** |
+| Base tributable (16,64 UTM → tramo 4 %) | 1.191.893 |
+| Impuesto único (`taxAmount`) | −8.985 |
+| **Líquido a pagar** (`totalAmount`) | **1.272.908** |
+| Aportes del empleador (2,4 % + 3,5 % + 0,93 %) | 100.341 |
+| **Costo empleador** | **1.659.456** |
+
+Reglas de redondeo: cada línea se redondea al peso, y los totales se obtienen sumando las líneas ya redondeadas, para que lo impreso siempre cuadre.
+
+### A.5 Integración con otros módulos del ERP
+
+| Módulo | Qué entrega RR.HH. | Llave compartida |
+|---|---|---|
+| Contabilidad | Asiento de remuneraciones del período: Σ montos por `cuentaContable` × `centroCosto` | `DEPARTAMENTO.centroCosto`, `CONCEPTO.cuentaContable` |
+| Finanzas / Tesorería | Nómina de pago: trabajador, banco, cuenta, líquido, fecha de pago | `entity_id`, `PERIODO.fechaPago` |
+| Proyectos / Control de gestión | Costo empleador por centro de costo y por período | `centroCosto` |
+
+El formato exacto se define en la documentación de contratos y se coordina con los grupos de esos módulos.
+
+### A.6 Riesgos de datos y sesgos
+
+#### A.6.1 Datos sensibles (Ley 21.719)
+
+| Riesgo | Medida en el diseño |
+|---|---|
+| Datos de salud (licencias médicas) | Solo se guardan tipo y días; **está prohibido registrar diagnósticos** (validación en el formulario y en la observación) |
+| Afiliación sindical revelada por el descuento de cuota sindical | `CONCEPTO.esSensible = true` → solo RR.HH. ve esa línea y cada consulta queda en la auditoría |
+| Datos bancarios y RUT | Clasificados como confidenciales; ocultos para jefaturas y gerencia |
+| Información en `localStorage` sin cifrar | El MVP usa **solo datos ficticios** (seed). Para producción se documenta la necesidad de servidor, cifrado y autenticación |
+| Uso de un dato para otra finalidad | Consentimiento por finalidad; `genero` se usa solo para reportes agregados de equidad |
+| Exceso de datos | Minimización: no se piden estado civil, religión, foto ni otros datos que no sirven para remunerar |
+| Cambios no autorizados | Bitácora de solo inserción que guarda qué campos cambiaron (no sus valores), quién y por qué |
+
+#### A.6.2 Sesgos
+
+| Sesgo posible | Medida |
+|---|---|
+| Brecha salarial de género escondida en los promedios | Reporte por cargo (no global), con medianas; se oculta si un grupo tiene menos de 5 personas para no identificar a nadie |
+| Bandas salariales que copian desigualdades históricas | Las bandas se definen explícitamente por cargo y no se calculan a partir de los sueldos actuales |
+| Indicador de ausentismo que castiga maternidad o enfermedad | El ausentismo cuenta solo ausencias injustificadas; licencias y permisos legales se muestran aparte y nunca en rankings |
+| Decisiones automáticas sobre personas | El módulo **no** puntúa ni recomienda despidos ni aumentos; solo calcula lo que la ley y el contrato determinan, y cada monto es explicable |
+| Formularios que excluyen identidades | Género con "No binario" y "Prefiere no informar"; nombre social visible en pantalla (Ley 21.120) |
+| Edad o nacionalidad usadas para discriminar | Se usan solo para validaciones legales (edad mínima, art. 19 CT) y no aparecen en filtros de reportes |
+
+#### A.6.3 Riesgos del proyecto
+
+| Riesgo | Mitigación |
+|---|---|
+| Errores de cálculo legal | Casos de prueba de referencia validados contra un simulador público de sueldo líquido; parámetros con fuente citada |
+| Parámetros que cambian durante el semestre (IMM en enero 2027, aporte del empleador) | Tabla versionada por vigencia; pantalla para agregar un valor nuevo sin tocar código |
+| Alcance demasiado grande | P1 cerrado antes del 20-nov; P2 solo si P1 está probado |
+| Choques con la base al actualizar el template | No se edita el código central; todo lo propio vive en `src/rrhh/` y `module-config.js` |
+
+### A.7 Cronograma y organización del grupo
+
+| Fase | Fechas | Entregable |
+|---|---|---|
+| 0. Diseño | hasta jue 22-oct, 15:00 | **MER (data-model.md + imagen) y plan.md** — revisión intermedia |
+| 1. Especificación | 23-oct → 2-nov | `spec.md` con historias de usuario y criterios de aceptación (`/speckit.specify`, `/speckit.clarify`), `research.md`, `contracts/` |
+| 2. Tareas y base de datos | 3-nov → 9-nov | `tasks.md` (`/speckit.tasks`), `module-config.js`, `storage-rrhh.js`, datos iniciales |
+| 3. Planilla | 10-nov → 20-nov | Motor de cálculo con pruebas, períodos, novedades, liquidaciones e impresión |
+| 4. Panel, reportes y gobierno de datos | 21-nov → 26-nov | Panel, reportes, roles, auditoría, P2 si alcanza |
+| 5. Cierre | 27-nov → semana del 30-nov | README con instrucciones, MER final, demo con datos ficticios, ensayo de la presentación de 5 minutos |
+
+| Línea de trabajo | Responsable |
+|---|---|
+| Fichas, contratos y catálogos (F1–F3) | Rodrigo y Benjamín |
+| Parámetros legales y motor de cálculo (F4, F7) | Vicente |
+| Períodos, novedades, liquidaciones e impresión (F5, F6, F8, F9) | Constanza y Yelena |
+| Panel, reportes, roles y auditoría (F10, F11, P2) | Karla |
+
+Las decisiones se registran como *issues* de GitHub (una por decisión de diseño) y cada línea de trabajo usa su propia rama y *pull request* hacia `main`.
+
+### A.8 Criterios de aceptación del MVP
+
+1. Se puede crear un trabajador con contrato y calcular su liquidación de un período con el resultado del caso de referencia (sección A.4), cuadrado al peso.
+2. Un período cerrado no permite editar liquidaciones ni novedades.
+3. Cambiar un parámetro legal con una nueva vigencia afecta solo a los períodos posteriores.
+4. Un trabajador con liquidaciones pagadas no se puede eliminar, solo dar de baja.
+5. Con el rol "Jefatura" no se ven sueldos, datos bancarios ni conceptos sensibles.
+6. Toda edición, anulación o consulta de datos sensibles queda en la auditoría.
+7. `npm test` pasa con las pruebas del motor y de los flujos principales.
+
+### A.9 Fuentes de los parámetros legales
+
+Ley 21.830 (ingreso mínimo), Superintendencia de Pensiones (tope imponible, reforma Ley 21.735), Ley 21.561 (jornada de 40 horas), Ley 21.719 (protección de datos personales), Código del Trabajo (arts. 19, 31, 32, 47, 50, 58, 159–161), SII (tramos del impuesto único). Los valores se verifican en Previred y el SII antes de la demo.

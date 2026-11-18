@@ -1,21 +1,23 @@
 # Especificación de la Funcionalidad: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
 
-**Rama de la funcionalidad**: 001-erp-base-module  
+> **Funcionalidad descrita**: módulo de **Recursos Humanos y Planilla (RR.HH.)**. La base ERP (Entidad/Documento) se mantiene como capa reutilizable de soporte; las historias de usuario, requisitos y criterios de aceptación de este documento corresponden al módulo de RR.HH. y Planilla.
+
+**Rama de la funcionalidad**: 001-rrhh-planilla  
 **Creada**: 2026-07-08  
-**Actualizada**: 2026-11-16  
-**Estado**: Borrador   
+**Actualizada**: 2026-11-17  
+**Estado**: Borrador  
 **Entrada**: Descripción del usuario: "Construir un módulo base de software de planificación de recursos empresariales (ERP) que pueda extenderse en módulos ERP personalizados. Debe proporcionar gestión de datos maestros (entidades) y documentos transaccionales vinculados con capacidades de crear/editar/eliminar/buscar."  
-**Última incorporación**: Historias de Usuario 1 a 6 (US1–US4 y US6 con prioridad P1; US5 con prioridad P2), con FR-001–FR-087 y las reglas transversales de seguridad, auditoría y respaldo.
+**Última incorporación**: Historias de Usuario 1 a 12 (US1–US4, US6 y US12 con prioridad P1; US5, US7, US8, US10 y US11 con prioridad P2; US9 con prioridad P3), con FR-001–FR-107, SC-001–SC-029 y las reglas transversales de seguridad, auditoría y respaldo. Las Historias 7 a 12 agregan vacaciones (FR-088–FR-091), cargas familiares y asignación familiar (FR-092–FR-094), simulador de sueldo (FR-095–FR-096), reportes de gestión y equidad salarial (FR-097–FR-100), exportaciones contables y de pago (FR-101–FR-104) y parámetros legales versionados (FR-105–FR-107).
 
 ## Propósito
 
-Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio. Sobre esta base se construye el módulo de **Recursos Humanos y Planilla** (Historias de Usuario 1 a 6), que reutiliza la Entidad como **Trabajador** y el Documento como **Liquidación**, y añade contratos, novedades, períodos, cálculo legal, explicación e impresión de liquidaciones y gobierno de datos.
+Este proyecto sirve como módulo base reutilizable para construir módulos ERP personalizados. Establece los patrones comunes que todo módulo ERP necesita: gestionar registros de datos maestros (**Entidades**) y sus **Documentos** transaccionales asociados, con navegación, validación, persistencia y búsqueda ya implementadas, de modo que los módulos personalizados solo necesiten definir sus campos y reglas específicos del dominio. Sobre esta base se construye el módulo de **Recursos Humanos y Planilla** (Historias de Usuario 1 a 12), que reutiliza la Entidad como **Trabajador** y el Documento como **Liquidación**, y añade contratos, novedades, períodos, cálculo legal, explicación e impresión de liquidaciones, gobierno de datos, vacaciones, cargas familiares y asignación familiar, simulador de sueldo, reportes de gestión y equidad salarial, exportaciones contables y de pago, y parámetros legales versionados.
 
 ## Clarifications
 
 ### Session 2026-11-08
 
-- Q: ¿Dónde deben definirse las entidades de Recursos Humanos que usan las Historias de Usuario 1–4 (Trabajador, Contrato, Novedad y Período de remuneración)? → A: Opción A — definir Trabajador, Contrato, Novedad y Período en las Entidades Clave de 001, remitiendo el detalle al data-model de 002.
+- Q: ¿Dónde deben definirse las entidades de Recursos Humanos que usan las Historias de Usuario 1–4 (Trabajador, Contrato, Novedad y Período de remuneración)? → A: Opción A — definir Trabajador, Contrato, Novedad y Período en las Entidades Clave de 001, remitiendo el detalle al data-model de `001-rrhh-planilla`.
 - Q: ¿La identidad y el rol del usuario deben provenir de una autenticación real o de una sesión simulada con selector de rol? → A: Opción A — sesión simulada con selector de rol, sin credenciales ni backend.
 - Q: ¿Cómo se cargan y actualizan los parámetros legales (UF, UTM, tasas y tramos) para cada período? → A: Opción A — carga manual versionada por un administrador mediante formulario o archivo de configuración, sin integración con servicios externos.
 - Q: ¿Durante cuánto tiempo debe conservarse la bitácora de auditoría exigida por la Ley 21.719? → A: Opción A — mientras dure la relación laboral y 6 años después del término (validar con asesoría legal).
@@ -289,7 +291,7 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - Al seleccionar el rol Jefatura, el selector pide además el Trabajador activo que representa, y su equipo son los Trabajadores que lo tienen como jefatura directa; si no se selecciona un Trabajador, el sistema no muestra ni permite operar novedades.
 - Al seleccionar el rol Trabajador, el selector pide además el Trabajador (activo o desvinculado) que representa; si no selecciona uno, el sistema no muestra liquidaciones. Un Trabajador desvinculado puede consultar sus propias liquidaciones de períodos cerrados, sin operar otras funciones.
 - Son datos sensibles en esta versión el sueldo base y las condiciones salariales de los contratos, las liquidaciones y las licencias médicas.
-- Permisos y visibilidad por rol: el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5, cierra períodos, consulta la bitácora de auditoría, exporta e importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo. La jefatura ve de su equipo únicamente los datos básicos (nombre, código, cargo, departamento, centro de costo y estado laboral) y gestiona las novedades de su equipo (incluidas licencias médicas sin diagnóstico clínico), pudiendo aprobar o rechazar las que no haya registrado ella misma; en listados, detalles, búsquedas y vistas imprimibles tiene ocultos o bloqueados los contratos, los sueldos base y las liquidaciones de su equipo, y no puede operar sobre Trabajadores ajenos a su equipo. El Trabajador solo ve sus propias liquidaciones de períodos cerrados; el resto de la información sensible permanece oculta o inaccesible para él.
+- Permisos y visibilidad por rol: el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5 y 7 a 12, cierra períodos, consulta la bitácora de auditoría, exporta e importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo. La jefatura ve de su equipo únicamente los datos básicos (nombre, código, cargo, departamento, centro de costo y estado laboral) y gestiona las novedades de su equipo (incluidas licencias médicas sin diagnóstico clínico), pudiendo aprobar o rechazar las que no haya registrado ella misma; en listados, detalles, búsquedas y vistas imprimibles tiene ocultos o bloqueados los contratos, los sueldos base y las liquidaciones de su equipo, y no puede operar sobre Trabajadores ajenos a su equipo. El Trabajador solo ve sus propias liquidaciones de períodos cerrados; el resto de la información sensible permanece oculta o inaccesible para él.
 - Cambiar de rol durante la sesión aplica de inmediato los permisos del nuevo rol, vuelve a pedir el Trabajador que se representa cuando el rol es jefatura o Trabajador, y queda registrado en la bitácora.
 - Las restricciones se aplican en la interfaz y en la capa de datos, por lo que un enlace directo no permite eludirlas; cuando se deniega una acción, el sistema lo informa sin revelar el contenido protegido.
 - La bitácora de auditoría registra toda consulta, creación, modificación o desactivación de información sensible, los cambios de rol, los accesos denegados y las operaciones de exportación e importación de respaldo, con al menos usuario, rol, fecha y hora, acción y registro afectado, y los campos modificados cuando corresponda; es de solo inserción y se conserva mientras dure la relación laboral y 6 años después. Al importar un respaldo, nunca se sobrescriben ni se eliminan los registros previos de la bitácora.
@@ -312,6 +314,169 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 11. **Dado** una operación sobre información sensible, **cuando** la bitácora no puede escribirse, **entonces** la operación no se completa.
 12. **Dado** un acceso denegado por falta de permisos, **cuando** el sistema lo rechaza, **entonces** el intento queda registrado en la bitácora.
 13. **Dado** cualquier cambio o consulta de información sensible, **cuando** la operación se completa, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
+
+---
+
+### Historia de Usuario 7 - Vacaciones: Solicitud, Aprobación y Saldo (Prioridad: P2)
+
+**Como** Trabajador, jefatura o administrador/a de RR.HH.,
+**quiero** solicitar días de vacaciones, aprobarlos o rechazarlos y consultar el saldo disponible de cada Trabajador,
+**para** planificar los descansos del equipo y cumplir el feriado legal sin llevar el control en planillas aparte.
+
+**Por qué esta prioridad**: El feriado anual es un derecho que la empresa debe controlar y que genera reclamos cuando no se lleva bien. No bloquea el cálculo de sueldos, porque las vacaciones no descuentan remuneración, por lo que puede construirse después del flujo principal.
+
+**Alcance**: incluye el saldo de vacaciones por Trabajador, las solicitudes, su aprobación o rechazo y el calendario de feriados. No incluye las novedades de horas extra, licencias y ausencias (US3), ni el pago de vacaciones proporcionales al término de la relación laboral, y aplica, sin redefinirlas, las reglas transversales de roles, datos sensibles y bitácora de la US6.
+
+**Reglas de negocio**:
+
+- Cada Trabajador acumula 15 días hábiles de feriado por cada año de servicio, devengados de forma proporcional: 1,25 días hábiles por cada mes completo trabajado desde su fecha de ingreso (art. 67 del Código del Trabajo).
+- Los días de vacaciones se cuentan en días hábiles: de lunes a viernes, sin contar los feriados registrados en el calendario de feriados (art. 69 del Código del Trabajo).
+- El saldo disponible es igual a los días devengados menos los días de solicitudes aprobadas. Una solicitud no puede superar el saldo disponible a la fecha de inicio de las vacaciones.
+- El saldo acumulado no puede superar dos períodos anuales (30 días hábiles) (art. 70 del Código del Trabajo); al alcanzar ese máximo, el sistema muestra una alerta en el panel principal.
+- El Trabajador solicita sus propias vacaciones; la jefatura y el administrador/a de RR.HH. pueden registrar una solicitud en nombre de un Trabajador de su ámbito. Toda solicitud nueva queda en estado "Pendiente".
+- Aprueba o rechaza la jefatura directa del Trabajador; si no tiene jefatura directa, lo hace el administrador/a de RR.HH. Nadie puede aprobar ni rechazar una solicitud que haya registrado. Un rechazo requiere un motivo.
+- Una solicitud "Pendiente" puede editarse o anularse; una "Aprobada" solo puede anularse antes de su fecha de inicio, y entonces los días vuelven al saldo.
+- Las vacaciones no pueden superponerse con otra solicitud de vacaciones aprobada o pendiente ni con licencias o ausencias registradas (US3) del mismo Trabajador.
+- Solo un Trabajador activo con contrato vigente en las fechas solicitadas puede tener vacaciones.
+- Las vacaciones aprobadas no descuentan días en la liquidación: el Trabajador recibe su remuneración íntegra (art. 71 del Código del Trabajo).
+- El administrador/a de RR.HH. mantiene el calendario de feriados (fecha y nombre); un feriado no puede repetirse en la misma fecha.
+
+**Prueba Independiente**: Con Trabajadores, contratos y feriados precargados como datos semilla, un Trabajador ve su saldo, solicita días, su jefatura los aprueba y el saldo se descuenta; una solicitud que supera el saldo o que se superpone con una licencia es rechazada. No requiere ejecutar el cálculo de planilla.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un Trabajador que ingresó hace 8 meses completos, **cuando** consulta su saldo, **entonces** ve 10 días hábiles devengados, los días aprobados y el saldo disponible.
+2. **Dado** un Trabajador con saldo suficiente, **cuando** solicita vacaciones indicando fecha de inicio y de término, **entonces** el sistema calcula los días hábiles excluyendo sábados, domingos y feriados del calendario, y registra la solicitud en estado "Pendiente".
+3. **Dado** una solicitud cuyos días hábiles superan el saldo disponible, **cuando** el Trabajador intenta registrarla, **entonces** el sistema la rechaza e indica el saldo disponible.
+4. **Dado** un Trabajador con una licencia médica registrada, **cuando** solicita vacaciones que se superponen con esas fechas, **entonces** el sistema la rechaza e indica la novedad con la que se superpone.
+5. **Dado** una solicitud "Pendiente", **cuando** la jefatura directa la aprueba, **entonces** pasa a "Aprobada" y los días se descuentan del saldo.
+6. **Dado** una solicitud "Pendiente", **cuando** la jefatura intenta rechazarla sin motivo, **entonces** el sistema impide el rechazo y señala que el motivo es obligatorio.
+7. **Dado** una solicitud registrada por una jefatura, **cuando** esa misma jefatura intenta aprobarla, **entonces** el sistema lo impide e indica que no tiene autorización.
+8. **Dado** una solicitud "Aprobada" cuya fecha de inicio aún no llega, **cuando** el Trabajador o el administrador/a la anula, **entonces** pasa a "anulada" y los días vuelven al saldo; **y dado** que la fecha de inicio ya pasó, **entonces** el sistema impide anularla.
+9. **Dado** un Trabajador con 30 días hábiles de saldo acumulado, **cuando** el administrador/a abre el panel principal, **entonces** ve una alerta de feriado acumulado al máximo para ese Trabajador.
+10. **Dado** un período con vacaciones aprobadas, **cuando** se ejecuta el cálculo de planilla (US4), **entonces** la liquidación no descuenta días por esas vacaciones.
+11. **Dado** que se crea, aprueba, rechaza o anula una solicitud, o se modifica el calendario de feriados, **cuando** la operación se completa, **entonces** la bitácora de auditoría la registra (regla transversal provista por la US6).
+
+---
+### Historia de Usuario 8 - Cargas Familiares y Asignación Familiar (Prioridad: P2)
+
+**Como** analista de remuneraciones o administrador/a de RR.HH.,
+**quiero** registrar las cargas familiares reconocidas de cada Trabajador y que la planilla pague automáticamente la asignación familiar según su tramo de ingreso,
+**para** cumplir con un beneficio legal que hoy se calcula a mano y suele olvidarse.
+
+**Por qué esta prioridad**: La asignación familiar es un haber legal que reciben muchos trabajadores de menores ingresos; omitirla genera pagos incorrectos. Depende de que el cálculo de la US4 ya funcione.
+
+**Alcance**: incluye el registro de cargas familiares, la tabla de tramos de asignación familiar y la línea de asignación familiar en la liquidación. No incluye el resto del motor de cálculo (US4), ni los trámites ante la caja de compensación o el IPS.
+
+**Reglas de negocio**:
+
+- Una carga familiar tiene: Trabajador, nombre, RUT válido (módulo 11), parentesco (hijo/a, cónyuge o conviviente civil, madre/padre, otro), fecha de nacimiento, tipo de carga (simple, maternal o de invalidez), número y fecha de la resolución de reconocimiento, y fecha de inicio y de término de vigencia.
+- El número y la fecha de la resolución de reconocimiento son obligatorios: sin ellos la carga no se paga.
+- Un mismo RUT de carga no puede estar vigente para dos Trabajadores de la empresa al mismo tiempo, ni repetirse vigente para el mismo Trabajador.
+- Un hijo/a deja de ser carga a los 18 años, o a los 24 si se registra como estudiante; el sistema avisa 30 días antes de que una carga cumpla la edad límite. La carga de invalidez no tiene límite de edad.
+- El tramo de asignación familiar del Trabajador (A, B, C o D) se determina comparando su remuneración imponible del período con la tabla de tramos vigente en los parámetros legales versionados; el tramo D no recibe monto. (Simplificación de esta versión: la ley usa el ingreso promedio del semestre anterior.)
+- El monto mensual es igual al monto por carga del tramo multiplicado por el número de cargas vigentes en el período; una carga de invalidez cuenta doble.
+- La asignación familiar se agrega a la liquidación como haber no imponible y no tributable, con la línea `ASIG_FAMILIAR`, mostrando el tramo, el número de cargas y el monto por carga en su explicación (US5).
+- Las cargas son datos personales de terceros: solo el administrador/a de RR.HH. y el analista de remuneraciones pueden verlas; la jefatura no accede a ellas, y el Trabajador ve solo las suyas.
+- Las cargas no se eliminan: se terminan con una fecha de término de vigencia y se conservan en el historial.
+
+**Prueba Independiente**: Con un Trabajador de tramo A y otro de tramo D precargados, el analista registra dos cargas al primero (una de invalidez) y una al segundo; al calcular el período, solo el primero recibe la asignación familiar por 3 cargas y el segundo no recibe monto.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** un Trabajador activo, **cuando** el analista registra una carga con todos los datos obligatorios y un RUT válido, **entonces** la carga queda vigente y aparece en la ficha de cargas del Trabajador.
+2. **Dado** una carga sin número o sin fecha de resolución de reconocimiento, **cuando** el analista intenta guardarla, **entonces** el sistema la rechaza y señala el campo que falta.
+3. **Dado** una carga vigente para un Trabajador, **cuando** se intenta registrar el mismo RUT como carga vigente de otro Trabajador, **entonces** el sistema lo rechaza e indica que la carga ya está reconocida.
+4. **Dado** un Trabajador cuya remuneración imponible queda en el tramo A y tiene dos cargas simples vigentes, **cuando** se ejecuta el cálculo, **entonces** su liquidación incluye la línea de asignación familiar por 2 veces el monto del tramo A, como haber no imponible y no tributable.
+5. **Dado** un Trabajador con una carga de invalidez, **cuando** se ejecuta el cálculo, **entonces** esa carga cuenta doble en el monto de la asignación.
+6. **Dado** un Trabajador cuya remuneración imponible queda en el tramo D, **cuando** se ejecuta el cálculo, **entonces** su liquidación no incluye monto de asignación familiar aunque tenga cargas vigentes.
+7. **Dado** un hijo/a registrado como carga que cumplirá 18 años en menos de 30 días y no está marcado como estudiante, **cuando** el analista abre el panel principal, **entonces** ve un aviso con el nombre del Trabajador y la fecha en que la carga deja de estar vigente.
+8. **Dado** la línea de asignación familiar de una liquidación, **cuando** el usuario consulta su explicación (US5), **entonces** ve el tramo aplicado, el número de cargas, el monto por carga y la vigencia del parámetro usado.
+9. **Dado** una jefatura, **cuando** intenta ver las cargas de un Trabajador de su equipo, **entonces** el sistema lo impide e indica que no tiene autorización.
+10. **Dado** que se registra, modifica o termina una carga, **cuando** la operación se completa, **entonces** la bitácora de auditoría la registra (regla transversal de la US6).
+
+---
+
+### Historia de Usuario 9 - Simulador de Sueldo Líquido y Bruto (Prioridad: P3)
+
+**Como** administrador/a de RR.HH., analista de remuneraciones o Trabajador,
+**quiero** simular cuánto sueldo líquido resulta de un sueldo bruto, o qué sueldo base se necesita para pagar un líquido determinado,
+**para** preparar ofertas laborales y responder consultas sin crear fichas, contratos ni liquidaciones de prueba.
+
+**Por qué esta prioridad**: Es una herramienta de apoyo muy útil en la práctica (ofertas laborales, negociaciones, consultas de trabajadores), pero no es necesaria para pagar los sueldos del mes.
+
+**Alcance**: incluye el cálculo de líquido a partir del bruto y de bruto a partir del líquido, con su desglose. No guarda datos, no crea registros y no reemplaza el cálculo oficial de la US4.
+
+**Reglas de negocio**:
+
+- El simulador pide: mes de referencia, sueldo base (o líquido deseado), tipo de contrato, jornada semanal, modalidad de gratificación, AFP, sistema de salud (FONASA o Isapre con valor del plan en UF) y, de forma opcional, horas extra, bonos imponibles, colación y movilización.
+- Usa los parámetros legales versionados vigentes en el mes de referencia y las mismas reglas de cálculo y redondeo de la US4, de modo que, para los mismos datos, el resultado coincide al peso con una liquidación calculada.
+- El cálculo de bruto a partir del líquido busca el menor sueldo base cuyo líquido iguala o supera el líquido deseado, con una diferencia máxima de 1 peso.
+- Si el sueldo base necesario es menor que el ingreso mínimo vigente, o si la jornada supera el máximo legal, el simulador lo informa y no entrega resultado.
+- El resultado muestra el desglose completo: haberes imponibles y no imponibles, AFP, salud, seguro de cesantía, impuesto único, líquido a pagar, aportes del empleador y costo empleador.
+- Si faltan parámetros legales del mes de referencia, el simulador indica cuáles faltan y no calcula.
+- Toda simulación se marca visiblemente como "Simulación referencial: no constituye una liquidación".
+- La simulación no lee ni guarda datos de Trabajadores, por lo que no se registra en la bitácora. Está disponible para el administrador/a de RR.HH., el analista de remuneraciones y el Trabajador; la jefatura no accede.
+- El usuario puede copiar el desglose como texto para pegarlo en una oferta o un correo.
+
+**Prueba Independiente**: Con los parámetros semilla, el usuario ingresa los datos del caso de referencia de la US4 y obtiene el mismo líquido al peso; luego ingresa ese líquido en el modo inverso y obtiene el mismo sueldo base, con diferencia máxima de 1 peso. No requiere fichas, contratos ni períodos.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** los datos del caso de referencia de la US4, **cuando** el usuario simula de bruto a líquido, **entonces** cada línea y el líquido a pagar coinciden al peso con la liquidación de referencia.
+2. **Dado** un líquido deseado, **cuando** el usuario simula de líquido a bruto, **entonces** el sistema entrega el sueldo base necesario y el desglose cuyo líquido difiere del deseado en 1 peso o menos.
+3. **Dado** un líquido deseado que requiere un sueldo base inferior al ingreso mínimo vigente, **cuando** el usuario simula, **entonces** el sistema informa que el resultado sería inferior al ingreso mínimo y no entrega desglose.
+4. **Dado** un mes de referencia sin parámetros legales cargados, **cuando** el usuario simula, **entonces** el sistema indica qué parámetros faltan y no calcula.
+5. **Dado** un afiliado a Isapre con un plan de valor mayor al 7 % de su imponible, **cuando** simula, **entonces** el descuento de salud corresponde al valor del plan convertido con la UF del mes de referencia.
+6. **Dado** una simulación terminada, **cuando** el usuario presiona "Copiar desglose", **entonces** el desglose queda en el portapapeles como texto con la marca de simulación referencial.
+7. **Dado** que el usuario realiza varias simulaciones, **cuando** revisa los listados de Trabajadores, contratos y liquidaciones, **entonces** no se creó ni modificó ningún registro.
+8. **Dado** una jefatura, **cuando** intenta abrir el simulador, **entonces** el sistema lo impide e indica que no tiene autorización.
+
+---
+
+### Historia de Usuario 10 - Reportes de Gestión y Equidad Salarial (Prioridad: P2)
+
+**Como** administrador/a de RR.HH. o analista de remuneraciones,
+**quiero** ver reportes del personal y de la planilla (dotación, costo por centro de costo, horas extra, ausentismo y brecha salarial de género por cargo),
+**para** tomar decisiones con datos y detectar sesgos sin exponer información individual.
+
+**Por qué esta prioridad**: Convierte los datos que el módulo ya registra en información útil para la gestión y para detectar desigualdades. Es de solo lectura, por lo que no arriesga los datos de las demás historias.
+
+**Alcance**: incluye los reportes, sus filtros, los gráficos y un campo opcional de género en la ficha, usado solo en reportes agregados. No incluye exportar archivos (US11) ni modificar datos de ninguna otra historia.
+
+**Reglas de negocio**:
+
+- Los reportes se calculan sobre los períodos cerrados (US4); los períodos abiertos o calculados no se incluyen, para que las cifras no cambien después.
+- **Dotación**: Trabajadores activos al último día del período, altas (ingresos) y bajas (desvinculaciones) del período, por departamento.
+- **Costo de la planilla**: suma del costo empleador por centro de costo y por período, con la variación porcentual respecto del período anterior.
+- **Horas extra**: total de horas extra aprobadas por departamento y período.
+- **Ausentismo**: días de ausencia divididos por los días hábiles del período, por departamento. Las licencias médicas, las vacaciones y los permisos legales no se cuentan como ausentismo y se muestran por separado, para no castigar enfermedad ni maternidad.
+- **Brecha salarial de género por cargo**: diferencia porcentual entre la mediana del sueldo base de cada género dentro de un mismo cargo. Si algún grupo del cargo tiene menos de 5 personas, el sistema oculta el resultado de ese cargo e indica que hay muy pocas personas para mostrarlo sin identificar a nadie.
+- El género es un campo opcional de la ficha (Femenino, Masculino, No binario, Prefiere no informar), clasificado como dato sensible; solo se usa en el reporte de brecha y nunca aparece en listados, búsquedas ni filtros de Trabajadores.
+- Los reportes muestran solo totales y nunca datos de una persona identificable.
+- El administrador/a de RR.HH. ve todos los reportes; el analista ve todos menos la brecha de género; la jefatura ve solo horas extra y ausentismo de su equipo, sin montos; el Trabajador no accede a reportes.
+- Cada reporte puede filtrarse por rango de períodos y por departamento, y muestra un estado vacío explicativo cuando no hay períodos cerrados.
+
+**Prueba Independiente**: Con datos semilla de tres períodos cerrados y Trabajadores de distintos cargos y géneros, el administrador/a ve la dotación, el costo por centro de costo y la brecha por cargo; un cargo con menos de 5 personas en algún grupo aparece oculto. No modifica ningún dato.
+
+**Escenarios de Aceptación**:
+
+1. **Dado** tres períodos cerrados, **cuando** el administrador/a abre el reporte de costo, **entonces** ve el costo empleador por centro de costo de cada período y la variación porcentual respecto del anterior.
+2. **Dado** un período con altas y bajas, **cuando** el usuario abre el reporte de dotación, **entonces** ve los Trabajadores activos al cierre, las altas y las bajas por departamento.
+3. **Dado** un período con licencias médicas y ausencias injustificadas, **cuando** el usuario abre el reporte de ausentismo, **entonces** el indicador considera solo las ausencias, y las licencias y vacaciones aparecen por separado.
+4. **Dado** un cargo con 6 mujeres y 7 hombres con sueldo base registrado, **cuando** el administrador/a abre el reporte de brecha, **entonces** ve la mediana de cada grupo y la diferencia porcentual del cargo.
+5. **Dado** un cargo con 3 mujeres y 10 hombres, **cuando** el administrador/a abre el reporte de brecha, **entonces** el resultado de ese cargo aparece oculto con el mensaje de que hay muy pocas personas para mostrarlo.
+6. **Dado** un período abierto o calculado, **cuando** el usuario abre cualquier reporte, **entonces** ese período no se incluye en las cifras.
+7. **Dado** una jefatura, **cuando** abre los reportes, **entonces** ve solo las horas extra y el ausentismo de su equipo, sin montos de dinero; **y cuando** intenta abrir el reporte de costo o de brecha, **entonces** el sistema lo impide.
+8. **Dado** un analista de remuneraciones, **cuando** intenta abrir el reporte de brecha de género, **entonces** el sistema lo impide e indica que no tiene autorización.
+9. **Dado** que no existen períodos cerrados, **cuando** el usuario abre los reportes, **entonces** ve un estado vacío que explica que los reportes se calculan sobre períodos cerrados.
+10. **Dado** que el administrador/a consulta el reporte de brecha de género, **cuando** la consulta se completa, **entonces** la bitácora de auditoría registra la consulta de un dato sensible (regla transversal de la US6).
+
+---
+
+### Historia de Usuario 12 - Parámetros Legales (Prioridad: P1)
+
+[US12]
 
 ---
 
@@ -352,6 +517,8 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - ¿Qué ocurre cuando un usuario autorizado consulta datos sensibles de un trabajador que no pertenece a su equipo?
 - ¿Qué ocurre cuando el rol de jefatura intenta imprimir o exportar una liquidación?
 - ¿Se registran en la auditoría también los accesos denegados o fallidos?
+- ¿Qué ocurre si una solicitud de vacaciones incluye un feriado agregado al calendario después de aprobarla?
+- ¿Qué ocurre con el saldo de vacaciones de un Trabajador desvinculado?
 
 ## Requisitos *(obligatorio)*
 
@@ -441,10 +608,9 @@ Este proyecto sirve como módulo base reutilizable para construir módulos ERP p
 - **FR-082**: El sistema DEBE impedir cerrar un período con novedades pendientes o con Trabajadores sin calcular (según la definición de la Historia de Usuario 4); al cerrar DEBE congelar UF, UTM y tasas, registrar quién y cuándo lo cerró y pasar el período a "cerrado" sin posibilidad de reapertura (Historia de Usuario 4).
 - **FR-083**: Cada línea de liquidación DEBE redondearse al peso entero y los totales DEBEN obtenerse sumando las líneas ya redondeadas; las liquidaciones de períodos cerrados no DEBEN poder modificarse y su corrección queda fuera del alcance de esta versión (Historia de Usuario 4).
 - **FR-084**: El sistema DEBE registrar en la bitácora de auditoría la creación, cálculo, recálculo y cierre de períodos de remuneración con usuario, fecha y hora, y los datos relevantes de la operación (Historia de Usuario 4).
-- **FR-085**: El sistema DEBE aplicar los permisos detallados por rol de la sesión identificada (simulada), en complemento a FR-051–FR-054 (Historia de Usuario 6): el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5 y es el único rol que cierra períodos, consulta la bitácora de auditoría, exporta/importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo; jefatura y Trabajador según las restricciones de visibilidad de FR-052/FR-054, con segregación de FR-053/FR-077.
+- **FR-085**: El sistema DEBE aplicar los permisos detallados por rol de la sesión identificada (simulada), en complemento a FR-051–FR-054 (Historia de Usuario 6): el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5 y 7 a 12 y es el único rol que cierra períodos, consulta la bitácora de auditoría, exporta/importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo; jefatura y Trabajador según las restricciones de visibilidad de FR-052/FR-054, con segregación de FR-053/FR-077.
 - **FR-086**: Al cambiar de rol durante una sesión activa, el sistema DEBE aplicar de inmediato los permisos del nuevo rol, volver a solicitar el Trabajador que se representa cuando el rol sea jefatura o Trabajador, y registrar el cambio en la bitácora de auditoría (Historia de Usuario 6).
 - **FR-087**: La consulta de la bitácora de auditoría DEBE estar disponible exclusivamente para el rol administrador/a de RR.HH., quien puede visualizar y reconstruir los accesos y modificaciones registrados (Historia de Usuario 6).
-- **FR-088**: Durante la ejecución del cálculo masivo de un período, el sistema DEBE mostrar un indicador de progreso con el porcentaje o el número de Trabajadores procesados hasta que la operación finalice (Historia de Usuario 4).
 
 ### Requisitos de Extensibilidad *(obligaciones del módulo base)*
 
@@ -474,8 +640,10 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **Contrato**: Condiciones laborales de un Trabajador (sueldo base, jornada y tipo de contrato) con historial por vigencia y alertas de vencimiento; pertenece a un Trabajador.
 - **Novedad**: Evento de un período (horas extra, licencia médica o ausencia) asociado a un Trabajador y a un Período de Remuneración, con estado Pendiente/Aprobada/Rechazada/anulada y sin diagnóstico clínico.
 - **Período de Remuneración**: Mes y año de liquidación con estado Abierto/Calculado/Cerrado; al cerrarse congela UF, UTM, ingreso mínimo y parámetros legales, y agrupa Novedades y Liquidaciones.
+- **Solicitud de Vacaciones**: Período de descanso pedido para un Trabajador, con fechas, días hábiles, estado (Pendiente, Aprobada, Rechazada o anulada), quién la registró y quién la resolvió.
+- **Feriado**: Fecha no hábil del calendario (fecha y nombre), usada para contar los días hábiles de vacaciones.
 
-> El detalle de atributos, claves de almacenamiento y relaciones de las entidades de Recursos Humanos se documenta en `specs/001-erp-base-module/data-model.md`.
+> El detalle de atributos, claves de almacenamiento y relaciones de las entidades de Recursos Humanos se documenta en `specs/001-rrhh-planilla/data-model.md`.
 
 ## Criterios de Éxito *(obligatorio)*
 
@@ -504,7 +672,6 @@ Los módulos personalizados construidos sobre esta base DEBEN poder:
 - **SC-021**: Al menos el 95% de las pruebas de acceso con distintos roles confirma que los datos ocultos no pueden recuperarse desde la interfaz ni mediante enlaces directos.
 - **SC-022**: Un usuario puede exportar un respaldo completo y restaurarlo sin pérdida de entidades, documentos, novedades, períodos ni liquidaciones en menos de 5 minutos.
 - **SC-023**: El cálculo masivo de un período con hasta 500 Trabajadores y sus novedades aprobadas genera todas las liquidaciones en 10 segundos o menos en el entorno de uso previsto.
-- **SC-024**: El 100% de las pantallas, formularios, listados y vistas imprimibles cumple con WCAG 2.2 nivel AA, verificado mediante pruebas automatizadas y manuales de navegación por teclado, contraste y lectores de pantalla.
 
 ## Suposiciones
 
