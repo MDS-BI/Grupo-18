@@ -33,11 +33,12 @@
 ## Notas
 
 - La especificación está lista para la planificación y la implementación.
-- Inventario validado: 12 historias de usuario, 107 requisitos funcionales (FR-001 a FR-107), 5 requisitos de extensibilidad (XR-001 a XR-005) y 29 criterios de éxito (SC-001 a SC-029). No quedan marcadores [NEEDS CLARIFICATION].
-- Alcance validado: el módulo base (Entidad/Documento, navegación, configuración, campos personalizados y ciclo de vida) más el módulo de Recursos Humanos y Planilla (US1–US12). El propósito y las suposiciones ahora describen explícitamente la relación Entidad→Trabajador y Documento→Liquidación.
+- Inventario: 12 historias de usuario, 68 requisitos funcionales (FR-040 a FR-107) y 19 criterios de éxito (SC-011 a SC-029), todos de Recursos Humanos y Planilla. No quedan marcadores [NEEDS CLARIFICATION].
+- Alcance: exclusivamente el módulo de Recursos Humanos y Planilla (US1–US12).
 - 2026-11-08: se corrigieron las suposiciones contradictorias sobre flujos de aprobación y períodos (ahora dentro del alcance de US3/US4) y sobre las reglas de cálculo (US4, no US5).
 - 2026-11-08: se retiraron detalles de implementación de las suposiciones (monograma sin referencia a SVG; persistencia local sin nombrar la API del navegador; sanitización de contenido sin referencias al DOM/HTML).
 - 2026-11-08: se eliminaron las referencias obsoletas a una "Historia de Usuario 16" y a numeraciones duplicadas; la numeración vigente es FR-001–FR-107 y SC-001–SC-029.
+- 2026-11-18: se retiró del spec el módulo base genérico (FR-001–FR-039, XR-001–XR-005, SC-001–SC-010, sus casos límite, entidades y suposiciones) por no corresponder a Recursos Humanos y Planilla; la numeración vigente no se reutiliza.
 - 2026-11-16: se agregaron FR-063 a FR-084 con reglas importantes de US1–US4 (cada uno remitido a su historia), se alinearon FR-040 a FR-050 con US5, se aclaró FR-003 (eliminación de Entidad genérica; Trabajadores se desactivan) y se actualizaron las Suposiciones para incluir US1, US2 y US6 en la versión inicial.
 - 2026-11-17: se completaron las historias US11 y US12 con escenarios de aceptación, se amplió el inventario a US1–US12 / FR-107 / SC-029 y se alinearon plan, modelo de datos, contratos y tareas.
 - 2026-11-16: se aplicó pasada de alineación fina (terminología de sesión identificada, visibilidad por rol y respaldo JSON/bitácora en US6 y FR-051–FR-060, escenarios y casos límite sincronizados) y se agregaron FR-085 a FR-087 como complemento explícito de US6.

@@ -1,86 +1,39 @@
-# Contrato de Almacenamiento de Entidades
+# Contrato de Almacenamiento: Recursos Humanos y Planilla
 
 ## Propósito
 
-La aplicación almacena los registros de entidad localmente en el navegador usando `localStorage`.
+La aplicación guarda los datos del módulo de Recursos Humanos y Planilla localmente en el navegador usando `localStorage`.
 
-## Forma de los Datos
+## Ficha del Trabajador — clave `erp_base_module:entities`
 
-Cada registro de entidad debe incluir:
-
-- `id`: cadena única
-- `entity_id`: cadena única, generada automáticamente, usada para vincular documentos
-- `name`: cadena no vacía
-- `code`: cadena no vacía
-- `taxId`: cadena opcional (identificación fiscal)
-- `email`: cadena opcional con formato de correo válido cuando está presente
-- `phone`: cadena opcional
-- `address`: cadena opcional
-- `category`: cadena opcional
-- `description`: cadena opcional
-- `targetDate`: cadena de fecha opcional (YYYY-MM-DD) válida cuando está presente
-- `creditLimit`: número opcional no negativo
-- `paymentTerms`: cadena opcional
-- `createdAt`: cadena de marca de tiempo ISO
-- `updatedAt`: cadena de marca de tiempo ISO
-
-## Operaciones
-
-- `loadEntities()`: devuelve todas las entidades almacenadas.
-- `saveEntities(entities)`: persiste la lista completa.
-- `addEntity(entity)`: añade una nueva entidad.
-- `updateEntity(id, updates)`: actualiza una entidad existente.
-- `deleteEntity(id)`: elimina una entidad por id.
-
-## Almacenamiento de Documentos
-
-Cada registro de documento debe incluir:
+Las fichas de los Trabajadores se guardan en el almacenamiento común de la aplicación (`src/storage.js`). Cada ficha incluye:
 
 - `id`: cadena única
-- `entity_id`: el entity_id autogenerado de la entidad vinculada
-- `series`: cadena opcional que agrupa folios consecutivos
-- `folio`: entero positivo obligatorio; junto con la serie forma el número oficial del documento
-- `startDate`: cadena de fecha de calendario válida
-- `endDate`: cadena de fecha de calendario válida, igual o posterior a startDate
-- `quantity`: entero positivo opcional
-- `subtotal`: número no negativo opcional
-- `discount`: número no negativo opcional; no puede superar el subtotal
-- `taxAmount`: número no negativo opcional
-- `totalAmount`: número no negativo opcional
-- `currency`: cadena opcional
-- `paymentTerms`: cadena opcional
-- `notes`: cadena opcional
-- `status`: cadena opcional
-- `createdAt`: cadena de marca de tiempo ISO
-- `updatedAt`: cadena de marca de tiempo ISO
+- `entity_id`: cadena única, generada automáticamente, usada para vincular contratos, novedades, liquidaciones y demás tablas del módulo
+- `name`: nombre legal completo, no vacío
+- `code`: número de ficha, no vacío
+- `taxId`: RUT con dígito verificador
+- `email`: correo con formato válido cuando está presente
+- `phone`, `address`, `description`: cadenas opcionales
+- `category`: código del departamento
+- `targetDate`: fecha de término del contrato vigente (YYYY-MM-DD) cuando corresponde
+- `paymentTerms`: forma de pago
+- `createdAt` y `updatedAt`: marcas de tiempo ISO
+- Campos propios de RR.HH. (`fechaIngreso`, `fechaNacimiento`, `estadoLaboral`, `afp`, `sistemaSalud`, `banco`, `numeroCuenta`, etc.), detallados en `data-model.md`.
 
-Operaciones:
+Operaciones: `loadEntities()` devuelve todas las fichas y `saveEntities(entities)` persiste la lista completa.
 
-- `loadDocuments()`: devuelve todos los documentos almacenados.
-- `saveDocuments(documents)`: persiste la lista completa.
-- `addDocument(document)`: añade un nuevo documento.
-- `updateDocument(id, updates)`: actualiza un documento existente.
-- `deleteDocument(id)`: elimina un documento por id.
-- `deleteDocumentsForEntity(entityId)`: elimina todos los documentos vinculados a una entidad eliminada.
+Validación:
 
-## Expectativas de Validación
+- Una ficha sin `name` o `code` debe rechazarse antes de la persistencia.
+- Un `email` presente debe tener formato de correo válido.
+- El `entity_id` se genera automáticamente y es único.
+- Las operaciones preservan el orden de la lista y actualizan las marcas de tiempo.
+- Las fichas de Trabajadores no se eliminan: se desactivan según la Historia de Usuario 1.
 
-- Un `name` o `code` faltante debe rechazarse antes de la persistencia.
-- Un `email` presente debe tener formato de correo válido y un `creditLimit` presente debe ser un número no negativo.
-- Un documento sin `folio` entero positivo debe rechazarse; un `discount` mayor que el `subtotal` debe rechazarse.
-- Un entity_id debe generarse automáticamente y debe ser único.
-- Un documento sin un `entity_id` que coincida con una entidad existente debe rechazarse.
-- Eliminar una entidad también debe eliminar todos los documentos vinculados a su entity_id.
-- Las operaciones de almacenamiento deben preservar el orden actual de la lista y actualizar las marcas de tiempo.
+## Tablas del módulo RR.HH. y Planilla
 
-## Expectativas de Extensibilidad
-
-- Los campos adicionales añadidos por módulos personalizados deben persistirse junto a los campos base sin manejo especial en la capa de almacenamiento.
-- Las operaciones base anteriores permanecen estables para que los módulos personalizados puedan construir sobre ellas sin modificación.
-
-## Contrato de Almacenamiento RR.HH. y Planilla
-
-La extensión de Recursos Humanos usa las mismas garantías de identidad, marcas de tiempo e integridad referencial de la base, con tablas propias bajo el prefijo `erp_rrhh:*`. El detalle del MER está en `specs/001-rrhh-planilla/data-model.md`.
+Las demás tablas del módulo usan las mismas garantías de identidad, marcas de tiempo e integridad referencial, bajo el prefijo `erp_rrhh:*`. El detalle del MER está en `specs/001-rrhh-planilla/data-model.md`.
 
 ### Claves y operaciones
 

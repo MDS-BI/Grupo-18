@@ -3,7 +3,7 @@
 description: "Task list for RR.HH. y Planilla feature implementation"
 ---
 
-# Tasks: Módulo Base ERP — Recursos Humanos y Planilla
+# Tasks: Módulo de Recursos Humanos y Planilla
 
 **Input**: Design documents from `/specs/001-rrhh-planilla/`
 
@@ -27,12 +27,12 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Confirmar toolchain Vite/Vitest, configuración base y arranque de la aplicación.
+**Purpose**: Confirmar toolchain Vite/Vitest, configuración del módulo de RR.HH. y arranque de la aplicación.
 
 - [ ] T001 Verificar y actualizar dependencias Vite, Vitest y jsdom en `package.json` y `package-lock.json`
 - [ ] T002 [P] Configurar scripts `dev`, `build`, `test:run`, `lint` y `format:check` en `package.json` usando `eslint.config.js` y `.prettierrc.json`
 - [ ] T003 [P] Preparar el entorno jsdom y la limpieza de `localStorage` en `tests/setup/setup.js`
-- [ ] T004 [P] Declarar la configuración RR.HH. (etiquetas, campos personalizados, ciclo de vida y acento) en `src/module-config.js`, sin modificar la lógica del núcleo (SC-008)
+- [ ] T004 [P] Declarar la configuración RR.HH. (nombre del módulo, etiquetas de Trabajador, Contrato, Novedad y Liquidación, y datos de la empresa emisora) en `src/module-config.js`
 - [ ] T005 Implementar el arranque de la aplicación y los estilos globales en `src/main.js` y `src/styles.css`
 - [ ] T006 Verificar el documento de entrada y el montaje del workspace en `index.html`
 
@@ -44,8 +44,8 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 
 **⚠️ CRITICAL**: No iniciar ninguna historia hasta completar esta fase.
 
-- [ ] T007 Implementar el contrato base de entidades y documentos (carga, guardado, IDs, marcas de tiempo, cascada) en `src/storage.js`
-- [ ] T008 [P] Implementar sanitización de contenido para listas, formularios, búsqueda y detalle en `src/utils/sanitize.js`
+- [ ] T007 Implementar la capa de almacenamiento compartida que usan las colecciones de RR.HH. (carga, guardado, IDs y marcas de tiempo) en `src/storage.js`
+- [ ] T008 [P] Implementar la sanitización de los textos libres de RR.HH. (nombres, observaciones y motivos) en listados, formularios, búsquedas y detalles en `src/utils/sanitize.js`
 - [ ] T009 Implementar el núcleo de auditoría de solo inserción con retención y aborto de operación si falla la escritura en `src/rrhh/seguridad/auditoria.js`
 - [ ] T010 [P] Definir los roles simulados y su catálogo de permisos en `src/rrhh/seguridad/roles.js`
 - [ ] T011 Implementar la sesión simulada, selección de representado y cambio de rol en `src/rrhh/seguridad/session.js`
@@ -56,7 +56,7 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 - [ ] T016 [P] Cargar datos semilla de catálogos, conceptos, parámetros y casos de referencia en `src/rrhh/data/seed.js`
 - [ ] T017 Implementar exportación/importación JSON versionada sin sobrescribir auditoría en `src/backup.js`
 - [ ] T018 Implementar el marco de workspace y el router de módulos RR.HH. en `src/rrhh/views/workspace.js` y `src/rrhh/views/rrhh-router.js`
-- [ ] T019 Validar el flujo base de inicio rápido (panel, entidad, documento, búsqueda y persistencia) en `tests/integration/rrhh-quickstart.test.js`, con aserciones de SC-001 (<2 min para crear una entidad), SC-002 (<10 s para buscar) y SC-005 (<10 s para alcanzar gestión/búsqueda desde el panel)
+- [ ] T019 Validar el flujo de inicio rápido de RR.HH. (selección de rol, ficha de Trabajador, contrato, novedad y persistencia) en `tests/integration/rrhh-quickstart.test.js`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -80,7 +80,6 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 - [ ] T024 [US1] Implementar servicios de cargos, departamentos y centros de costo en `src/rrhh/utils/catalogos-service.js`
 - [ ] T025 [P] [US1] Construir formulario de Trabajador con validaciones y selector de jefatura en `src/rrhh/components/trabajador-form.js`
 - [ ] T026 [US1] Construir vistas de fichas y catálogos en `src/rrhh/views/trabajadores-view.js` y `src/rrhh/views/catalogos-view.js`
-- [ ] T027 [US1] Excluir Trabajadores y Liquidaciones de las vistas genéricas en `src/components/entity-list.js` y `src/components/document-list.js`, sin alterar el núcleo de entidades/documentos; exclusión de presentación permitida por SC-008 (FR-003)
 - [ ] T028 [US1] Registrar creación, actualización y desactivación en bitácora desde `src/rrhh/utils/alertas-service.js` y `src/rrhh/seguridad/auditoria.js`
 
 **Checkpoint**: US1 fully functional and independently testable.
@@ -290,7 +289,7 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 
 - [ ] T091 [P] [US10] Implementar funciones de mediana y variación porcentual en `src/rrhh/calculo/estadisticas.js`
 - [ ] T092 [US10] Implementar servicios de reportes sobre períodos cerrados en `src/rrhh/utils/reportes-service.js`
-- [ ] T093 [P] [US10] Declarar el campo opcional sensible `genero` en `src/module-config.js` y consumirlo en `src/rrhh/components/trabajador-form.js` sin alterar la lógica del núcleo (SC-008)
+- [ ] T093 [P] [US10] Declarar el campo opcional sensible `genero` en `src/module-config.js` y consumirlo en `src/rrhh/components/trabajador-form.js` (FR-099)
 - [ ] T094 [P] [US10] Construir componente de gráficos en `src/rrhh/components/grafico-reporte.js`
 - [ ] T095 [US10] Construir vista de reportes con filtros en `src/rrhh/views/reportes.js`
 - [ ] T096 [US10] Integrar ruta, permisos y auditoría de brecha en `src/rrhh/views/rrhh-router.js` y `src/rrhh/seguridad/auditoria.js`
@@ -347,10 +346,10 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 **Purpose**: Verificación final, calidad, rendimiento y cierre documental.
 
 - [ ] T108 [P] Actualizar documentación funcional, modelo de datos y contratos en `docs/rrhh.md`, `specs/001-rrhh-planilla/data-model.md` y `specs/001-rrhh-planilla/contracts/`
-- [ ] T109 [P] Ejecutar y corregir la suite completa en `tests/unit/` y `tests/integration/`, con aserciones de SC-001 (<2 min), SC-002 (<10 s), SC-004 (<10 s con 500 registros), SC-005 (<10 s), SC-011 (<1 s por línea), SC-012 (<30 s por PDF), SC-020 (<5 min para reconstruir trazabilidad), SC-021 (≥95% de pruebas de acceso) y SC-022 (<5 min para exportar/restaurar respaldo)
+- [ ] T109 [P] Ejecutar y corregir la suite completa en `tests/unit/` y `tests/integration/`, con aserciones de SC-011 (<1 s por línea), SC-012 (<30 s por PDF), SC-020 (<5 min para reconstruir trazabilidad), SC-021 (≥95% de pruebas de acceso) y SC-022 (<5 min para exportar/restaurar respaldo)
 - [ ] T110 [P] Verificar `lint` y `format:check` usando `package.json`
-- [ ] T111 Verificar rendimiento en `tests/integration/rrhh-rendimiento.test.js`: creación de entidad <2 min (SC-001), búsqueda <10 s (SC-002), navegación desde el panel <10 s (SC-005), 500 entidades y búsqueda <10 s (SC-004), explicación por línea <1 s (SC-011), PDF <30 s (SC-012) y cálculo de 500 trabajadores <10 s (SC-023)
-- [ ] T112 Validar el flujo completo de `quickstart.md` en `tests/integration/rrhh-quickstart.test.js`, incluyendo SC-001, SC-002 y SC-005
+- [ ] T111 Verificar rendimiento en `tests/integration/rrhh-rendimiento.test.js`: explicación por línea <1 s (SC-011), PDF <30 s (SC-012) y cálculo de 500 trabajadores <10 s (SC-023)
+- [ ] T112 Validar el flujo completo de `quickstart.md` en `tests/integration/rrhh-quickstart.test.js`
 - [ ] T113 Endurecer seguridad de datos sensibles, sanitización y enlaces directos en `src/rrhh/seguridad/` y `src/utils/sanitize.js`
 - [ ] T114 Verificar accesibilidad WCAG 2.2 AA en `src/styles.css` y `src/rrhh/components/`
 - [ ] T115 Validar retención de auditoría y respaldo sin sobrescritura en `src/backup.js` y `src/rrhh/seguridad/auditoria.js`, con aserciones de SC-020 (<5 min para reconstruir trazabilidad) y SC-022 (<5 min para exportar/restaurar respaldo)

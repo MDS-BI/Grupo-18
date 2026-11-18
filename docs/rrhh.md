@@ -1,26 +1,25 @@
 # Módulo de Recursos Humanos y Planilla
 
 **Funcionalidad**: `001-rrhh-planilla` | **Actualizado**: 2026-11-17
-**Fuentes**: `spec.md` (US1–US6, FR-040–FR-087), `plan.md`, `data-model.md`, `quickstart.md`, `tasks.md`.
+**Fuentes**: `spec.md` (US1–US12, FR-040–FR-107), `plan.md`, `data-model.md`, `quickstart.md`, `tasks.md`.
 
 ## 1. Alcance y arquitectura
 
-Extensión del ERP base sin modificar su núcleo: reutiliza la **Entidad** como **Trabajador** y el **Documento** como **Liquidación**. Las reglas específicas viven en `src/rrhh/` y `src/module-config.js`. Persistencia local (`localStorage`) y sesión simulada, sin backend ni credenciales.
+Módulo de Recursos Humanos y Planilla de un ERP. El código vive en `src/rrhh/` y su configuración en `src/module-config.js`. Persistencia local (`localStorage`) y sesión simulada, sin backend ni credenciales.
 
-- Datos base: `erp_base_module:*`; datos RR.HH.: `erp_rrhh:*`.
-- El Trabajador es una Entidad con campos personalizados, no una tabla nueva.
-- La Liquidación reutiliza el Documento; líneas y snapshots se guardan aparte.
+- Trabajadores y liquidaciones: almacenamiento común `erp_base_module:entities` / `erp_base_module:documents`; demás tablas: `erp_rrhh:*`.
+- Las líneas de liquidación y sus snapshots se guardan en `erp_rrhh:lineas-liquidacion`.
 
 ## 2. Configuración
 
-`src/module-config.js` centraliza nombre, acento, etiquetas, campos personalizados, ciclo de vida de documentos y bloque `rrhh`/`empresa` (datos de la empresa emisora). Sin configuración se usan los valores por defecto Entidad/Documento. Un módulo adaptado no debe tocar código central (SC-008). Con `rrhh.only: true` (configuración actual) el navegador abre directamente en RRHH/Planilla y oculta Panel, Entidades, Documentos y Búsqueda; el código base permanece disponible para pruebas y otros módulos.
+`src/module-config.js` centraliza el nombre del módulo, las etiquetas y el bloque `rrhh`/`empresa` (datos de la empresa emisora). Con `rrhh.only: true` (configuración actual) el navegador abre directamente en el espacio de trabajo de RR.HH. y Planilla.
 
 ## 3. Modelo y claves de almacenamiento
 
 | Entidad | Clave | Estados / notas |
 |---|---|---|
-| Trabajador | `erp_base_module:entities` | Entidad con campos personalizados |
-| Liquidación | `erp_base_module:documents` | Documento base reutilizado |
+| Trabajador | `erp_base_module:entities` | Activo / Desvinculado; no se elimina |
+| Liquidación | `erp_base_module:documents` | Borrador / Cerrada, según el período |
 | Contrato | `erp_rrhh:contratos` | Vigente / Vencido / Terminado; sin “cancelado” |
 | Período | `erp_rrhh:periodos` | Abierto / Calculado / Cerrado |
 | Novedad | `erp_rrhh:novedades` | Pendiente / Aprobada / Rechazada / Anulada |

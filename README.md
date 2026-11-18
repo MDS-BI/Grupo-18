@@ -1,21 +1,25 @@
-# ERP Software Base Module (Vite + Vanilla JS)
+# Human Resources and Payroll Module — Grupo 18 (Vite + Vanilla JS)
 
 > **Grupo 18 — Módulo de Recursos Humanos y Planilla.** El diseño de nuestro módulo está en [`specs/001-rrhh-planilla/`](specs/001-rrhh-planilla/):
 >
+> - [Especificación (`spec.md`)](specs/001-rrhh-planilla/spec.md)
 > - [Plan de trabajo (`plan.md`)](specs/001-rrhh-planilla/plan.md)
 > - [Modelo Entidad-Relación y diccionario de datos (`data-model.md`)](specs/001-rrhh-planilla/data-model.md) · [imagen del MER](specs/001-rrhh-planilla/mer.png) · [MER resumido](specs/001-rrhh-planilla/mer-resumen.png)
+> - [Tareas (`tasks.md`)](specs/001-rrhh-planilla/tasks.md)
 
-Minimal single-page app serving as an Enterprise Resource Planning (ERP) software base module. It provides the common foundation for building custom ERP modules: master data management (Entities) and linked transactional documents (Documents) with create/edit/delete/search, validation, and browser localStorage persistence — using Vite and vanilla HTML, CSS, and JavaScript.
+Single-page app for the **Human Resources and Payroll** (Recursos Humanos y Planilla) module of an ERP, built with Vite and vanilla HTML, CSS, and JavaScript, with browser `localStorage` persistence.
 
-The user interface is fully in **Spanish** (default terms: Entidad / Documento; module name: Módulo Base ERP), including labels, validation messages, empty states, and dialogs.
+The user interface is fully in **Spanish**, including labels, validation messages, empty states, and dialogs.
 
-Entities carry standard ERP master-data fields (name, code, tax ID, email, phone, address, category, target date, credit limit, payment terms). Documents use series + folio numbering and carry a monetary breakdown (subtotal, discount, tax, total), currency, payment terms, notes, quantity, dates, and status.
+The module covers (user stories US1–US12 in the spec):
 
-The app presents itself as a coherent ERP workspace:
-
-- **Workspace shell** — every screen lives inside a branded chrome: a top bar with a logo (an SVG monogram derived from the module name) and module name, plus a persistent sidebar of module buttons (Panel, Entidades, Documentos, Búsqueda). The active module is highlighted (`aria-current="page"`), and the sidebar collapses to an icon rail on narrow viewports.
-- **Home dashboard** — the entry screen offers quick-action buttons for key ERP tasks (new entity, new document, open management areas, find records) and live statistic cards showing record counts.
-- **Design tokens** — styling is driven by CSS custom properties in `src/styles.css`, so branding changes apply globally.
+- Worker records (fichas de Trabajadores) and catalogs of positions, departments, and cost centers.
+- Employment contracts with history and expiry alerts.
+- Monthly events (overtime, medical leave, absences) with approval flow.
+- Payroll calculation under Chilean law, payslip lifecycle, and period closing.
+- Line-by-line payslip explanation and printable / PDF payslip.
+- Simulated role-based session, sensitive-data protection, and an append-only audit log.
+- Vacations, family allowances, salary simulator, management and pay-equity reports, accounting and payment CSV exports, and versioned legal parameters.
 
 ## Setup
 
@@ -53,31 +57,12 @@ npm run format         # apply formatting
 npm run build          # production build with Vite
 ```
 
-## Building Custom Modules
+## Configuration
 
-Custom ERP modules built on this base define:
-
-- What an **Entity** represents (e.g., customer, product, asset) plus domain-specific fields.
-- What a **Document** represents (e.g., order, invoice, contract).
-- Module-specific labels and validation rules.
-
-The base module handles identity generation, timestamps, referential integrity between entities and documents, cascade deletion, navigation, and search. See `specs/001-rrhh-planilla/` for the full specification.
-
-## Tailoring via Configuration
-
-All tailoring lives in one place: the `userConfig` object at the top of `src/module-config.js`. Developers edit this single export; no core code changes are required. Available knobs:
-
-- `moduleName` — display name shown in the top bar, dashboard, and document title; also derives the logo monogram.
-- `labels` — rename Entity/Document terms across every screen, including sidebar buttons, quick actions, forms, and messages. Spanish articles and agreements (el/la, seleccionado/a) are derived from the first word of each configured term.
-- `customFields` — declare extra fields per record type with `target` (`entity` or `document`), `key`, `label`, `type` (`text`, `number`, `date`, or `select`), optional `required`, and `options` for selects. Keys must not collide with base field names (see `specs/001-rrhh-planilla/data-model.md`). Values persist alongside records and appear in search results.
-- `statusLifecycle` — restrict document statuses to a configured list of `statuses` with permitted `transitions` between them. Without it, status stays a free-form field.
-- `theme.accentColor` — a hex color (e.g., `"#0f62fe"`) applied across the shell as highlights and primary controls. Invalid values fall back to the default.
-- `rrhh` — enables the RRHH/Planilla workspace (`enabled`), sets its `label` and `roleSelector`, and with `only: true` the browser starts directly in RRHH and hides the generic Entities/Documents/Search screens. The base code stays available to tests and other modules.
-
-If the configuration is invalid (unknown types, bad keys, transitions referencing unknown statuses, non-hex accent colors), the app shows the problems in a banner and falls back to defaults instead of breaking...
+Module settings live in the `userConfig` object at the top of `src/module-config.js`: the module name, the Worker / Contract / Event / Payslip labels, the issuing company data used on payslips, and the `rrhh` block (`enabled`, `label`, `roleSelector`, and `only: true`, which opens the app directly in the HR and Payroll workspace).
 
 ## Notes
 
-- Data is persisted to `localStorage` under the keys `erp_base_module:entities` and `erp_base_module:documents`.
-- Deleting an entity also deletes its documents (cascade).
+- Workers are stored under the `localStorage` key `erp_base_module:entities` (shared storage in `src/storage.js`); the rest of the HR tables use the `erp_rrhh:*` prefix. See `specs/001-rrhh-planilla/data-model.md`.
+- Workers are never deleted: they are deactivated, and closed payslips are kept as required by law.
 - This project intentionally uses vanilla HTML, CSS, and JavaScript for simplicity.

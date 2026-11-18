@@ -1,20 +1,19 @@
-# Plan de Implementación: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+# Plan de Implementación: Módulo de Recursos Humanos y Planilla
 
 **Rama**: `001-rrhh-planilla` | **Fecha**: 2026-07-08 | **Actualizado**: 2026-11-17 | **Especificación**: [spec.md](spec.md)
 **Entrada**: Especificación de la funcionalidad desde `/specs/001-rrhh-planilla/spec.md`
 
-> **Enfoque de la funcionalidad**: este plan describe el módulo de **Recursos Humanos y Planilla (RR.HH.)** construido sobre la base ERP reutilizable. El ERP base (Entidad/Documento) se conserva como contexto y capa de soporte; el dominio funcional, las historias de usuario y los entregables son de RR.HH. El diseño original de RR.HH. se incorporó en el [Apéndice A](#apéndice-a--diseño-original-del-módulo-rrhh) junto con los [diagramas MER](mer.png) y [MER resumido](mer-resumen.png).
+> **Enfoque de la funcionalidad**: este plan describe el módulo de **Recursos Humanos y Planilla (RR.HH.)**; el dominio funcional, las historias de usuario y los entregables son exclusivamente de RR.HH. El diseño original de RR.HH. se incorporó en el [Apéndice A](#apéndice-a--diseño-original-del-módulo-rrhh) junto con los [diagramas MER](mer.png) y [MER resumido](mer-resumen.png).
 
 ## Resumen
 
-Construir una aplicación web ligera con Vite que sirva como módulo base de software de planificación de recursos empresariales (ERP). El módulo proporciona la base común: gestión de datos maestros (Entidades), documentos transaccionales vinculados (Documentos), flujos de crear/editar/eliminar/buscar, validación y persistencia local — construida principalmente con HTML, CSS y JavaScript vanilla. La aplicación se presenta como un espacio de trabajo ERP coherente: una barra superior con marca (logotipo derivado + nombre del módulo) y una barra lateral persistente de botones de módulo envuelven cada pantalla, y la pantalla de entrada es un panel estilo ERP con acciones rápidas y estadísticas en vivo. La adaptación a un módulo específico se realiza mediante un único archivo de configuración (`src/module-config.js`) que cubre terminología, campos personalizados, ciclo de vida de documentos y color de acento, de modo que el núcleo de entidades/documentos permanece intacto; los componentes genéricos de presentación solo aplican exclusiones declaradas (FR-003).
+Construir una aplicación web ligera con Vite para el módulo de Recursos Humanos y Planilla, con HTML, CSS y JavaScript vanilla y persistencia local en el navegador. La aplicación se presenta como un espacio de trabajo con una barra superior con el nombre del módulo y una barra lateral con las pantallas de RR.HH. (Trabajadores, catálogos, contratos, novedades, períodos y planilla, liquidaciones, vacaciones, cargas familiares, simulador, reportes, exportaciones, parámetros legales y auditoría), y un panel principal con las alertas del módulo. El nombre del módulo, las etiquetas y los datos de la empresa emisora se declaran en `src/module-config.js`.
 
-### Cobertura del spec vigente (US1–US12, FR-001 a FR-107, SC-001 a SC-029)
+### Cobertura del spec vigente (US1–US12, FR-040 a FR-107, SC-011 a SC-029)
 
 El plan cubre la especificación vigente completa:
 
-- **Módulo base (FR-001–FR-039, XR-001–XR-005)**: CRUD de Entidad/Documento, integridad referencial y eliminación en cascada (con la aclaración de FR-003: la eliminación aplica a la Entidad genérica; los Trabajadores se desactivan según US1), navegación/panel/búsqueda, configuración y extensibilidad, campos personalizados, ciclo de vida de documentos y rendimiento para al menos 500 registros.
-- **US1 – Fichas de trabajadores y catálogos (FR-061–FR-067 y reglas relacionadas)**: Trabajador como reutilización de Entidad, validación de RUT/correo/fechas, unicidad normalizada de RUT y código, catálogos (cargo, departamento, centro de costo) con crear/editar/ocultar/reactivar sin eliminación, estado laboral Activo/Desvinculado, desactivación irreversible que bloquea si hay novedades Pendientes, termina automáticamente el contrato vigente o vencido y deja al equipo de una jefatura desvinculada como "sin jefatura directa" (novedades pendientes a cargo del administrador/a), jefatura directa opcional (activa, no autoasignada) y auditoría de creación/actualización/desactivación de fichas y catálogos.
+- **US1 – Fichas de trabajadores y catálogos (FR-061–FR-067 y reglas relacionadas)**: validación de RUT/correo/fechas, unicidad normalizada de RUT y código, catálogos (cargo, departamento, centro de costo) con crear/editar/ocultar/reactivar sin eliminación, estado laboral Activo/Desvinculado, desactivación irreversible que bloquea si hay novedades Pendientes, termina automáticamente el contrato vigente o vencido y deja al equipo de una jefatura desvinculada como "sin jefatura directa" (novedades pendientes a cargo del administrador/a), jefatura directa opcional (activa, no autoasignada) y auditoría de creación/actualización/desactivación de fichas y catálogos.
 - **US2 – Contratos y alertas (FR-068–FR-073)**: contratos con sueldo/jornada/tipo/vigencia, estados (vigente, vencido, terminado) e historial sin superposición, máximo un contrato vigente por Trabajador y vigencias sin solapamiento (puede no tener contratos), validación de sueldo mínimo y jornada máxima con parámetros legales, transiciones y restricciones (término de contratos vigentes o vencidos, sin eliminación lógica/física, cambios y renovaciones mediante nuevo registro), alertas de próximo vencimiento/vencido y obligación de contrato con vigencia en la fecha de la novedad o en el período de cálculo.
 - **US3 – Novedades y aprobación (FR-074–FR-078)**: tipos (horas extra, licencia médica, ausencia), asociación a trabajador/período activo, split atómico por meses, estados (pendiente, aprobada, rechazada, anulada), licencia médica sin diagnóstico clínico, bloqueo en períodos cerrados, segregación de funciones (jefatura no aprueba lo que registra; analista registra/ve pero no aprueba ni rechaza; solo Pendientes se editan/anulan y las Aprobadas/Rechazadas no se modifican), validación de superposición de licencias/ausencias, tope de horas extra con justificación escrita, motivo obligatorio de rechazo y auditoría.
 - **US4 – Períodos y cálculo (FR-079–FR-084)**: creación de período único con parámetros legales obligatorios (estado inicial abierto), cálculo con cualquier contrato cuya vigencia comprenda al menos un día del período (incluidos terminados/vencidos con vigencia en el período y cálculo proporcional) y novedades aprobadas, resumen de liquidaciones generadas y Trabajadores excluidos con motivo, estados Abierto/Calculado/Cerrado con recálculo idempotente y desactualización por cambios posteriores, cierre con congelamiento de parámetros y registro de quién/cuándo, prohibiciones de cierre/reapertura/modificación según reglas, y redondeo por línea al peso con totales por suma de líneas.
@@ -29,20 +28,20 @@ El plan cubre la especificación vigente completa:
 
 ### Módulo de Recursos Humanos y Planilla
 
-La extensión de RR.HH. y Planilla reutiliza la **Entidad** como **Trabajador** y el **Documento** como **Liquidación de Sueldo**, sin modificar el núcleo de entidades/documentos; lo específico vive en `src/rrhh/` y en `src/module-config.js`, y las tablas propias usan el prefijo `erp_rrhh:*`. T027 ajusta solo los componentes genéricos de presentación (`src/components/entity-list.js` y `src/components/document-list.js`) para excluir Trabajadores y Liquidaciones de las vistas base (FR-003). El detalle de atributos y relaciones se documenta en `specs/001-rrhh-planilla/data-model.md` (documento vigente).
+El código del módulo vive en `src/rrhh/` y su configuración en `src/module-config.js`; los Trabajadores se guardan en el almacenamiento común (`src/storage.js`) y las demás tablas usan el prefijo `erp_rrhh:*`. El detalle de atributos y relaciones se documenta en `specs/001-rrhh-planilla/data-model.md` (documento vigente).
 
 Incluye: fichas y catálogos; contratos con historial, vigencia y alertas; conjuntos completos de parámetros legales por mes y año, cargados manualmente y bloqueados desde el primer uso; períodos con apertura, cálculo y cierre; novedades con segregación de funciones y aprobación; motor de cálculo con líneas explicables y parámetros congelados al cierre; ciclo de vida de liquidaciones y comprobante imprimible; sesión simulada por rol; bitácora de auditoría de solo inserción; respaldo/restauración JSON; vacaciones y feriados; cargas familiares y asignación familiar; simulador de sueldo; reportes de gestión y equidad; y exportaciones CSV contable y de pago. El motor calcula, para cada trabajador con un contrato cuya vigencia comprenda al menos un día del período (incluidos terminados o vencidos con vigencia en el período), haberes/descuentos/impuestos y costo empleador de forma proporcional a los días naturales de vigencia, usando el conjunto de parámetros del mes y topes legales, conservando por línea base, tasa/fórmula y snapshot del parámetro aplicado; los totales se obtienen de líneas redondeadas al peso.
 
 ## Clarificaciones y Decisiones
 
 **2026-11-08 (clarify inicial)**:
-- Entidades RR.HH. definidas en 001 con detalle en `specs/001-rrhh-planilla/data-model.md`; Trabajador reutiliza Entidad y Liquidación reutiliza Documento.
+- Entidades RR.HH. definidas en 001 con detalle en `specs/001-rrhh-planilla/data-model.md`.
 - Sesión simulada con selector de rol, sin autenticación real ni credenciales.
 - Parámetros legales cargados manualmente como conjuntos completos por mes/año; sin integración externa de indicadores.
 - Bitácora conservada durante la relación laboral y 6 años después del término (Ley 21.719).
 - Respaldo/restauración completa en JSON para mitigar pérdida de datos locales.
 
-**2026-11-16 (alineación con spec vigente, FR-001–FR-107, SC-001–SC-029)**:
+**2026-11-16 (alineación con spec vigente, FR-040–FR-107, SC-011–SC-029)**:
 - **FR-085–FR-087 (US6)**: el plan incorpora explícitamente permisos detallados por rol (administrador/a de RR.HH., analista de remuneraciones, jefatura, Trabajador), cambio de rol en sesión activa con aplicación inmediata, reselección de representado cuando corresponda y registro en bitácora, y consulta de bitácora exclusiva del administrador/a de RR.HH.
 - **Bitácora inmutable y respaldo JSON (FR-056, FR-060)**: exportación e importación de respaldo se registran en la bitácora de auditoría. Al importar un respaldo, el sistema **nunca** sobrescribe ni elimina los registros previos de la bitácora (se preserva la trazabilidad de solo inserción); la restauración de datos operativos se realiza de forma controlada y validada sin comprometer la inmutabilidad histórica de auditoría.
 - **Visibilidad transversal por rol (US6, FR-048/FR-049/FR-052/FR-054)** en listados, detalles, búsquedas y vistas imprimibles: la jefatura ve de su equipo únicamente los datos básicos (nombre, código, cargo, departamento, centro de costo y estado laboral) y gestiona sus novedades (incluidas licencias médicas sin diagnóstico clínico), pudiendo aprobar/rechazar las que no haya registrado ella misma, pero tiene ocultos o bloqueados contratos, sueldos base y liquidaciones y no opera sobre Trabajadores ajenos a su equipo; el Trabajador (activo o desvinculado) solo accede a sus propias liquidaciones de períodos cerrados (históricas incluidas), sin operar otras funciones. Las restricciones se aplican en interfaz y capa de datos, también para la carga de parámetros legales y el respaldo, y las denegaciones no revelan contenido protegido.
@@ -57,18 +56,18 @@ Incluye: fichas y catálogos; contratos con historial, vigencia y alertas; conju
 **Pruebas**: Vitest con jsdom para pruebas unitarias y de interacción  
 **Plataforma Objetivo**: Navegadores modernos de escritorio y móviles  
 **Tipo de Proyecto**: Aplicación web  
-**Objetivos de Rendimiento**: crear entidad <2 min (SC-001); buscar entidad <10 s (SC-002); alcanzar gestión/búsqueda desde el panel <10 s (SC-005); listas y búsquedas de hasta 500 registros con respuesta <10 s (SC-004); explicación por línea <1 s (SC-011); comprobante PDF <30 s (SC-012); cálculo de un período de hasta 500 trabajadores en 10 s o menos (SC-023); auditoría reconstruible en <5 min (SC-020); respaldo exportable y restaurable en <5 min (SC-022); y pruebas de acceso con al menos 95% de cumplimiento (SC-021)
-**Restricciones**: Huella mínima de librerías, despliegue simple, sin backend requerido; sesión simulada con selector de rol (sin autenticación real ni credenciales); conjuntos completos de parámetros legales cargados manualmente por mes/año; bitácora de solo inserción conservada durante la relación laboral y 6 años después del término; respaldo/restauración JSON sin sobrescribir ni eliminar registros previos de auditoría; estructura extensible por configuración
-**Escala/Alcance**: Módulo base (Entidad/Documento) + RR.HH. y Planilla (US1–US12) para 1 empresa, hasta 500 trabajadores y 24 períodos de historia en el MVP
+**Objetivos de Rendimiento**: explicación por línea <1 s (SC-011); comprobante PDF <30 s (SC-012); cálculo de un período de hasta 500 trabajadores en 10 s o menos (SC-023); auditoría reconstruible en <5 min (SC-020); respaldo exportable y restaurable en <5 min (SC-022); y pruebas de acceso con al menos 95% de cumplimiento (SC-021)
+**Restricciones**: Huella mínima de librerías, despliegue simple, sin backend requerido; sesión simulada con selector de rol (sin autenticación real ni credenciales); conjuntos completos de parámetros legales cargados manualmente por mes/año; bitácora de solo inserción conservada durante la relación laboral y 6 años después del término; respaldo/restauración JSON sin sobrescribir ni eliminar registros previos de auditoría; configuración del módulo centralizada en `src/module-config.js`
+**Escala/Alcance**: módulo de RR.HH. y Planilla (US1–US12) para 1 empresa, hasta 500 trabajadores y 24 períodos de historia en el MVP
 
 ## Verificación de la Constitución
 
 *COMPROBACIÓN: Debe pasar antes de la investigación de la Fase 0. Reverificar tras el diseño de la Fase 1.*
 
-- **I. Calidad y Mantenibilidad (PASS)**: estructura modular con separación de almacenamiento, dominio, cálculo, seguridad/auditoría y vistas; configuración centralizada; reglas de negocio y permisos encapsulados. SC-008 distingue el núcleo de Entidad/Documento de la configuración inicial y de las exclusiones de presentación; T027 ajusta solo componentes de presentación.
-- **II. Pruebas primero y Verificación (PENDIENTE)**: las tareas T020–T107 siguen el patrón pruebas antes que implementación para US1–US12; las aserciones de SC-001, SC-002, SC-004, SC-005, SC-011, SC-012, SC-020, SC-021, SC-022 y SC-023 están definidas en T019/T109/T111/T112/T115, y su ejecución queda para Phase 15.
+- **I. Calidad y Mantenibilidad (PASS)**: estructura modular con separación de almacenamiento, dominio, cálculo, seguridad/auditoría y vistas; configuración centralizada; reglas de negocio y permisos encapsulados.
+- **II. Pruebas primero y Verificación (PENDIENTE)**: las tareas T020–T107 siguen el patrón pruebas antes que implementación para US1–US12; las aserciones de SC-011, SC-012, SC-020, SC-021, SC-022 y SC-023 están definidas en T109/T111/T115, y su ejecución queda para Phase 15.
 - **III. Consistencia de Experiencia de Usuario (PASS)**: mensajes de validación, estados vacíos, estados de solo lectura/bloqueo, denegaciones sin revelar contenido y marco consistente (barra superior + barra lateral) en todas las pantallas, incluida la vista imprimible; los Casos Límite están declarados como comportamientos verificables.
-- **IV. Rendimiento y Fiabilidad (PENDIENTE)**: T111 define SC-004/011/012/023, T019/T112 definen SC-001/002/005, T109 define SC-021 y T109/T115 definen SC-020/022; la ejecución de estas mediciones está pendiente en Phase 15.
+- **IV. Rendimiento y Fiabilidad (PENDIENTE)**: T111 define SC-011/012/023, T109 define SC-021 y T109/T115 definen SC-020/022; la ejecución de estas mediciones está pendiente en Phase 15.
 - **Quality Standards (PENDIENTE)**: documentación `docs/rrhh.md` (T108/T116), verificación de `lint`/`format:check` (T110) y checklist de release (T119) aún no ejecutados.
 
 **Resultado**: PENDIENTE; no hay bloqueantes de diseño, pero persisten brechas de ejecución y documentación rastreadas en `tasks.md` (T108, T110, T111, T112, T119).
@@ -77,13 +76,13 @@ Incluye: fichas y catálogos; contratos con historial, vigencia y alertas; conju
 
 ### Fase 0: Investigación
 
-`research.md` consolida las decisiones técnicas: Vite con JavaScript vanilla, persistencia local, separación Entidad/Documento y extensibilidad por configuración; sesión simulada por rol; conjuntos completos de parámetros legales cargados manualmente por mes/año y bloqueados desde su primer uso; bitácora de solo inserción con retención; respaldo/restauración JSON; y la alineación 2026-11-16 (FR-085–FR-087, registro de export/import en bitácora, preservación de auditoría en importación, visibilidad transversal por rol, auditoría append-only y parámetros como núcleo fundacional). No quedan `NEEDS CLARIFICATION`.
+`research.md` consolida las decisiones técnicas: Vite con JavaScript vanilla, persistencia local y configuración centralizada del módulo; sesión simulada por rol; conjuntos completos de parámetros legales cargados manualmente por mes/año y bloqueados desde su primer uso; bitácora de solo inserción con retención; respaldo/restauración JSON; y la alineación 2026-11-16 (FR-085–FR-087, registro de export/import en bitácora, preservación de auditoría en importación, visibilidad transversal por rol, auditoría append-only y parámetros como núcleo fundacional). No quedan `NEEDS CLARIFICATION`.
 
 ### Fase 1: Modelo de Datos, Contratos e Inicio Rápido
 
-- `data-model.md`: Entidad, Documento, Catálogo, ModuleConfig y extensión RR.HH. (Trabajador, Contrato, Novedad, Período, conjuntos de parámetros, tramos, conceptos, líneas, auditoría, vacaciones, feriados, cargas, solicitudes, exportaciones y reportes) alineada a US1–US12 y FR-001–FR-107.
+- `data-model.md`: modelo del módulo RR.HH. (Trabajador, Catálogo, Contrato, Novedad, Período, conjuntos de parámetros, tramos, conceptos, líneas, auditoría, vacaciones, feriados, cargas, solicitudes, exportaciones y reportes) alineado a US1–US12 y FR-040–FR-107.
 - `contracts/`: contratos de almacenamiento y operaciones (incl. respaldo/restauración, reglas de auditoría/visibilidad y formato de exportación CSV) coherentes con FR-056, FR-060, FR-101–FR-104 y permisos por rol.
-- `quickstart.md`: escenarios de validación end-to-end para módulo base y RR.HH., incluyendo sesión simulada, conjuntos de parámetros, permisos/visibilidad por rol (jefatura y trabajador activo/desvinculado), bitácora inmutable, respaldo/restauración sin sobrescribir auditoría previa, vacaciones, cargas, simulador, reportes y exportaciones CSV.
+- `quickstart.md`: escenarios de validación end-to-end del módulo de RR.HH., incluyendo sesión simulada, conjuntos de parámetros, permisos/visibilidad por rol (jefatura y trabajador activo/desvinculado), bitácora inmutable, respaldo/restauración sin sobrescribir auditoría previa, vacaciones, cargas, simulador, reportes y exportaciones CSV.
 
 ### Fase 2: Núcleo Fundacional de Implementación
 
@@ -115,16 +114,11 @@ src/
 ├── module-config.js
 ├── backup.js           (exportación/importación JSON; registra operación en bitácora y preserva auditoría previa)
 ├── utils/
-│   └── sanitize.js     (escape/sanitización de HTML para listas, formularios, búsqueda y detalle)
+│   └── sanitize.js     (escape/sanitización de HTML de los textos libres de RR.HH.)
 ├── components/
-│   ├── shell.js        (marco: barra superior, logotipo, barra lateral, módulo activo)
-│   ├── dashboard.js    (acciones rápidas + estadísticas en vivo)
-│   ├── entity-form.js  (formulario entidad con campos personalizados)
-│   ├── entity-list.js  (listado/eliminación de entidades genéricas)
-│   ├── document-form.js (formulario documento con campos personalizados y ciclo de vida)
-│   ├── document-list.js (listado de documentos y cascada)
-│   └── search-bar.js   (búsqueda base por nombre, código, categoría, descripción y fecha)
-└── rrhh/               (extensión RR.HH. y Planilla; no modifica el código central)
+│   ├── shell.js        (marco: barra superior y barra lateral de RR.HH.)
+│   └── dashboard.js    (panel principal con alertas de RR.HH.)
+└── rrhh/               (módulo de RR.HH. y Planilla)
     ├── calculo/        (motor puro, esquema de parámetros, conjuntos por mes/año, RUT y redondeo)
     ├── components/     (trabajador, contrato, novedad, parámetros, línea explicativa, selector de rol)
     ├── seguridad/      (roles, sesión/cambio de rol, permisos/visibilidad y auditoría append-only)
@@ -137,7 +131,7 @@ tests/
 └── setup/
 ```
 
-**Decisión de Estructura**: aplicación Vite con módulos JavaScript y CSS separados, persistencia en localStorage y contrato de almacenamiento aislado. `module-config.js` centraliza adaptación (nombre, etiquetas, campos personalizados, ciclo de vida y acento) mediante tokens CSS; según SC-008, su declaración inicial y las exclusiones de presentación de T027 no alteran el núcleo de Entidad/Documento. La extensión `src/rrhh/` reutiliza Entidad→Trabajador y Documento→Liquidación; T027 excluye ambos de las vistas genéricas sin alterar el núcleo. `backup.js` implementa exportación/importación JSON validada; la importación restaura datos operativos de forma controlada pero **no sobrescribe ni elimina** la bitácora previa, y ambas operaciones quedan auditadas (FR-056, FR-060). `exportaciones-service.js` genera los dos CSV con formato definido en FR-101–FR-104 y consume `fechaPago` registrada en la entidad Período de T048 (FR-104). `src/rrhh/seguridad/auditoria.js` se implementa como núcleo fundacional (append-only, retención y aborto si falla la escritura); T014 define el esquema/validación en `src/rrhh/calculo/parametros.js` y T015 la carga/selección/bloqueo de conjuntos completos por mes/año en `src/rrhh/calculo/parametros-mes.js`; `src/rrhh/seguridad/` aplica sesión simulada, permisos/visibilidad por rol (FR-051–FR-054, FR-085–FR-087) y auditoría transversal.
+**Decisión de Estructura**: aplicación Vite con módulos JavaScript y CSS separados, persistencia en localStorage y contrato de almacenamiento aislado. `module-config.js` centraliza la configuración del módulo (nombre, etiquetas y datos de la empresa emisora); el código de RR.HH. vive en `src/rrhh/`. `backup.js` implementa exportación/importación JSON validada; la importación restaura datos operativos de forma controlada pero **no sobrescribe ni elimina** la bitácora previa, y ambas operaciones quedan auditadas (FR-056, FR-060). `exportaciones-service.js` genera los dos CSV con formato definido en FR-101–FR-104 y consume `fechaPago` registrada en la entidad Período de T048 (FR-104). `src/rrhh/seguridad/auditoria.js` se implementa como núcleo fundacional (append-only, retención y aborto si falla la escritura); T014 define el esquema/validación en `src/rrhh/calculo/parametros.js` y T015 la carga/selección/bloqueo de conjuntos completos por mes/año en `src/rrhh/calculo/parametros-mes.js`; `src/rrhh/seguridad/` aplica sesión simulada, permisos/visibilidad por rol (FR-051–FR-054, FR-085–FR-087) y auditoría transversal.
 
 ## Seguimiento de Complejidad
 
@@ -146,7 +140,7 @@ No se introdujeron violaciones de diseño. **Deuda explícita** rastreada:
 | Violación / Deuda | Por qué es necesaria | Alternativa simple rechazada | Mitigación |
 |---|---|---|---|
 | Documentación `docs/rrhh.md` pendiente | Quality Standards exige documentar comportamiento, configuración y contratos antes de release | Publicar sin documentación | Completar antes de la release con T108/T116/T119 |
-| Aserciones de SC-001, SC-002, SC-004, SC-005, SC-011, SC-012, SC-020, SC-021, SC-022 y SC-023 pendientes de ejecución | Los umbrales declarados deben verificarse, no solo implementarse | Asumir cumplimiento sin medición | Ejecutar T019/T109/T111/T112/T115 en Phase 15 |
+| Aserciones de SC-011, SC-012, SC-020, SC-021, SC-022 y SC-023 pendientes de ejecución | Los umbrales declarados deben verificarse, no solo implementarse | Asumir cumplimiento sin medición | Ejecutar T109/T111/T115 en Phase 15 |
 
 ---
 
@@ -289,7 +283,6 @@ El formato exacto se define en FR-101–FR-104 y en `contracts/entity-storage.md
 | Errores de cálculo legal | Casos de prueba de referencia validados contra un simulador público de sueldo líquido; parámetros con fuente citada |
 | Parámetros que cambian durante el semestre (IMM en enero 2027, aporte del empleador) | Conjuntos completos por mes/año; pantalla para agregar un conjunto nuevo sin tocar código; el conjunto usado se bloquea |
 | Alcance demasiado grande | P1 cerrado antes del 20-nov; P2 solo si P1 está probado |
-| Choques con la base al actualizar el template | No se edita el código central; todo lo propio vive en `src/rrhh/` y `module-config.js` |
 
 ### A.7 Cronograma y organización del grupo
 

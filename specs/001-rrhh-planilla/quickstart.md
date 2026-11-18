@@ -1,4 +1,4 @@
-# Inicio Rápido: Módulo Base de Software de Planificación de Recursos Empresariales (ERP)
+# Inicio Rápido: Módulo de Recursos Humanos y Planilla
 
 ## Configuración
 
@@ -6,40 +6,11 @@
 2. Inicie el servidor de desarrollo con `npm run dev`.
 3. Abra la URL local de Vite en un navegador.
 
-## Flujo de Usuario Principal
-
-1. Aterrice en el panel ERP y use un botón de acción rápida (nueva entidad, nuevo documento, gestión de entidades o buscar registros).
-2. Cree una entidad usando el formulario.
-3. Busque una entidad usando la pantalla de búsqueda.
-4. Edite o elimine una entidad desde el área de gestión.
-5. Cambie entre módulos usando la barra lateral; actualice la página para confirmar que las entidades persisten en el almacenamiento local y que el marco con marca (logotipo, nombre del módulo) permanece consistente.
-
-## Validación
-
-- Verifique que los campos obligatorios muestran errores de validación.
-- Verifique que un documento exige folio entero positivo y que el descuento no puede superar el subtotal.
-- Verifique que un correo electrónico con formato inválido se rechaza con una explicación.
-- Verifique que los resultados de búsqueda se actualizan a medida que el usuario escribe.
-- Verifique que la lista permanece consistente tras las acciones de edición y eliminación.
-- Verifique que las estadísticas del panel coinciden con el número de registros almacenados.
-
-## Extender el Módulo Base
-
-Los módulos ERP personalizados adaptan la base mediante un único archivo de configuración (`src/module-config.js`) en lugar de editar el código central:
-
-1. Establezca el nombre del módulo y los mapeos de términos (p. ej., Entidad → Cliente, Documento → Pedido de Venta); cada pantalla se reetiqueta, incluida la barra lateral y el logotipo.
-2. Declare campos personalizados por tipo de registro (texto, número, fecha, selección) — aparecen automáticamente en formularios, listas, validación y búsqueda.
-3. Defina el ciclo de vida de estados de documentos y las transiciones permitidas (p. ej., cotización → pedido → facturado).
-4. Opcionalmente establezca `theme.accentColor` para remarcar los resaltados y controles principales de todo el espacio de trabajo.
-5. Añada reglas de validación específicas del módulo junto a las reglas base donde sea necesario.
-
-La generación de identidad, marcas de tiempo, integridad referencial entre entidades y documentos, eliminación en cascada, navegación y búsqueda siguen siendo gestionadas por el módulo base. Sin archivo de configuración, la aplicación se ejecuta con el comportamiento predeterminado Entidad/Documento. Consulte `specs/001-rrhh-planilla/` para la especificación completa.
-
 ## Flujo de RR.HH. y Planilla
 
 1. En la barra superior, seleccione el rol simulado (administrador/a de RR.HH., analista de remuneraciones, jefatura o Trabajador). No se solicitan credenciales; la sesión vive solo en memoria. Al elegir jefatura o Trabajador, seleccione el Trabajador que representa (jefatura: activo; Trabajador: activo o desvinculado). Al cambiar de rol en sesión activa, los permisos se aplican de inmediato, se vuelve a pedir el representado cuando corresponda y el cambio queda registrado en la bitácora.
 2. Con rol Administrador, cargue un conjunto completo de parámetros legales (UF, UTM, IMM, tasas, topes y tramos) para un mes y año, con fuente. El conjunto se bloquea desde su primer uso. No hay integración con servicios externos.
-3. Cree o abra un trabajador (Entidad) y registre su contrato con sueldo base, jornada, tipo y vigencia. Si cambia el sueldo, registre un nuevo contrato o anexo sin sobrescribir el anterior.
+3. Cree o abra la ficha de un Trabajador y registre su contrato con sueldo base, jornada, tipo y vigencia. Si cambia el sueldo, registre un nuevo contrato o anexo sin sobrescribir el anterior.
 4. Abra el período mensual en `Planilla` y registre las novedades del mes (horas extra, licencias médicas o ausencias). Las licencias solo guardan tipo y días, sin diagnósticos.
 5. Con rol Jefatura, apruebe o rechace las novedades pendientes. Con rol Analista no se permite aprobar; una novedad rechazada puede corregirse y reenviarse.
 6. Ejecute el cálculo del período. El sistema valida contratos vigentes, novedades aprobadas y parámetros legales vigentes, y genera una liquidación por trabajador con líneas explicables.
