@@ -56,6 +56,17 @@ La interfaz aplica **ocultamiento proactivo** de lo no permitido; accesos direct
 - **US5**: explicación por línea con base, tasa/factor, fórmula y snapshot; comprobante carta/A4, máximo dos páginas, sin controles y con identificación de la empresa.
 - **US6**: auditoría append-only con retención de 6 años, filtros, intentos denegados, exportación/importación JSON; la importación preserva la auditoría previa.
 
+### Buscador de Trabajadores
+
+El listado usa un selector **Buscar por:** con cuatro criterios excluyentes, de modo que los campos no se cruzen entre sí:
+
+- **Nombre** (predeterminado): prefijo del nombre completo desde el primer carácter (`c` → `ca` → `camila s`). No coincide con apellidos sueltos, RUT, código ni cargo.
+- **RUT**: prefijo del RUT normalizado desde el primer dígito (acepta puntos y guion).
+- **Código**: prefijo del código desde el primer carácter.
+- **Cargo**: desplegable con los cargos activos y la opción “Todos los cargos” por defecto; filtra al instante al seleccionar.
+
+Al cambiar de criterio se limpia la consulta anterior. El alcance por rol se conserva: Jefatura ve solo a su equipo; Admin/Analista ve toda la empresa.
+
 ## 6. Contratos públicos
 
 - **Storage**: operaciones `load*`, `save*`, `add*`, `update*`, `delete*`; `getParametroVigente`, `getTramoImpuesto`, `cerrarPeriodo`, `appendAuditoria`.

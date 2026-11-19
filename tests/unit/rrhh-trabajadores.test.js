@@ -61,6 +61,36 @@ function workerPayload(ids, overrides = {}) {
   };
 }
 
+function nombres(rows) {
+  return rows.map((row) => row.name);
+}
+
+function seedBusqueda() {
+  const ids = seedCatalogos();
+  const otroCargo = crearCatalogo({ tipo: 'cargo', codigo: 'CAR-02', nombre: 'Contador' }, viewer);
+  const ana = crearTrabajador(workerPayload(ids), viewer);
+  const camila = crearTrabajador(
+    workerPayload(ids, {
+      name: 'Camila Soto',
+      code: 'TRAB-002',
+      rut: '7.654.321-6',
+      email: 'camila@example.com',
+      cargoId: otroCargo.id
+    }),
+    viewer
+  );
+  const cristina = crearTrabajador(
+    workerPayload(ids, {
+      name: 'Cristina Rojas',
+      code: 'TRAB-003',
+      rut: '9.876.543-3',
+      email: 'cristina@example.com'
+    }),
+    viewer
+  );
+  return { ids, otroCargo, ana, camila, cristina };
+}
+
 describe('US1 - catálogos base', () => {
   it('rejects unknown catalog types and missing code or name', () => {
     const result = validarCatalogo({ tipo: 'turno', codigo: '', nombre: '' });
@@ -143,24 +173,71 @@ describe('US1 - fichas de trabajadores', () => {
     expect(entity.taxId).toBe('12.345.678-5');
   });
 
-  it('lists and searches workers by name, RUT and cargo', () => {
-    const ids = seedCatalogos();
-    crearTrabajador(workerPayload(ids), viewer);
-    crearTrabajador(
-      workerPayload(ids, {
-        name: 'Bruno Soto',
-        code: 'TRAB-002',
-        rut: '7.654.321-6',
-        email: 'bruno@example.com'
-      }),
-      viewer
-    );
+  it('filters names by prefix from the first character without crossing fields', () => {
+    seedBusqueda();
 
-    expect(listTrabajadores()).toHaveLength(2);
-    expect(buscarTrabajadores('perez').map((row) => row.name)).toEqual(['Ana Pérez']);
-    expect(buscarTrabajadores('bru').map((row) => row.name)).toEqual(['Bruno Soto']);
-    expect(buscarTrabajadores('7654').map((row) => row.name)).toEqual(['Bruno Soto']);
-    expect(buscarTrabajadores('analista').map((row) => row.name).sort()).toEqual(['Ana Pérez', 'Bruno Soto']);
+    expect(listTrabajadores()).toHaveLength(3);
+    expect(nombres(buscarTrabajadores('c', { criterio: 'nombre' }))).toEqual([
+      'Camila Soto',
+      'Cristina Rojas'
+    ]);
+    expect(nombres(buscarTrabajadores('ca', { criterio: 'nombre' }))).toEqual(['Camila Soto']);
+    expect(nombres(buscarTrabajadores('camila s', { criterio: 'nombre' }))).toEqual([
+      'Camila Soto'
+    ]);
+    expect(nombres(buscarTrabajadores('aNa'))).toEqual(['Ana Pérez']);
+    expect(nombres(buscarTrabajadores('perez'))).toEqual([]);
+    expect(nombres(buscarTrabajadores('7654', { criterio: 'nombre' }))).toEqual([]);
+    expect(nombres(buscarTrabajadores('contador', { criterio: 'nombre' }))).toEqual([]);
+  });
+
+  it('filters RUT and code by prefix from the first character', () => {
+    seedBusqueda();
+
+    expect(nombres(buscarTrabajadores('1', { criterio: 'rut' }))).toEqual(['Ana Pérez']);
+    expect(nombres(buscarTrabajadores('12', { criterio: 'rut' }))).toEqual(['Ana Pérez']);
+    expect(nombres(buscarTrabajadores('12.345.678-5', { criterio: 'rut' }))).toEqual(['Ana Pérez']);
+    expect(nombres(buscarTrabajadores('7', { criterio: 'rut' }))).toEqual(['Camila Soto']);
+
+    expect(nombres(buscarTrabajadores('t', { criterio: 'codigo' }))).toEqual([
+      'Ana Pérez',
+      'Camila Soto',
+      'Cristina Rojas'
+    ]);
+    expect(nombres(buscarTrabajadores('trab-002', { criterio: 'codigo' }))).toEqual([
+      'Camila Soto'
+    ]);
+  });
+
+  it('filters cargo by catalog id with an empty option meaning no filter', () => {
+    const { ids, otroCargo } = seedBusqueda();
+
+    expect(nombres(listTrabajadores({ criterio: 'cargo', cargoId: otroCargo.id }))).toEqual([
+      'Camila Soto'
+    ]);
+    expect(nombres(listTrabajadores({ criterio: 'cargo', cargoId: ids.cargo.id }))).toEqual([
+      'Ana Pérez',
+      'Cristina Rojas'
+    ]);
+    expect(listTrabajadores({ criterio: 'cargo' })).toHaveLength(3);
+  });
+
+  it('keeps the jefatura scope for every search criterion', () => {
+    const { ids, camila } = seedBusqueda();
+    const jefatura = { role: 'jefatura', usuario: 'Jefatura A', equipo: [camila.entityId] };
+
+    expect(nombres(listTrabajadores({ term: 'c', criterio: 'nombre', viewer: jefatura }))).toEqual([
+      'Camila Soto'
+    ]);
+    expect(nombres(listTrabajadores({ term: '7', criterio: 'rut', viewer: jefatura }))).toEqual([
+      'Camila Soto'
+    ]);
+    expect(
+      nombres(listTrabajadores({ term: 'trab002', criterio: 'codigo', viewer: jefatura }))
+    ).toEqual(['Camila Soto']);
+    expect(
+      nombres(listTrabajadores({ criterio: 'cargo', cargoId: ids.cargo.id, viewer: jefatura }))
+    ).toEqual([]);
   });
 
   it('updates base data and the RRHH profile', () => {

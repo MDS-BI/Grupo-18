@@ -96,7 +96,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - Un catálogo tiene tipo (cargo, departamento o centro de costo), código y nombre; el código es único dentro de su tipo.
 - Desactivar un catálogo no borra historia: deja de ofrecerse en fichas nuevas pero se sigue mostrando en las fichas que ya lo usaban.
 
-**Prueba Independiente**: Con catálogos precargados como datos semilla, un usuario crea un trabajador, lo encuentra buscando por nombre, código y RUT, lo actualiza, lo desactiva y comprueba que conserva su historia; además crea, edita y desactiva un catálogo. No requiere recorrer las pantallas de contratos, novedades ni liquidaciones.
+**Prueba Independiente**: Con catálogos precargados como datos semilla, un usuario crea un trabajador, lo encuentra con el selector **Buscar por:** (nombre, código, RUT o cargo), lo actualiza, lo desactiva y comprueba que conserva su historia; además crea, edita y desactiva un catálogo. No requiere recorrer las pantallas de contratos, novedades ni liquidaciones.
 
 **Escenarios de Aceptación**:
 
@@ -104,7 +104,7 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 2. **Dado** que un usuario está creando o editando una ficha, **cuando** deja el nombre, el código o el RUT en blanco, o ingresa un RUT con dígito verificador inválido, un correo mal formado o una fecha de ingreso que no es una fecha de calendario, **entonces** el sistema impide guardar y señala el campo específico que debe corregirse.
 3. **Dado** que ya existe una ficha con un RUT registrado, **cuando** un usuario intenta crear u actualizar otra ficha con ese mismo RUT, **entonces** el sistema rechaza la operación e indica que el RUT ya está asociado a otro trabajador.
 4. **Dado** que ya existe una ficha con un código registrado, **cuando** un usuario intenta crear u actualizar otra ficha con ese mismo código, **entonces** el sistema rechaza la operación e indica que el código ya está asociado a otro trabajador.
-5. **Dado** que existen fichas registradas, **cuando** el usuario busca por nombre, código o RUT (con o sin puntos y guion), **entonces** obtiene las fichas que coinciden; **y cuando** la búsqueda no arroja coincidencias, **entonces** el listado muestra un estado vacío explicativo en lugar de una tabla en blanco.
+5. **Dado** que existen fichas registradas, **cuando** el usuario elige un criterio en **Buscar por:** (Nombre, RUT, Código o Cargo) y ajusta su control —prefijo desde el primer carácter para nombre, RUT y código; desplegable de cargos activos para cargo—, **entonces** obtiene solo las fichas que coinciden con ese criterio (el RUT admite puntos y guion); **y cuando** la búsqueda no arroja coincidencias, **entonces** el listado muestra un estado vacío explicativo en lugar de una tabla en blanco.
 6. **Dado** un trabajador existente, **cuando** el usuario actualiza sus datos o su cargo, departamento o centro de costo, **entonces** los cambios se guardan sobre la misma ficha y se reflejan de inmediato en el listado y en la búsqueda.
 7. **Dado** un trabajador activo, **cuando** el usuario desactiva su ficha indicando la fecha de desvinculación, **entonces** la ficha queda con estado laboral "Desvinculado" con esa fecha y conserva sus datos e historia, sin eliminarse del sistema.
 8. **Dado** que un usuario gestiona catálogos base, **cuando** crea un cargo, departamento o centro de costo con código y nombre, **entonces** queda disponible para asignarlo a fichas.

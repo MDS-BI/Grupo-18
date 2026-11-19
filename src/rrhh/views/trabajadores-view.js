@@ -15,6 +15,7 @@ import {
   feedback,
   hideFeedback,
   input,
+  select,
   showFeedback
 } from '../components/dom.js';
 
@@ -68,14 +69,64 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
   const listPanel = el(documentRef, 'div', 'panel rrhh-list-panel');
   const toolbar = el(documentRef, 'div', 'rrhh-toolbar');
 
-  const searchLabel = el(documentRef, 'label', null, 'Buscar');
+  const criterioLabel = el(documentRef, 'label', null, 'Buscar por:');
+  criterioLabel.setAttribute('for', 'trabajadores-criterio');
+  toolbar.appendChild(criterioLabel);
+  const criterioSelect = select(documentRef, {
+    id: 'trabajadores-criterio',
+    options: [
+      { value: 'nombre', label: 'Nombre' },
+      { value: 'rut', label: 'RUT' },
+      { value: 'codigo', label: 'Código' },
+      { value: 'cargo', label: 'Cargo' }
+    ],
+    value: 'nombre'
+  });
+  toolbar.appendChild(criterioSelect);
+
+  const searchLabel = el(documentRef, 'label', null, 'Nombre');
   searchLabel.setAttribute('for', 'trabajadores-buscar');
   toolbar.appendChild(searchLabel);
   const searchInput = input(documentRef, {
     id: 'trabajadores-buscar',
-    placeholder: 'Nombre, código, RUT, cargo…'
+    placeholder: 'Nombre…'
   });
   toolbar.appendChild(searchInput);
+
+  const cargoLabel = el(documentRef, 'label', null, 'Cargo');
+  cargoLabel.setAttribute('for', 'trabajadores-cargo');
+  cargoLabel.hidden = true;
+  toolbar.appendChild(cargoLabel);
+  const cargoSelect = select(documentRef, {
+    id: 'trabajadores-cargo',
+    options: [
+      { value: '', label: 'Todos los cargos' },
+      ...listCatalogos({ tipo: 'cargo' }).map((row) => ({ value: row.id, label: row.nombre }))
+    ]
+  });
+  cargoSelect.hidden = true;
+  toolbar.appendChild(cargoSelect);
+
+  const SEARCH_LABELS = { nombre: 'Nombre', rut: 'RUT', codigo: 'Código' };
+  const SEARCH_PLACEHOLDERS = {
+    nombre: 'Nombre…',
+    rut: 'RUT (sin puntos ni guion)…',
+    codigo: 'Código…'
+  };
+
+  function setCriterio() {
+    const criterio = criterioSelect.value;
+    const byCargo = criterio === 'cargo';
+    searchLabel.hidden = byCargo;
+    searchInput.hidden = byCargo;
+    cargoLabel.hidden = !byCargo;
+    cargoSelect.hidden = !byCargo;
+    searchInput.value = '';
+    cargoSelect.value = '';
+    if (byCargo) return;
+    searchLabel.textContent = SEARCH_LABELS[criterio] ?? SEARCH_LABELS.nombre;
+    searchInput.placeholder = SEARCH_PLACEHOLDERS[criterio] ?? SEARCH_PLACEHOLDERS.nombre;
+  }
 
   const includeLabel = el(documentRef, 'label', 'rrhh-checkbox');
   const includeBaja = input(documentRef, { id: 'trabajadores-incluir-baja', type: 'checkbox' });
@@ -200,6 +251,8 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
   function refresh() {
     const rows = listTrabajadores({
       term: searchInput.value,
+      criterio: criterioSelect.value,
+      cargoId: cargoSelect.value,
       incluirBaja: includeBaja.checked,
       viewer
     });
@@ -251,8 +304,14 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
     empty.hidden = rows.length > 0;
   }
 
+  criterioSelect.addEventListener('change', () => {
+    setCriterio();
+    refresh();
+  });
   searchInput.addEventListener('input', refresh);
+  cargoSelect.addEventListener('change', refresh);
   includeBaja.addEventListener('change', refresh);
+  setCriterio();
   refresh();
 
   return {

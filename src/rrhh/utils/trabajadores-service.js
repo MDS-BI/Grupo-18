@@ -54,13 +54,6 @@ function normalizeSearch(value) {
   return normalizeText(value).replace(/[^a-z0-9]/g, '');
 }
 
-function normalizeWords(value) {
-  return normalizeText(value)
-    .split(/\s+/)
-    .map((w) => w.replace(/[^a-z0-9]/g, ''))
-    .filter(Boolean);
-}
-
 function normalizeRut(value) {
   return String(value ?? '')
     .replace(/[^0-9kK]/g, '')
@@ -207,7 +200,13 @@ function join(entity, profile, catalogos, entities = []) {
 }
 
 /** List workers joined with their RRHH profile and catalog labels. */
-export function listTrabajadores({ term = '', incluirBaja = false, viewer } = {}) {
+export function listTrabajadores({
+  term = '',
+  criterio = 'nombre',
+  cargoId = '',
+  incluirBaja = false,
+  viewer
+} = {}) {
   const catalogos = listCatalogos({ incluirInactivos: true });
   const allEntities = loadEntities();
   let entities = allEntities;
@@ -222,27 +221,16 @@ export function listTrabajadores({ term = '', incluirBaja = false, viewer } = {}
   const rows = entities.map((entity) =>
     join(entity, profileFor(entityIdOf(entity)), catalogos, allEntities)
   );
-  const query = normalizeSearch(term);
-  if (!query) return rows.sort((a, b) => a.name.localeCompare(b.name));
-  return rows
-    .filter((row) => {
-      const nameQ = normalizeSearch(row.name);
-      const codeQ = normalizeSearch(row.code);
-      const rutQ = normalizeRut(row.rut);
-      const cargoQ = normalizeSearch(row.cargo);
-      const nameWords = normalizeWords(row.name);
-      const cargoWords = normalizeWords(row.cargo);
-      const startsAt = (s) => s.startsWith(query);
-      return (
-        startsAt(nameQ) ||
-        nameWords.some(startsAt) ||
-        startsAt(codeQ) ||
-        startsAt(rutQ) ||
-        startsAt(cargoQ) ||
-        cargoWords.some(startsAt)
-      );
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const sortByName = (items) => items.sort((a, b) => a.name.localeCompare(b.name));
+  if (criterio === 'cargo') {
+    if (!cargoId) return sortByName(rows);
+    return sortByName(rows.filter((row) => String(row.cargoId) === String(cargoId)));
+  }
+  const field = { nombre: 'name', rut: 'rut', codigo: 'code' }[criterio] ?? 'name';
+  const normalize = field === 'rut' ? normalizeRut : normalizeSearch;
+  const query = normalize(term);
+  if (!query) return sortByName(rows);
+  return sortByName(rows.filter((row) => normalize(row[field]).startsWith(query)));
 }
 
 export function buscarTrabajadores(term, options = {}) {
