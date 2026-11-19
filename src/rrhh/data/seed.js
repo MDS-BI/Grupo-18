@@ -25,8 +25,10 @@ import {
 } from '../utils/contratos-service.js';
 import {
   calcularPeriodo,
+  cambiarEstadoLiquidacion,
   clearLiquidaciones,
   listLiquidaciones,
+  listLiquidacionesPeriodo,
   saveLiquidacion
 } from '../utils/liquidacion-service.js';
 import {
@@ -50,6 +52,7 @@ import {
 } from '../utils/periodos-service.js';
 import { rangoPeriodo } from '../utils/periodos.js';
 import {
+  actualizarTrabajador,
   clearTrabajadores,
   crearTrabajador,
   desactivarTrabajador,
@@ -64,6 +67,14 @@ export const RUT_INVALIDO_EJEMPLO = '12.345.678-9';
 
 export const PERIODO_CALCULADO = '2026-09';
 export const PERIODO_ABIERTO = '2026-10';
+
+function fechaRelativa(dias) {
+  const fecha = new Date();
+  fecha.setUTCDate(fecha.getUTCDate() + dias);
+  return fecha.toISOString().slice(0, 10);
+}
+
+const VENCIMIENTO_CERCANO = fechaRelativa(12);
 
 const ADMIN = {
   role: 'administrador',
@@ -182,6 +193,139 @@ export const SEED_DATASET = Object.freeze({
       centroCostoCodigo: 'CC-RRHH',
       fechaIngreso: '2024-06-03',
       estadoLaboral: 'Activo'
+    },
+    {
+      key: 'claudia',
+      code: 'TR-006',
+      name: 'Claudia Morales Fuentes',
+      rut: '12.000.001-2',
+      email: 'claudia.morales@ejemplo.cl',
+      phone: '+56 9 4666 7788',
+      address: 'Av. Providencia 2200, Providencia',
+      afp: 'AFP Capital',
+      salud: 'Isapre Consalud',
+      cargo: 'Contador',
+      cargoCodigo: 'CAR-CONT',
+      departamentoCodigo: 'FIN',
+      centroCostoCodigo: 'CC-FIN',
+      fechaIngreso: '2026-08-03',
+      estadoLaboral: 'Activo',
+      jefeKey: 'ana',
+      estadoLiquidacion: 'borrador'
+    },
+    {
+      key: 'carlos',
+      code: 'TR-007',
+      name: 'Carlos Mena Rojas',
+      rut: '12.000.002-0',
+      email: 'carlos.mena@ejemplo.cl',
+      phone: '+56 9 4777 8899',
+      address: 'Av. Ossa 900, Ñuñoa',
+      afp: 'AFP Modelo',
+      salud: 'Fonasa 7%',
+      cargo: 'Operario de Bodega',
+      cargoCodigo: 'CAR-OP',
+      departamentoCodigo: 'OPE',
+      centroCostoCodigo: 'CC-OPE',
+      fechaIngreso: '2026-08-10',
+      estadoLaboral: 'Activo',
+      jefeKey: 'ana',
+      estadoLiquidacion: 'borrador'
+    },
+    {
+      key: 'cristobal',
+      code: 'TR-008',
+      name: 'Cristóbal Soto Aguirre',
+      rut: '12.000.003-9',
+      email: 'cristobal.soto@ejemplo.cl',
+      phone: '+56 9 4888 9900',
+      address: 'Calle Huérfanos 1500, Santiago',
+      afp: 'AFP Habitat',
+      salud: 'Isapre Banmédica',
+      cargo: 'Analista de Remuneraciones',
+      cargoCodigo: 'CAR-RRHH',
+      departamentoCodigo: 'RH',
+      centroCostoCodigo: 'CC-RRHH',
+      fechaIngreso: '2026-08-17',
+      estadoLaboral: 'Activo',
+      jefeKey: 'ana',
+      estadoLiquidacion: 'borrador'
+    },
+    {
+      key: 'marta',
+      code: 'TR-009',
+      name: 'Marta Cáceres Vidal',
+      rut: '12.000.004-7',
+      email: 'marta.caceres@ejemplo.cl',
+      phone: '+56 9 4999 0011',
+      address: 'Av. Apoquindo 1800, Las Condes',
+      afp: 'AFP Provida',
+      salud: 'Fonasa 7%',
+      cargo: 'Asistente Administrativa',
+      cargoCodigo: 'CAR-ASIS',
+      departamentoCodigo: 'RH',
+      centroCostoCodigo: 'CC-RRHH',
+      fechaIngreso: '2026-08-01',
+      estadoLaboral: 'Activo',
+      jefeKey: 'luis',
+      estadoLiquidacion: 'aprobada'
+    },
+    {
+      key: 'mauricio',
+      code: 'TR-010',
+      name: 'Mauricio Fuentes Ríos',
+      rut: '12.000.005-5',
+      email: 'mauricio.fuentes@ejemplo.cl',
+      phone: '+56 9 4111 2233',
+      address: 'Av. Providencia 1000, Providencia',
+      afp: 'AFP Cuprum',
+      salud: 'Isapre Consalud',
+      cargo: 'Contador',
+      cargoCodigo: 'CAR-CONT',
+      departamentoCodigo: 'FIN',
+      centroCostoCodigo: 'CC-FIN',
+      fechaIngreso: '2026-08-05',
+      estadoLaboral: 'Activo',
+      jefeKey: 'luis',
+      estadoLiquidacion: 'aprobada'
+    },
+    {
+      key: 'marcela',
+      code: 'TR-011',
+      name: 'Marcela Ruiz Aguilar',
+      rut: '12.000.006-3',
+      email: 'marcela.ruiz@ejemplo.cl',
+      phone: '+56 9 4222 3344',
+      address: 'Av. Apoquindo 2500, Las Condes',
+      afp: 'AFP Capital',
+      salud: 'Fonasa 7%',
+      cargo: 'Diseñadora UX',
+      cargoCodigo: 'CAR-UX',
+      departamentoCodigo: 'PRO',
+      centroCostoCodigo: 'CC-PRO',
+      fechaIngreso: '2026-08-12',
+      estadoLaboral: 'Activo',
+      jefeKey: 'luis',
+      estadoLiquidacion: 'pagada'
+    },
+    {
+      key: 'diego',
+      code: 'TR-012',
+      name: 'Diego Valenzuela Costa',
+      rut: '12.000.007-1',
+      email: 'diego.valenzuela@ejemplo.cl',
+      phone: '+56 9 4333 4455',
+      address: 'Camino a Melipilla 5000, Maipú',
+      afp: 'AFP Modelo',
+      salud: 'Fonasa 7%',
+      cargo: 'Operario de Bodega',
+      cargoCodigo: 'CAR-OP',
+      departamentoCodigo: 'OPE',
+      centroCostoCodigo: 'CC-OPE',
+      fechaIngreso: '2026-08-20',
+      estadoLaboral: 'Activo',
+      jefeKey: 'luis',
+      estadoLiquidacion: 'pagada'
     }
   ],
   contratos: [
@@ -234,6 +378,77 @@ export const SEED_DATASET = Object.freeze({
       fechaInicio: '2024-06-03',
       modalidadGratificacion: 'art50',
       asignacionColacion: 32000,
+      asignacionMovilizacion: 0
+    },
+    {
+      trabajadorKey: 'claudia',
+      tipoContrato: 'indefinido',
+      sueldoBase: 780000,
+      jornadaHorasSemanales: 40,
+      fechaInicio: '2026-08-03',
+      modalidadGratificacion: 'art50',
+      asignacionColacion: 30000,
+      asignacionMovilizacion: 0
+    },
+    {
+      trabajadorKey: 'carlos',
+      tipoContrato: 'part_time',
+      sueldoBase: 620000,
+      jornadaHorasSemanales: 30,
+      fechaInicio: '2026-08-10',
+      modalidadGratificacion: 'art50',
+      asignacionColacion: 25000,
+      asignacionMovilizacion: 0
+    },
+    {
+      trabajadorKey: 'cristobal',
+      tipoContrato: 'indefinido',
+      sueldoBase: 950000,
+      jornadaHorasSemanales: 40,
+      fechaInicio: '2026-08-17',
+      modalidadGratificacion: 'art50',
+      asignacionColacion: 35000,
+      asignacionMovilizacion: 10000
+    },
+    {
+      trabajadorKey: 'marta',
+      tipoContrato: 'part_time',
+      sueldoBase: 650000,
+      jornadaHorasSemanales: 28,
+      fechaInicio: '2026-08-01',
+      modalidadGratificacion: 'art50',
+      asignacionColacion: 28000,
+      asignacionMovilizacion: 0
+    },
+    {
+      trabajadorKey: 'mauricio',
+      tipoContrato: 'indefinido',
+      sueldoBase: 900000,
+      jornadaHorasSemanales: 40,
+      fechaInicio: '2026-08-05',
+      modalidadGratificacion: 'art50',
+      asignacionColacion: 32000,
+      asignacionMovilizacion: 8000
+    },
+    {
+      trabajadorKey: 'marcela',
+      tipoContrato: 'plazo_fijo',
+      sueldoBase: 880000,
+      jornadaHorasSemanales: 38,
+      fechaInicio: '2026-08-12',
+      fechaTermino: VENCIMIENTO_CERCANO,
+      modalidadGratificacion: 'art50',
+      asignacionColacion: 30000,
+      asignacionMovilizacion: 12000
+    },
+    {
+      trabajadorKey: 'diego',
+      tipoContrato: 'indefinido',
+      sueldoBase: 620000,
+      jornadaHorasSemanales: 42,
+      fechaInicio: '2026-08-20',
+      modalidadGratificacion: 'art50',
+      asignacionColacion: 30000,
       asignacionMovilizacion: 0
     }
   ],
@@ -304,6 +519,10 @@ export const SEED_DATASET = Object.freeze({
     {
       trabajadorKey: 'renata',
       fecha: '2026-08-31'
+    },
+    {
+      trabajadorKey: 'diego',
+      fecha: '2026-09-20'
     }
   ]
 });
@@ -409,6 +628,15 @@ function createWorkers(catalogs) {
   return workers;
 }
 
+function applyJefaturas(workers) {
+  for (const definition of SEED_DATASET.trabajadores) {
+    if (!definition.jefeKey) continue;
+    const jefe = workers.get(definition.jefeKey);
+    const worker = workers.get(definition.key);
+    actualizarTrabajador(worker.entityId, { jefeId: jefe.entityId }, ADMIN);
+  }
+}
+
 function createContracts(workers) {
   for (const definition of SEED_DATASET.contratos) {
     const worker = workers.get(definition.trabajadorKey);
@@ -449,6 +677,26 @@ function applyDesvinculaciones(workers) {
   for (const item of SEED_DATASET.desvinculaciones) {
     const worker = workers.get(item.trabajadorKey);
     desactivarTrabajador(worker.entityId, item.fecha, ADMIN);
+  }
+}
+
+const TRANSICIONES_LIQUIDACION_SEED = {
+  borrador: ['borrador'],
+  aprobada: ['aprobada'],
+  pagada: ['aprobada', 'pagada']
+};
+
+function applyEstadosLiquidacion(workers) {
+  const liquidaciones = listLiquidacionesPeriodo(PERIODO_CALCULADO);
+  for (const definition of SEED_DATASET.trabajadores) {
+    const transiciones = TRANSICIONES_LIQUIDACION_SEED[definition.estadoLiquidacion] || [];
+    if (!transiciones.length) continue;
+    const worker = workers.get(definition.key);
+    const liquidacion = liquidaciones.find((row) => row.trabajador?.entityId === worker.entityId);
+    if (!liquidacion) continue;
+    for (const estado of transiciones) {
+      cambiarEstadoLiquidacion(liquidacion.id, estado, { viewer: ADMIN });
+    }
   }
 }
 
@@ -564,6 +812,7 @@ export function loadSeedData({ reset = true, mark = true } = {}) {
 
   const catalogs = catalogMap();
   const workers = createWorkers(catalogs);
+  applyJefaturas(workers);
   createContracts(workers);
   createNovedades(workers);
   applyDesvinculaciones(workers);
@@ -579,6 +828,7 @@ export function loadSeedData({ reset = true, mark = true } = {}) {
   });
   marcarPeriodoCalculado(PERIODO_CALCULADO);
   applyBonos(workers);
+  applyEstadosLiquidacion(workers);
 
   if (mark) storage().setItem(SEED_LOADED_KEY, 'loaded');
   return getSeedSummary();

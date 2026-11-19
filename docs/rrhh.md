@@ -67,6 +67,12 @@ El listado usa un selector **Buscar por:** con cuatro criterios excluyentes, de 
 
 Al cambiar de criterio se limpia la consulta anterior. El alcance por rol se conserva: Jefatura ve solo a su equipo; Admin/Analista ve toda la empresa.
 
+### Datos de prueba (seed)
+
+`src/rrhh/data/seed.js` carga **12 trabajadores** (`TR-001`–`TR-012`), 12 contratos, 5 novedades, 2 períodos, 13 catálogos y 10 liquidaciones de `2026-09`. Ana Rivas Molina y Luis Herrera Pavez son las dos jefaturas: tienen 3 y 4 personas asignadas mediante `jefeId`, respectivamente, para probar el alcance de Jefatura.
+
+Los nombres incluyen grupos con inicial compartida (`Claudia`/`Carlos`/`Cristóbal`, `Marta`/`Mauricio`/`Marcela`) y cargos variados para ejercitar el buscador por criterio. Diego Valenzuela está desvinculado (filtro de inactivos) y Marcela Ruiz tiene un contrato a plazo fijo que vence 12 días después de la carga, de modo que **Resumen** siempre muestra una alerta activa. Las liquidaciones nuevas cubren los estados `borrador`, `aprobada` y `pagada`; las tres originales permanecen en `calculada`.
+
 ## 6. Contratos públicos
 
 - **Storage**: operaciones `load*`, `save*`, `add*`, `update*`, `delete*`; `getParametroVigente`, `getTramoImpuesto`, `cerrarPeriodo`, `appendAuditoria`.
