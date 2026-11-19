@@ -1418,6 +1418,10 @@ table.rrhh-table tbody tr:last-child td {
   .print-clean select,
   .print-clean textarea,
   .print-clean .rrhh-seed-actions,
+  .print-clean #view-rrhh > .view-header,
+  .print-clean #rrhh-liquidaciones-view > #liquidaciones-feedback,
+  .print-clean #rrhh-liquidaciones-view > .rrhh-list-container,
+  .print-clean .liq-actions,
   #rrhh-logout-btn,
   #rrhh-user-badge {
     display: none !important;
@@ -1426,7 +1430,9 @@ table.rrhh-table tbody tr:last-child td {
   .print-clean .main-content,
   .print-clean .rrhh-main-only,
   .print-clean #view-rrhh,
-  .print-clean #rrhh-panel-liquidaciones {
+  .print-clean #rrhh-panel-liquidaciones,
+  .print-clean #rrhh-liquidaciones-view,
+  .print-clean #rrhh-liquidacion-root {
     padding: 0 !important;
     margin: 0 !important;
     max-width: none !important;
@@ -1456,11 +1462,23 @@ table.rrhh-table tbody tr:last-child td {
   .print-clean .liq-group,
   .print-clean .liq-header,
   .print-clean .liq-totals,
-  .print-clean .liq-explanation,
+  .print-clean .liq-explanation-body,
   .print-clean .liq-meta-block {
     page-break-inside: avoid;
     break-inside: avoid;
     overflow: visible !important;
+  }
+
+  .print-clean #liq-explanation > h3,
+  .print-clean #liq-explanation > .liq-explanation-hint {
+    display: none !important;
+  }
+
+  .print-clean #liq-explanation {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: none !important;
   }
 
   .print-clean .liq-line-amount,

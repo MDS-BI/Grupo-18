@@ -148,11 +148,20 @@ describe('US5 - clean printing and PDF', () => {
     result.dispose();
   });
 
-  it('declares print rules that hide application chrome and avoid page breaks inside sections', () => {
+  it('declares print rules that isolate the comprobante and keep selected explanations', () => {
     expect(css).toMatch(/@media\s+print/);
     expect(css).toMatch(/\.print-clean[^{]*\.topbar|\.topbar[^{]*\{[^}]*display:\s*none/s);
     expect(css).toMatch(/\.print-clean[^{]*\.sidebar|\.sidebar[^{]*\{[^}]*display:\s*none/s);
     expect(css).toMatch(/\.print-clean[^{]*\.nav-module|\.nav-module[^{]*\{[^}]*display:\s*none/s);
+    expect(css).toMatch(
+      /\.print-clean[^{]*#view-rrhh\s*>\s*\.view-header[^{]*\{[^}]*display:\s*none/s
+    );
+    expect(css).toMatch(
+      /\.print-clean[^{]*#rrhh-liquidaciones-view[^{]*\.rrhh-list-container[^{]*\{[^}]*display:\s*none/s
+    );
+    expect(css).toMatch(/\.print-clean[^{]*\.liq-explanation-hint[^{]*\{[^}]*display:\s*none/s);
+    expect(css).not.toMatch(/\.print-clean\s+#liq-explanation\s*\{[^}]*display:\s*none/s);
+    expect(css).toMatch(/\.print-clean[^{]*#rrhh-liquidacion-root[^{]*\{[^}]*width:\s*100%/s);
     expect(css).toMatch(/page-break-inside:\s*avoid/);
     expect(css).toMatch(/size:\s*(letter|A4)/i);
   });
