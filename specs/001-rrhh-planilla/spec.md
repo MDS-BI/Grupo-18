@@ -18,10 +18,16 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 ### Session 2026-11-08
 
 - Q: ¿Dónde deben definirse las entidades de Recursos Humanos que usan las Historias de Usuario 1–4 (Trabajador, Contrato, Novedad y Período de remuneración)? → A: Opción A — definir Trabajador, Contrato, Novedad y Período en las Entidades Clave de 001, remitiendo el detalle al data-model de `001-rrhh-planilla`.
-- Q: ¿La identidad y el rol del usuario deben provenir de una autenticación real o de una sesión simulada con selector de rol? → A: Opción A — sesión simulada con selector de rol, sin credenciales ni backend.
+- Q: ¿La identidad y el rol del usuario deben provenir de una autenticación real o de una sesión simulada con selector de rol? → A: Opción A (original) — sesión simulada con selector de rol, sin credenciales ni backend.
 - Q: ¿Cómo se cargan y actualizan los parámetros legales (UF, UTM, tasas y tramos) para cada período? → A: Opción A — carga manual versionada por un administrador mediante formulario o archivo de configuración, sin integración con servicios externos.
 - Q: ¿Durante cuánto tiempo debe conservarse la bitácora de auditoría exigida por la Ley 21.719? → A: Opción A — mientras dure la relación laboral y 6 años después del término (validar con asesoría legal).
 - Q: ¿La versión inicial debe incluir exportación e importación de datos para respaldo y restauración? → A: Opción A — exportación e importación completa en JSON para respaldo y restauración.
+
+### Session 2026-06-19
+
+- Q: ¿Cómo se accede a la aplicación? → A: Ingreso con **rol y clave demo** (autenticación simulada local). El rol se elige/valida en el acceso; no existe autenticación real ni backend. Credenciales demo por defecto (documentadas): `administrador`/`admin123`, `analista`/`analista123`, `jefatura`/`jefatura123`, `trabajador`/`trabajador123`. La sesión autenticada vive en el navegador (p. ej. almacenamiento de sesión) y al refrescar puede requerirse reingreso según implementación.
+- Q: ¿Se permite cambiar de rol sin cerrar sesión? → A: No en el flujo simplificado: para cambiar de rol se debe **cerrar sesión** e ingresar de nuevo con otra cuenta demo (o misma clave según diseño), evitando cambios implícitos de permisos en caliente salvo que se especifique lo contrario.
+- Q: ¿Qué comportamiento tienen los roles Jefatura y Trabajador al ingresar? → A: Tras autenticarse con rol **Jefatura** o **Trabajador**, el sistema debe permitir **elegir a qué persona (Trabajador representado) corresponde la sesión** cuando aplique (para visibilidad de equipo/liquidaciones personales), con validaciones coherentes con las reglas existentes (jefatura solo equipo asignado; trabajador solo sus datos). Debe existir un **botón "Cerrar sesión"** visible en el encabezado.
 
 ### Session 2026-11-17
 
@@ -58,6 +64,8 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 - Q: Al validar si una solicitud de vacaciones cabe en el saldo, ¿se cuentan los días que se devengarán entre hoy y la fecha de inicio (US7)? → A: Opción A — sí, el saldo se proyecta a la fecha de inicio; la pantalla muestra el saldo de hoy y el proyectado.
 - Q: Si el equipo de una jefatura es pequeño, ¿se aplica también el mínimo de 5 personas a sus reportes de horas extra y ausentismo (US10)? → A: Opción A — sí, si el equipo o departamento del reporte tiene menos de 5 personas, las cifras se ocultan con una explicación.
 - Q: ¿La tabla de tramos de asignación familiar es un dato obligatorio del conjunto de parámetros legales de cada mes (US8 y US12)? → A: Opción A — sí; sin ella no se puede crear ni calcular el período.
+
+**Notas UI RR.HH. (sesión 2026-11-19, ajustes de privacidad/representación):** en `Contratos` (vista RRHH), si el rol es **Jefatura** o **Trabajador**, se limita el alcance a su ámbito (Jefatura: equipo asignado; Trabajador: solo su persona representada) y se **oculta la columna “Sueldo base”**. En el encabezado/badge se muestra el **nombre y código** del trabajador representado cuando aplica (en vez de solo el UUID). En la pantalla de selección de representado, el texto aclara: **Jefatura** elige su propia ficha de jefe/a para cargar su equipo; **Trabajador** elige su ficha personal.
 
 ## Escenarios de Usuario y Pruebas *(obligatorio)*
 
@@ -303,42 +311,40 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 ### Historia de Usuario 6 - Seguridad, Roles y Gobierno de Datos (Prioridad: P1)
 
 **Como** administrador/a de RR.HH.,
-**quiero** restringir el acceso a los datos sensibles (sueldos, liquidaciones y licencias médicas) según el rol de la sesión y registrar una bitácora de auditoría,
+**quiero** restringir el acceso a los datos sensibles (sueldos, liquidaciones y licencias médicas) según el rol de la sesión autenticada demo y registrar una bitácora de auditoría,
 **para** cumplir estrictamente con la normativa de protección de datos (Ley 21.719).
 
 **Por qué esta prioridad**: Protege la privacidad de la información personal y asegura la trazabilidad de cualquier modificación.
 
-**Alcance**: incluye los roles de la sesión simulada, los permisos por rol, la protección de datos sensibles y la bitácora de auditoría. No incluye autenticación real, credenciales ni gestión de usuarios. Las demás historias aplican estas reglas sin redefinirlas.
+**Alcance**: incluye roles, permisos por rol, protección de datos sensibles y bitácora. La autenticación es **simulada** (ingreso por rol y clave demo, sin backend). Las demás historias aplican estas reglas sin redefinirlas.
 
 **Reglas de negocio**:
 
-- La identidad y el rol se determinan al iniciar una sesión simulada mediante un selector; los roles son administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador. Sin rol seleccionado, o con un rol no reconocido, el sistema no muestra ni permite operar ningún dato.
-- Al seleccionar el rol Jefatura, el selector pide además el Trabajador activo que representa, y su equipo son los Trabajadores que lo tienen como jefatura directa; si no se selecciona un Trabajador, el sistema no muestra ni permite operar novedades.
-- Al seleccionar el rol Trabajador, el selector pide además el Trabajador (activo o desvinculado) que representa; si no selecciona uno, el sistema no muestra liquidaciones. Un Trabajador desvinculado puede consultar sus propias liquidaciones de períodos cerrados, sin operar otras funciones.
-- Son datos sensibles en esta versión el sueldo base y las condiciones salariales de los contratos, las liquidaciones y las licencias médicas.
-- Permisos y visibilidad por rol: el administrador/a de RR.HH. accede a todas las funciones de las Historias 1 a 5 y 7 a 12, cierra períodos, consulta la bitácora de auditoría, exporta e importa el respaldo y carga los parámetros legales; el analista de remuneraciones gestiona fichas, catálogos y contratos, registra novedades, crea períodos, ejecuta el cálculo y consulta liquidaciones, pero no cierra períodos, no aprueba novedades y no accede a la bitácora ni al respaldo. La jefatura ve de su equipo únicamente los datos básicos (nombre, código, cargo, departamento, centro de costo y estado laboral) y gestiona las novedades de su equipo (incluidas licencias médicas sin diagnóstico clínico), pudiendo aprobar o rechazar las que no haya registrado ella misma; en listados, detalles, búsquedas y vistas imprimibles tiene ocultos o bloqueados los contratos, los sueldos base y las liquidaciones de su equipo, y no puede operar sobre Trabajadores ajenos a su equipo. El Trabajador solo ve sus propias liquidaciones de períodos cerrados; el resto de la información sensible permanece oculta o inaccesible para él.
-- Cambiar de rol durante la sesión aplica de inmediato los permisos del nuevo rol, vuelve a pedir el Trabajador que se representa cuando el rol es jefatura o Trabajador, y queda registrado en la bitácora.
-- Las restricciones se aplican en la interfaz y en la capa de datos, por lo que un enlace directo no permite eludirlas; cuando se deniega una acción, el sistema lo informa sin revelar el contenido protegido.
-- La bitácora de auditoría registra toda consulta, creación, modificación o desactivación de información sensible, los cambios de rol, los accesos denegados y las operaciones de exportación e importación de respaldo, con al menos usuario, rol, fecha y hora, acción y registro afectado, y los campos modificados cuando corresponda, con valores anteriores y nuevos para campos no sensibles y marcadores de cambio para datos sensibles; es de solo inserción y se conserva mientras dure la relación laboral y 6 años después. Al importar un respaldo, nunca se sobrescriben ni se eliminan los registros previos de la bitácora.
-- Si la bitácora no puede escribirse, la operación no se completa.
+- El acceso requiere **inicio de sesión con rol y clave demo** (FR-051). Sin sesión autenticada no se muestran ni operan datos. Roles válidos: administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador. Si las credenciales no son válidas, el acceso se rechaza con mensaje genérico (sin revelar detalles).
+- Tras autenticarse como **jefatura**, el sistema debe permitir elegir el **Trabajador representado** (activo, del equipo según reglas del sistema) cuando sea necesario para operar novedades/equipo; si no se selecciona uno válido, no se permiten operaciones que dependan de ese alcance. Tras autenticarse como **Trabajador**, debe permitir elegir/confirmar el **Trabajador representado** (activo o desvinculado) para acceder solo a sus liquidaciones de períodos cerrados; si no se selecciona uno, no se muestran liquidaciones.
+- Datos sensibles: sueldo base y condiciones salariales de contratos, liquidaciones y licencias médicas (sin diagnóstico).
+- **Ocultamiento proactivo (UI):** en navegación, listados, detalles, búsquedas y comprobantes imprimibles se ocultan o deshabilitan las secciones/acciones no permitidas al rol. Ante **accesos directos o acciones prohibidas**, el sistema informa denegación **sin revelar contenido protegido** y el intento se audita cuando aplique.
+- Permisos: administrador/a accede a US1–US5,7–12 según matriz, cierra períodos, consulta bitácora, exporta/importa respaldo y carga parámetros; analista gestiona fichas, catálogos, contratos, registra novedades, crea períodos, ejecuta cálculo y consulta liquidaciones, pero no cierra, no aprueba/rechaza novedades, no bitácora ni respaldo; jefatura ve solo datos básicos de su equipo y gestiona novedades de su equipo (aprueba/rechaza las que no registró), sin contratos, sueldos base ni liquidaciones de otros; Trabajador solo sus liquidaciones de períodos cerrados (históricas incluidas).
+- **Cambio de rol:** en esta versión se realiza **cerrando sesión e iniciando sesión** con otra credencial demo (no cambio en caliente). Debe existir **botón "Cerrar sesión"** visible en el encabezado.
+- Bitácora append-only: registra consultas/cambios sensibles, denegaciones relevantes, exportación/importación de respaldo y eventos de sesión autenticada cuando se definan; retención según política vigente. Si no puede escribirse, la operación sensible no se completa. Importación de respaldo no elimina/sobrescribe registros previos de bitácora.
+- En caso de credenciales inválidas o sesión inválida, el sistema no expone datos.
 
-**Prueba Independiente**: Al simular cada rol, la interfaz muestra y permite solo lo que corresponde; con el rol Jefatura se ocultan los sueldos, y cada consulta o cambio sensible, junto con cada acceso denegado, aparece en la bitácora.
+**Prueba Independiente**: Login demo por rol, selección de representado para jefatura/trabajador, verificación de ocultamiento en UI y denegación en accesos directos, y registros en bitácora.
 
 **Escenarios de Aceptación**:
 
-1. **Dado** un usuario con rol de jefatura, **cuando** consulta el sistema, **entonces** ve y registra las novedades de su equipo, y aprueba o rechaza las de su equipo que no haya registrado ella misma, sin acceso a las liquidaciones ni a los sueldos base.
-2. **Dado** que el usuario selecciona el rol Jefatura, **cuando** no selecciona el Trabajador activo que representa, **entonces** el sistema no muestra ni permite operar novedades.
-3. **Dado** que el usuario selecciona el rol Trabajador, **cuando** no selecciona el Trabajador (activo o desvinculado) que representa, **entonces** el sistema no muestra liquidaciones. Al seleccionar un Trabajador activo o desvinculado que representa, puede consultar sus propias liquidaciones históricas de períodos cerrados.
-4. **Dado** un Trabajador desvinculado representado en la sesión, **cuando** utiliza el sistema, **entonces** solo puede consultar sus propias liquidaciones de períodos cerrados y no puede operar otras funciones.
-5. **Dado** un usuario sin rol seleccionado o con un rol no reconocido, **cuando** intenta usar el sistema, **entonces** no se muestra ni se permite operar ningún dato.
-6. **Dado** un analista de remuneraciones, **cuando** intenta consultar la bitácora, exportar o importar un respaldo o aprobar una novedad, **entonces** el sistema lo impide e indica que no tiene autorización.
-7. **Dado** un usuario sin autorización sobre una liquidación, **cuando** intenta acceder a ella mediante un enlace directo, **entonces** el sistema lo impide sin revelar su contenido.
-8. **Dado** una sesión activa, **cuando** el usuario cambia de rol, **entonces** se aplican de inmediato los permisos del nuevo rol, se vuelve a pedir el Trabajador que representa si corresponde y el cambio queda en la bitácora.
-9. **Dado** el administrador/a de RR.HH., **cuando** consulta la bitácora, **entonces** puede ver los registros con usuario, rol, fecha y hora, acción y registro afectado, y puede reconstruir los accesos y modificaciones de un usuario o período.
-10. **Dado** cualquier rol, **cuando** intenta editar o eliminar un registro de auditoría, **entonces** el sistema lo rechaza y el intento queda registrado.
-11. **Dado** una operación sobre información sensible, **cuando** la bitácora no puede escribirse, **entonces** la operación no se completa.
-12. **Dado** un acceso denegado por falta de permisos, **cuando** el sistema lo rechaza, **entonces** el intento queda registrado en la bitácora.
-13. **Dado** cualquier cambio o consulta de información sensible, **cuando** la operación se completa, **entonces** el sistema genera un registro automático de auditoría de solo inserción.
+1. **Dado** credenciales demo válidas de jefatura, **cuando** el usuario inicia sesión y selecciona un Trabajador representado de su equipo, **entonces** ve datos básicos y gestiona novedades de ese ámbito sin ver contratos/sueldos/liquidaciones ajenas al permiso.
+2. **Dado** login como jefatura sin seleccionar representado válido cuando se requiere, **entonces** no se permiten operaciones de novedades/equipo hasta completar la selección.
+3. **Dado** login como Trabajador sin seleccionar representado, **entonces** no se muestran liquidaciones.
+4. **Dado** un Trabajador desvinculado representado, **cuando** accede, **entonces** solo consulta sus liquidaciones de períodos cerrados.
+5. **Dado** acceso sin sesión autenticada, **cuando** intenta usar el sistema, **entonces** se muestra pantalla/login y no se exponen datos.
+6. **Dado** un analista, **cuando** intenta aprobar novedad, consultar bitácora o exportar respaldo, **entonces** se deniega (oculto o acción bloqueada según UI) sin revelar contenido protegido.
+7. **Dado** un usuario sin autorización sobre una liquidación, **cuando** accede por URL/ruta directa, **entonces** se deniega sin mostrar contenido.
+8. **Dado** el usuario autenticado, **cuando** pulsa "Cerrar sesión", **entonces** la sesión se limpia y se requiere nuevo ingreso.
+9. **Dado** administrador/a, **cuando** consulta bitácora, **entonces** ve registros con usuario/rol/fecha/acción/registro y no puede editarlos ni eliminarlos.
+10. **Dado** una operación sensible sin posibilidad de escribir bitácora, **entonces** la operación no se completa.
+11. **Dado** un acceso denegado, **cuando** ocurre, **entonces** queda registrado en bitácora si corresponde al flujo definido.
+12. **Dado** cambios/consultas sensibles completadas, **entonces** se genera registro automático en bitácora (según reglas existentes).
 
 ---
 
@@ -734,21 +740,21 @@ Este proyecto especifica el módulo de **Recursos Humanos y Planilla** de un ERP
 
 - El módulo gestiona los datos de una única empresa en un único espacio de trabajo, sin una base de datos multiinquilino compartida.
 - La versión inicial incluye todas las historias de usuario US1–US12: fichas y catálogos base (US1), contratos y alertas de plazo (US2), registro y aprobación de novedades (US3), cálculo y cierre de períodos (US4), explicación e impresión de liquidaciones (US5), seguridad y gobierno de datos (US6), vacaciones (US7), cargas familiares y asignación familiar (US8), simulador de sueldo (US9), reportes de gestión y equidad salarial (US10), exportaciones contables y de pago (US11) y parámetros legales versionados (US12). Quedan fuera capacidades ERP avanzadas como contabilidad general, informes financieros y planificación presupuestaria.
-- La navegación entre las pantallas de RR.HH. se maneja dentro de la aplicación, y el botón atrás del navegador debe comportarse de forma predecible.
+- La aplicación opera en modo **RR.HH.-only**: no se muestran pantallas base genéricas del ERP antiguo en el flujo principal; el espacio de trabajo corresponde al módulo de RR.HH. y Planilla con **pestañas superiores** (sin barra lateral).
+- La navegación entre pestañas/pantallas de RR.HH. se maneja dentro de la aplicación, y el botón atrás del navegador debe comportarse de forma predecible.
 - Los datos persisten localmente en el navegador y no se ven afectados por la navegación entre pantallas.
 - El contenido introducido por el usuario (nombres, observaciones, motivos de rechazo y otros textos libres) DEBE sanitizarse antes de mostrarse para prevenir ataques de inyección de scripts (XSS).
 - Las liquidaciones y sus líneas existen como resultado del motor de cálculo de la Historia de Usuario 4; la Historia de Usuario 5 cubre únicamente su explicación e impresión, no las reglas de cálculo ni la generación de la planilla.
 - Cada línea conserva, desde el momento del cálculo, la base, la tasa o fórmula y el parámetro legal aplicado, de modo que la explicación no depende de parámetros posteriores.
-- La impresión se realiza mediante la función de impresión del navegador, que incluye la opción de guardar como PDF; no se requiere un generador de PDF dedicado.
-- Los datos de identificación de la empresa emisora están disponibles en la configuración del módulo.
-- Los parámetros legales (UF, UTM, tasas y tramos) se cargan y versionan manualmente por un administrador mediante un formulario en pantalla; no se integran servicios externos de indicadores previsionales.
+- La impresión se realiza mediante la función de impresión del navegador (`window.print()`), que incluye la opción de guardar como PDF; el comprobante debe ocupar el ancho disponible de la hoja sin recortar montos en pesos.
+- Los datos de identificación de la empresa emisora están disponibles en la configuración del módulo (`module-config.js`).
+- Los parámetros legales (UF, UTM, tasas y tramos) se cargan y versionan manualmente por un administrador mediante un formulario en pantalla; no se integran servicios externos.
 - Los montos se presentan en pesos chilenos con separador de miles.
 - El acceso a la explicación y al comprobante respeta los permisos vigentes del usuario.
-- Los roles de la sesión simulada son administrador/a de RR.HH., analista de remuneraciones, jefatura y Trabajador, sin gestión de asignación.
-- La identidad y el rol del usuario se determinan al iniciar una sesión simulada mediante un selector de rol; no se implementa autenticación real ni manejo de credenciales.
+- El acceso requiere **ingreso con rol y clave demo** (ver FR-051 y Session 2026-06-19). No hay autenticación real ni gestión de usuarios productiva.
+- Tras login como **jefatura** o **Trabajador**, se selecciona el **Trabajador representado** según reglas de visibilidad (equipo o propio histórico cerrado).
 - Los datos sensibles (sueldos, liquidaciones y licencias médicas) están clasificados explícitamente en el modelo de datos.
-- Las restricciones de acceso se aplican tanto en la interfaz como en la capa de datos, por lo que no pueden eludirse mediante enlaces directos.
-- La bitácora de auditoría se conserva mientras dure la relación laboral y 6 años después del término, conforme a la Ley 21.719.
-- La auditoría registra tanto los accesos autorizados como los denegados.
-- La versión inicial incluye exportación e importación completa en JSON para respaldo y restauración de los datos almacenados localmente.
+- Las restricciones de acceso se aplican en interfaz (ocultamiento proactivo) y en lógica de datos; los accesos directos denegados no revelan contenido protegido.
+- La bitácora de auditoría se conserva mientras dure la relación laboral y 6 años después del término, conforme a la Ley 21.719; los accesos denegados se registran cuando corresponda.
+- La versión inicial incluye exportación e importación completa en JSON para respaldo y restauración de los datos almacenados localmente (la importación no sobrescribe ni elimina registros previos de auditoría).
 

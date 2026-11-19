@@ -124,7 +124,7 @@ describe('US14 - simulated session persistence', () => {
 
   it('falls back to the default session when storage is corrupted', () => {
     store.set(SESSION_KEY, '{not-json');
-    expect(getSession().rol).toBe('analista');
+    expect(getSession().rol).toBe('');
   });
 
   it('preserves an unknown stored role so access is denied instead of granted', () => {

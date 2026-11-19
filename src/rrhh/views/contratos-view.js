@@ -35,6 +35,16 @@ export function renderContratosView(root, { doc, viewer } = {}) {
 
   const canManage = puedeGestionarContratos(viewer);
   const trabajadores = listTrabajadores({ incluirBaja: true });
+  const isPrivilegedViewer = viewer?.role === 'jefatura' || viewer?.role === 'trabajador';
+  const hideSueldoBase = isPrivilegedViewer;
+
+  let allowedEntityIds = null;
+  if (viewer?.role === 'trabajador') {
+    allowedEntityIds = new Set([viewer?.trabajadorId].filter(Boolean));
+  } else if (viewer?.role === 'jefatura') {
+    const equipo = Array.isArray(viewer?.equipo) ? viewer.equipo : [];
+    allowedEntityIds = new Set(equipo.filter(Boolean));
+  }
 
   const container = el(documentRef, 'section', 'rrhh-section rrhh-contratos-view');
   container.id = 'rrhh-contratos-view';
@@ -49,7 +59,9 @@ export function renderContratosView(root, { doc, viewer } = {}) {
       documentRef,
       'p',
       'panel-copy',
-      'Cada contrato tiene vigencia propia. Los cambios de sueldo cierran el contrato anterior y dejan historial completo.'
+      hideSueldoBase
+        ? 'Como Jefatura/Trabajador solo ves contratos de tu ámbito. No tienes acceso a sueldos base.'
+        : 'Cada contrato tiene vigencia propia. Los cambios de sueldo cierran el contrato anterior y dejan historial completo.'
     )
   );
   container.appendChild(header);
@@ -71,9 +83,9 @@ export function renderContratosView(root, { doc, viewer } = {}) {
     formPanel.appendChild(
       el(
         documentRef,
-        'div',
-        'panel rrhh-readonly',
-        'Tu rol puede consultar contratos, pero no crear ni modificarlos.'
+        'p',
+        'panel-copy',
+        'Como Jefatura solo ves las novedades de tu equipo. No tienes acceso a liquidaciones ni sueldos base.'
       )
     );
   }
@@ -82,13 +94,26 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   const filterLabel = el(documentRef, 'label', null, 'Trabajador');
   filterLabel.setAttribute('for', 'contratos-filtro-trabajador');
   toolbar.appendChild(filterLabel);
+  const filterOptions = [{ value: '', label: 'Todos' }];
+  if (allowedEntityIds) {
+    for (const row of trabajadores) {
+      if (allowedEntityIds.has(row.entityId)) {
+        filterOptions.push({ value: row.entityId, label: row.name });
+      }
+    }
+  } else {
+    for (const row of trabajadores) {
+      filterOptions.push({ value: row.entityId, label: row.name });
+    }
+  }
   const filterSelect = select(documentRef, {
     id: 'contratos-filtro-trabajador',
-    options: [
-      { value: '', label: 'Todos' },
-      ...trabajadores.map((row) => ({ value: row.entityId, label: row.name }))
-    ]
+    options: filterOptions
   });
+  if (allowedEntityIds && allowedEntityIds.size === 1) {
+    filterSelect.value = [...allowedEntityIds][0];
+    filterSelect.disabled = true;
+  }
   toolbar.appendChild(filterSelect);
 
   const includeLabel = el(documentRef, 'label', 'rrhh-checkbox');
@@ -105,16 +130,17 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   const table = el(documentRef, 'table', 'rrhh-table');
   const thead = el(documentRef, 'thead');
   const headRow = el(documentRef, 'tr');
-  for (const label of [
+  const headers = [
     'Trabajador',
     'Tipo',
-    'Sueldo base',
+    ...(hideSueldoBase ? [] : ['Sueldo base']),
     'Jornada',
     'Inicio',
     'Término',
     'Estado',
     ''
-  ]) {
+  ];
+  for (const label of headers) {
     headRow.appendChild(el(documentRef, 'th', null, label));
   }
   thead.appendChild(headRow);
@@ -136,10 +162,13 @@ export function renderContratosView(root, { doc, viewer } = {}) {
     trabajadores.find((row) => row.entityId === entityId)?.name || entityId;
 
   function refresh() {
-    const rows = listContratos({
+    const rowsAll = listContratos({
       entityId: filterSelect.value || undefined,
       incluirTerminados: includeTerminated.checked
     });
+    const rows = allowedEntityIds
+      ? rowsAll.filter((row) => allowedEntityIds.has(row.entityId))
+      : rowsAll;
     tbody.textContent = '';
     for (const row of rows) {
       const tr = el(documentRef, 'tr');
@@ -148,7 +177,9 @@ export function renderContratosView(root, { doc, viewer } = {}) {
       tr.appendChild(
         el(documentRef, 'td', null, TIPO_CONTRATO_LABELS[row.tipoContrato] || row.tipoContrato)
       );
-      tr.appendChild(el(documentRef, 'td', null, formatMoney(row.sueldoBase)));
+      if (!hideSueldoBase) {
+        tr.appendChild(el(documentRef, 'td', null, formatMoney(row.sueldoBase)));
+      }
       tr.appendChild(el(documentRef, 'td', null, `${row.jornadaHorasSemanales} h`));
       tr.appendChild(el(documentRef, 'td', null, row.fechaInicio));
       tr.appendChild(el(documentRef, 'td', null, row.fechaTermino || '—'));

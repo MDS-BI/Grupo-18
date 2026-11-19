@@ -1,46 +1,51 @@
 # Módulo de Recursos Humanos y Planilla
 
-**Funcionalidad**: `001-rrhh-planilla` | **Actualizado**: 2026-11-17
-**Fuentes**: `spec.md` (US1–US12, FR-040–FR-107), `plan.md`, `data-model.md`, `quickstart.md`, `tasks.md`.
+**Funcionalidad**: `001-rrhh-planilla` | **Actualizado**: 2026-06-19
+**Fuentes**: `spec.md` (US1–US12), `plan.md`, `data-model.md`, `quickstart.md`.
 
 ## 1. Alcance y arquitectura
 
-Módulo de Recursos Humanos y Planilla de un ERP. El código vive en `src/rrhh/` y su configuración en `src/module-config.js`. Persistencia local (`localStorage`) y sesión simulada, sin backend ni credenciales.
+Módulo de Recursos Humanos y Planilla. Aplicación web Vite (HTML/CSS/JS). Persistencia local (`localStorage`). **Modo RR.HH.-only**: no se muestran pantallas base genéricas del ERP en el flujo principal. Tras **inicio de sesión con rol y clave demo** se muestra un espacio de trabajo **sin barra lateral**, con **pestañas superiores** (incluye pestaña **Resumen** con alertas de contratos por vencer).
 
-- Trabajadores y liquidaciones: almacenamiento común `erp_base_module:entities` / `erp_base_module:documents`; demás tablas: `erp_rrhh:*`.
-- Las líneas de liquidación y sus snapshots se guardan en `erp_rrhh:lineas-liquidacion`.
+- Código: `src/rrhh/`, configuración `src/module-config.js`.
+- Trabajadores y liquidaciones: `erp_base_module:entities` / `erp_base_module:documents`; resto: prefijo `erp_rrhh:*`.
+- Líneas de liquidación: `erp_rrhh:lineas-liquidacion`.
 
-## 2. Configuración
+## 2. Configuración y acceso
 
-`src/module-config.js` centraliza el nombre del módulo, las etiquetas y el bloque `rrhh`/`empresa` (datos de la empresa emisora). Con `rrhh.only: true` (configuración actual) el navegador abre directamente en el espacio de trabajo de RR.HH. y Planilla.
+`src/module-config.js` define nombre del módulo, etiquetas y datos de empresa emisora.
+
+**Login demo (sin backend):** el usuario ingresa **rol** y **clave**. Credenciales por defecto (documento de referencia en `spec.md`): `administrador`/`admin123`, `analista`/`analista123`, `jefatura`/`jefatura123`, `trabajador`/`trabajador123`. Tras login válido se crea sesión en el navegador; existe **Cerrar sesión** en el encabezado. Para **cambiar de rol** debe cerrar sesión e iniciar sesión de nuevo.
+
+**Representado:** si el rol es **Jefatura** o **Trabajador**, se solicita elegir el **Trabajador representado** según corresponda (equipo para jefatura; propio histórico/cerrado según reglas) antes de operar con alcance restringido.
 
 ## 3. Modelo y claves de almacenamiento
 
 | Entidad | Clave | Estados / notas |
 |---|---|---|
-| Trabajador | `erp_base_module:entities` | Activo / Desvinculado; no se elimina |
-| Liquidación | `erp_base_module:documents` | Borrador / Cerrada, según el período |
-| Contrato | `erp_rrhh:contratos` | Vigente / Vencido / Terminado; sin “cancelado” |
+| Trabajador | `erp_base_module:entities` | Activo / Desvinculado |
+| Liquidación | `erp_base_module:documents` | Borrador / Cerrada |
+| Contrato | `erp_rrhh:contratos` | Vigente / Vencido / Terminado |
 | Período | `erp_rrhh:periodos` | Abierto / Calculado / Cerrado |
 | Novedad | `erp_rrhh:novedades` | Pendiente / Aprobada / Rechazada / Anulada |
-| Concepto | `erp_rrhh:conceptos` | Clasifica líneas y novedades |
-| Parámetro legal | `erp_rrhh:parametros` | Vigencia; congelado al cerrar período |
-| Tramo de impuesto | `erp_rrhh:tramos-impuesto` | Vigencia por período |
-| Línea de liquidación | `erp_rrhh:lineas-liquidacion` | Base, tasa/factor, fórmula y snapshot |
-| Auditoría | `erp_rrhh:auditoria` | Solo inserción; relación laboral + 6 años |
+| Concepto | `erp_rrhh:conceptos` | — |
+| Parámetro legal | `erp_rrhh:parametros` | — |
+| Tramo impuesto | `erp_rrhh:tramos-impuesto` | — |
+| Líneas liquidación | `erp_rrhh:lineas-liquidacion` | — |
+| Auditoría | `erp_rrhh:auditoria` | Solo inserción |
 
-Detalle completo: `specs/001-rrhh-planilla/data-model.md`.
+Detalle: `specs/001-rrhh-planilla/data-model.md`.
 
-## 4. Roles y permisos
+## 4. Roles y permisos (resumen)
 
-| Rol | Acceso | Restricciones |
-|---|---|---|
-| Administrador/a RR.HH. | US1–US5, cierre de períodos, bitácora, respaldo, parámetros | — |
-| Analista de remuneraciones | Fichas, catálogos, contratos, registro de novedades, períodos, cálculo, consulta de liquidaciones | No cierra, no aprueba/rechaza, sin bitácora ni respaldo |
-| Jefatura | Datos básicos de su equipo y gestión de novedades; aprueba/rechaza lo que no registró | Sin contratos, sueldos, liquidaciones ni Trabajadores ajenos |
-| Trabajador (activo o desvinculado) | Solo sus liquidaciones de períodos cerrados, incluidas históricas | Sin otras funciones |
+| Rol | Acceso (resumen) |
+|---|---|
+| Administrador/a RR.HH. | Gestión amplia, cierre, parámetros, respaldo, bitácora |
+| Analista remuneraciones | Fichas/catálogos/contratos/novedades/períodos/cálculo y consulta liquidaciones; no cierra; no aprueba/rechaza; sin bitácora ni respaldo |
+| Jefatura | Datos básicos del equipo y novedades del equipo (aprueba/rechaza las que no registró); sin contratos, sueldos base ni liquidaciones |
+| Trabajador | Solo sus liquidaciones de períodos cerrados |
 
-El cambio de rol aplica de inmediato, pide el representado cuando corresponde y se audita. Las denegaciones no revelan contenido protegido.
+La interfaz aplica **ocultamiento proactivo** de lo no permitido; accesos directos denegados muestran mensaje sin revelar contenido protegido.
 
 ## 5. Flujos funcionales
 

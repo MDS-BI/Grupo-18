@@ -158,8 +158,9 @@ describe('US1 - fichas de trabajadores', () => {
 
     expect(listTrabajadores()).toHaveLength(2);
     expect(buscarTrabajadores('perez').map((row) => row.name)).toEqual(['Ana Pérez']);
-    expect(buscarTrabajadores('7654321').map((row) => row.name)).toEqual(['Bruno Soto']);
-    expect(buscarTrabajadores('remuneraciones')).toHaveLength(2);
+    expect(buscarTrabajadores('bru').map((row) => row.name)).toEqual(['Bruno Soto']);
+    expect(buscarTrabajadores('7654').map((row) => row.name)).toEqual(['Bruno Soto']);
+    expect(buscarTrabajadores('analista').map((row) => row.name).sort()).toEqual(['Ana Pérez', 'Bruno Soto']);
   });
 
   it('updates base data and the RRHH profile', () => {

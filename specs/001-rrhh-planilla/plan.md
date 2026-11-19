@@ -7,7 +7,7 @@
 
 ## Resumen
 
-Construir una aplicación web ligera con Vite para el módulo de Recursos Humanos y Planilla, con HTML, CSS y JavaScript vanilla y persistencia local en el navegador. La aplicación se presenta como un espacio de trabajo con una barra superior con el nombre del módulo y una barra lateral con las pantallas de RR.HH. (Trabajadores, catálogos, contratos, novedades, períodos y planilla, liquidaciones, vacaciones, cargas familiares, simulador, reportes, exportaciones, parámetros legales y auditoría), y un panel principal con las alertas del módulo. El nombre del módulo, las etiquetas y los datos de la empresa emisora se declaran en `src/module-config.js`.
+Construir una aplicación web ligera con Vite para el módulo de Recursos Humanos y Planilla, con HTML, CSS y JavaScript vanilla y persistencia local en el navegador. La aplicación se presenta en modo **RR.HH.-only** (sin pantallas base genéricas del ERP en el flujo principal): tras **inicio de sesión con rol y clave demo** (ver `spec.md`), se muestra un **espacio de trabajo sin barra lateral**, con **pestañas superiores** (incl. **Resumen** con alertas de contratos por vencer y estado general del módulo) y las secciones de RR.HH. (Trabajadores, catálogos, contratos, novedades, períodos/planilla, liquidaciones, vacaciones, cargas familiares, simulador, reportes, exportaciones, parámetros legales, auditoría según permisos). El nombre del módulo, las etiquetas y los datos de la empresa emisora se declaran en `src/module-config.js`. Ñande
 
 ### Cobertura del spec vigente (US1–US12, FR-040 a FR-107, SC-011 a SC-029)
 
@@ -66,7 +66,7 @@ Incluye: fichas y catálogos; contratos con historial, vigencia y alertas; conju
 
 - **I. Calidad y Mantenibilidad (PASS)**: estructura modular con separación de almacenamiento, dominio, cálculo, seguridad/auditoría y vistas; configuración centralizada; reglas de negocio y permisos encapsulados.
 - **II. Pruebas primero y Verificación (PENDIENTE)**: las tareas T020–T107 siguen el patrón pruebas antes que implementación para US1–US12; las aserciones de SC-011, SC-012, SC-020, SC-021, SC-022 y SC-023 están definidas en T109/T111/T115, y su ejecución queda para Phase 15.
-- **III. Consistencia de Experiencia de Usuario (PASS)**: mensajes de validación, estados vacíos, estados de solo lectura/bloqueo, denegaciones sin revelar contenido y marco consistente (barra superior + barra lateral) en todas las pantallas, incluida la vista imprimible; los Casos Límite están declarados como comportamientos verificables.
+- **III. Consistencia de Experiencia de Usuario (PASS)**: mensajes de validación, estados vacíos, estados de solo lectura/bloqueo, denegaciones sin revelar contenido y marco consistente **barra superior + pestañas superiores** (RR.HH.-only, sin barra lateral) en todas las pantallas, incluida la vista imprimible; los Casos Límite están declarados como comportamientos verificables.
 - **IV. Rendimiento y Fiabilidad (PENDIENTE)**: T111 define SC-011/012/023, T109 define SC-021 y T109/T115 definen SC-020/022; la ejecución de estas mediciones está pendiente en Phase 15.
 - **Quality Standards (PENDIENTE)**: documentación `docs/rrhh.md` (T108/T116), verificación de `lint`/`format:check` (T110) y checklist de release (T119) aún no ejecutados.
 

@@ -138,6 +138,14 @@ button {
   gap: 0;
 }
 
+.rrhh-main-only {
+  padding: 0 28px 40px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  align-self: stretch;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -1368,7 +1376,7 @@ table.rrhh-table tbody tr:last-child td {
 @media print {
   @page {
     size: letter portrait;
-    margin: 12mm;
+    margin: 8mm;
   }
 
   .print-clean .topbar,
@@ -1381,27 +1389,61 @@ table.rrhh-table tbody tr:last-child td {
   .print-clean button,
   .print-clean input,
   .print-clean select,
-  .print-clean textarea {
+  .print-clean textarea,
+  .print-clean .rrhh-seed-actions,
+  #rrhh-logout-btn,
+  #rrhh-user-badge {
     display: none !important;
   }
 
-  .print-clean .main-content {
-    padding: 0;
+  .print-clean .main-content,
+  .print-clean .rrhh-main-only,
+  .print-clean #view-rrhh,
+  .print-clean #rrhh-panel-liquidaciones {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
   }
 
-  .print-clean .rrhh-liquidacion {
-    display: block;
-    padding: 0;
-    box-shadow: none;
-    border: none;
+  .print-clean .rrhh-liquidacion,
+  .print-clean .panel {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 
-  .rrhh-liquidacion .liq-line,
-  .rrhh-liquidacion .liq-group,
-  .rrhh-liquidacion .liq-header,
-  .rrhh-liquidacion .liq-totals,
-  .rrhh-liquidacion .liq-explanation {
+  .print-clean .liq-meta {
+    width: 100% !important;
+    max-width: none !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .print-clean .liq-line,
+  .print-clean .liq-group,
+  .print-clean .liq-header,
+  .print-clean .liq-totals,
+  .print-clean .liq-explanation,
+  .print-clean .liq-meta-block {
     page-break-inside: avoid;
     break-inside: avoid;
+    overflow: visible !important;
+  }
+
+  .print-clean .liq-line-amount,
+  .print-clean .liq-total strong {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+  }
+
+  .print-clean table {
+    width: 100% !important;
+    table-layout: auto !important;
   }
 }

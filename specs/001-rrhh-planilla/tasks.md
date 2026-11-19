@@ -48,15 +48,16 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 - [ ] T008 [P] Implementar la sanitización de los textos libres de RR.HH. (nombres, observaciones y motivos) en listados, formularios, búsquedas y detalles en `src/utils/sanitize.js`
 - [ ] T009 Implementar el núcleo de auditoría de solo inserción con retención y aborto de operación si falla la escritura en `src/rrhh/seguridad/auditoria.js`
 - [ ] T010 [P] Definir los roles simulados y su catálogo de permisos en `src/rrhh/seguridad/roles.js`
-- [ ] T011 Implementar la sesión simulada, selección de representado y cambio de rol en `src/rrhh/seguridad/session.js`
-- [ ] T012 Implementar las guardas de visibilidad por rol en listados, detalles, búsquedas y vistas imprimibles en `src/rrhh/seguridad/acceso-datos.js`
+- [ ] T011 Implementar autenticación demo (login rol+clave), sesión autenticada y cierre de sesión en `src/rrhh/seguridad/auth.js` y `src/rrhh/seguridad/session.js` (sin cambio de rol en caliente)
+- [ ] T011b Implementar selección de Trabajador representado tras login para rol Jefatura y Trabajador en `src/rrhh/components/representado-selector.js` y flujos en `session.js`/`workspace.js`
+- [ ] T012 Implementar guardas de visibilidad por rol (ocultamiento UI) y denegación en accesos directos en `src/rrhh/seguridad/acceso-datos.js`
 - [ ] T013 Implementar las colecciones RR.HH. con prefijo `erp_rrhh:*` en `src/rrhh/storage-rrhh.js`
 - [ ] T014 [P] Implementar el esquema, los tipos y la validación de parámetros legales en `src/rrhh/calculo/parametros.js`
 - [ ] T015 Implementar la carga, selección y bloqueo de un conjunto completo de parámetros por mes y año en `src/rrhh/calculo/parametros-mes.js`, usando el esquema de T014
 - [ ] T016 [P] Cargar datos semilla de catálogos, conceptos, parámetros y casos de referencia en `src/rrhh/data/seed.js`
 - [ ] T017 Implementar exportación/importación JSON versionada sin sobrescribir auditoría en `src/backup.js`
-- [ ] T018 Implementar el marco de workspace y el router de módulos RR.HH. en `src/rrhh/views/workspace.js` y `src/rrhh/views/rrhh-router.js`
-- [ ] T019 Validar el flujo de inicio rápido de RR.HH. (selección de rol, ficha de Trabajador, contrato, novedad y persistencia) en `tests/integration/rrhh-quickstart.test.js`
+- [ ] T018 Implementar el marco de workspace RR.HH.-only sin barra lateral (pestañas superiores), router y pestaña **Resumen** en `src/rrhh/views/workspace.js`, `src/rrhh/views/rrhh-router.js` y `src/rrhh/views/resumen-view.js`
+- [ ] T019 Validar el flujo de inicio rápido de RR.HH. (login demo, representado, ficha, contrato, novedad) en `tests/integration/rrhh-quickstart.test.js`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 

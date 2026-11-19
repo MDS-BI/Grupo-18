@@ -6,6 +6,7 @@
  * so listeners and print handlers do not leak between navigations.
  */
 
+import { renderResumenView } from './resumen-view.js';
 import { renderTrabajadoresView } from './trabajadores-view.js';
 import { renderContratosView } from './contratos-view.js';
 import { renderCatalogosView } from './catalogos-view.js';
@@ -16,6 +17,7 @@ import { renderLiquidacionesView } from './liquidaciones.js';
 import { renderAuditoriaView } from './auditoria.js';
 
 export const RRHH_TABS = [
+  'resumen',
   'trabajadores',
   'contratos',
   'catalogos',
@@ -27,6 +29,10 @@ export const RRHH_TABS = [
 ];
 
 const RENDERERS = {
+  resumen: (panel) => {
+    panel.innerHTML = renderResumenView();
+    return null;
+  },
   trabajadores: renderTrabajadoresView,
   contratos: renderContratosView,
   catalogos: renderCatalogosView,
@@ -41,21 +47,58 @@ export class RrhhWorkspace {
   constructor({ doc, config, viewer, initialTab, onRoleRequired, onLiquidationView } = {}) {
     this.doc = doc || (typeof document !== 'undefined' ? document : null);
     this.config = config || {};
-    this.viewer = viewer || { role: 'analista' };
+    this.viewer = viewer || { role: '' };
     this.onRoleRequired = onRoleRequired || (() => {});
     this.onLiquidationView = onLiquidationView || (() => {});
     this.controllers = new Map();
     this.activeTab = null;
 
-    this.tabs = [...(this.doc?.querySelectorAll?.('[data-rrhh-tab]') || [])];
+    this.allTabs = [...(this.doc?.querySelectorAll?.('[data-rrhh-tab]') || [])];
+    this.tabs = this.filterTabsByRole(this.allTabs);
+    for (const t of this.allTabs) {
+      const allowed = this.tabs.includes(t);
+      t.hidden = !allowed;
+    }
     this.panels = new Map();
     for (const tab of this.tabs) {
       const name = tab.dataset.rrhhTab;
       const panel = this.doc.getElementById(`rrhh-panel-${name}`);
       if (panel) this.panels.set(name, panel);
     }
+    // hide panels not allowed
+    for (const t of this.allTabs) {
+      const name = t.dataset.rrhhTab;
+      const panel = this.doc.getElementById(`rrhh-panel-${name}`);
+      if (panel && !this.panels.has(name)) panel.hidden = true;
+    }
     this.bind();
-    this.show(RRHH_TABS.includes(initialTab) ? initialTab : this.defaultTab());
+    const start = RRHH_TABS.includes(initialTab) && this.panels.has(initialTab) ? initialTab : this.defaultTab();
+    if (start) this.show(start);
+  }
+
+  filterTabsByRole(tabs) {
+    const role = this.viewer?.role || '';
+    const allowed = [];
+    for (const tab of tabs) {
+      const name = tab.dataset.rrhhTab;
+      if (!name) continue;
+      if (name === 'resumen') { allowed.push(tab); continue; }
+      if (name === 'auditoria') {
+        if (role === 'administrador') allowed.push(tab);
+        continue;
+      }
+      if (name === 'periodos' || name === 'planilla') {
+        if (role === 'administrador' || role === 'analista') allowed.push(tab);
+        continue;
+      }
+      if (name === 'liquidaciones') {
+        if (role === 'administrador' || role === 'analista' || role === 'trabajador') allowed.push(tab);
+        continue;
+      }
+      // trabajadores, contratos, catalogos, novedades: admin/analista/jefatura can see some; be permissive but views enforce
+      if (role === 'administrador' || role === 'analista' || role === 'jefatura') allowed.push(tab);
+    }
+    return allowed;
   }
 
   defaultTab() {

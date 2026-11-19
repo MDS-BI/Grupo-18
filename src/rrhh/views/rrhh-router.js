@@ -11,6 +11,7 @@ import { renderRrhhWorkspace } from './workspace.js';
 export { RRHH_TABS, RrhhWorkspace, renderRrhhWorkspace } from './workspace.js';
 
 export const RRHH_ROUTES = {
+  resumen: 'Resumen',
   trabajadores: 'Trabajadores',
   contratos: 'Contratos',
   catalogos: 'Catálogos',

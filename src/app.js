@@ -1,136 +1,113 @@
 import { loadModuleConfig, setActiveConfig, getConfig } from './module-config.js';
+import { validateDemoCredentials } from './rrhh/seguridad/auth.js';
 import {
-  addEntity,
-  updateEntity,
-  deleteEntity,
-  loadGenericEntities,
-  addDocument,
-  updateDocument,
-  deleteDocument,
-  loadGenericDocuments,
-  validateEntity,
-  validateDocument
-} from './storage.js';
-import { renderShell } from './components/shell.js';
-import { renderDashboard, refreshStats } from './components/dashboard.js';
-import {
-  renderEntityCustomFields,
-  readEntityForm,
-  fillEntityForm,
-  clearEntityForm,
-  showEntityErrors
-} from './components/entity-form.js';
-import {
-  renderDocumentCustomFields,
-  readDocumentForm,
-  fillDocumentForm,
-  clearDocumentForm,
-  showDocumentErrors,
-  renderStatusControl
-} from './components/document-form.js';
-import { renderEntitySelect, renderSearchResults } from './components/entity-list.js';
-import { renderDocumentSelect } from './components/document-list.js';
-import { bindSearch } from './components/search-bar.js';
-import { getViewer, setRole } from './rrhh/seguridad/session.js';
+  completeLoginSession,
+  getViewer,
+  logout,
+  setSession,
+  getSession
+} from './rrhh/seguridad/session.js';
 import { ensureSeedOnFirstBoot, restoreSeedData } from './rrhh/data/seed.js';
+import { listTrabajadores } from './rrhh/utils/trabajadores-service.js';
 import { renderRrhhWorkspace } from './rrhh/views/rrhh-router.js';
-
-const BASE_VIEWS = ['dashboard', 'entities', 'documents', 'search'];
 
 let modelConfig = null;
 let rrhhView = null;
 let liquidationView = null;
-let exclusiveMode = false;
 
 function qs(id) {
   return document.getElementById(id);
 }
 
-function views() {
-  return modelConfig?.rrhh?.enabled ? [...BASE_VIEWS, 'rrhh'] : BASE_VIEWS;
-}
-
-function isRrhhOnly() {
-  return Boolean(modelConfig?.rrhh?.enabled && modelConfig?.rrhh?.only);
-}
-
-/**
- * Keep the base screens in the code, but remove them from the RRHH-only UI.
- * Called by the browser entry point, not by `boot()`/`initApp()` tests.
- */
-export function applyExclusiveMode(exclusive = isRrhhOnly()) {
-  exclusiveMode = exclusive;
-  document.body?.classList.toggle('rrhh-only', exclusive);
-  for (const name of BASE_VIEWS) {
-    const navButton = qs(`nav-${name}`);
-    if (navButton) navButton.hidden = exclusive;
+function showSection(name) {
+  const map = { login: 'view-login', representado: 'view-representado', rrhh: 'view-rrhh' };
+  for (const [k, id] of Object.entries(map)) {
+    const el = qs(id);
+    if (el) el.hidden = k !== name;
   }
-  if (exclusive) showView('rrhh');
 }
 
-function refreshEntityOptions() {
-  const select = qs('edit-entity');
-  if (!select) return;
-  renderEntitySelect(select, loadGenericEntities(), 'Selecciona una entidad');
+function updateUserBadge() {
+  const badge = qs('rrhh-user-badge');
+  const btn = qs('rrhh-logout-btn');
+  const viewer = getViewer();
+  if (!viewer.role) {
+    if (badge) badge.hidden = true;
+    if (btn) btn.hidden = true;
+    return;
+  }
+  const labelMap = {
+    administrador: 'Administrador/a de RR.HH.',
+    analista: 'Analista de remuneraciones',
+    jefatura: 'Jefatura',
+    trabajador: 'Trabajador'
+  };
+  let repText = '';
+  if (viewer.trabajadorId && (viewer.role === 'jefatura' || viewer.role === 'trabajador')) {
+    const trabajadores = listTrabajadores({ incluirBaja: true });
+    const match = trabajadores.find((t) => (t.entityId || t.id) === viewer.trabajadorId);
+    if (match) {
+      const code = match.code ? ` (${match.code})` : '';
+      repText = ` · ${match.name || 'Sin nombre'}${code}`;
+    } else {
+      repText = ` · ${viewer.trabajadorId}`;
+    }
+  } else if (viewer.trabajadorId) {
+    repText = ` (rep: ${viewer.trabajadorId})`;
+  }
+  if (badge) {
+    badge.hidden = false;
+    badge.textContent = `${labelMap[viewer.role] || viewer.role}${repText}`;
+  }
+  if (btn) btn.hidden = false;
 }
 
-function refreshDocumentOptions() {
-  const select = qs('edit-document');
-  if (!select) return;
-  renderDocumentSelect(select, loadGenericDocuments(), 'Selecciona un documento');
+function needsRepresentado(viewer) {
+  if (viewer.role === 'jefatura' || viewer.role === 'trabajador') {
+    return !viewer.trabajadorId;
+  }
+  return false;
 }
 
-function refreshDocumentEntityOptions() {
-  const select = qs('document-entity');
+function populateRepresentadoSelect(role) {
+  const select = qs('rep-select');
   if (!select) return;
-  const entities = loadGenericEntities();
-  const previous = select.value;
-  select.textContent = '';
+  select.innerHTML = '';
+  const trabajadores = listTrabajadores({ incluirBaja: true });
+  const filtered =
+    role === 'trabajador'
+      ? trabajadores.filter((t) => t.estadoLaboral === 'Activo' || t.estadoLaboral === 'Desvinculado')
+      : trabajadores.filter((t) => t.estadoLaboral === 'Activo');
+  if (filtered.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No hay trabajadores disponibles';
+    select.appendChild(opt);
+    return;
+  }
   const placeholder = document.createElement('option');
   placeholder.value = '';
-  placeholder.textContent = 'Selecciona una entidad';
+  placeholder.textContent = 'Seleccione...';
   select.appendChild(placeholder);
-  for (const entity of entities) {
-    const option = document.createElement('option');
-    option.value = entity.entity_id;
-    option.textContent = `${entity.name} — ${entity.code}`;
-    select.appendChild(option);
-  }
-  if (previous && entities.some((entity) => entity.entity_id === previous)) {
-    select.value = previous;
+  for (const t of filtered) {
+    const opt = document.createElement('option');
+    opt.value = t.entityId || t.id;
+    opt.textContent = `${t.name || 'Sin nombre'} (${t.code || ''})`;
+    select.appendChild(opt);
   }
 }
 
-function renderSearch() {
-  const input = qs('search-input');
-  renderSearchResults(qs('search-results-list'), qs('search-empty'), input ? input.value : '');
-}
-
-function showView(name) {
-  const target = exclusiveMode && name !== 'rrhh' ? 'rrhh' : name;
-  for (const view of views()) {
-    const section = qs(`view-${view}`);
-    if (section) section.hidden = view !== target;
+function showRepresentadoScreen() {
+  const viewer = getViewer();
+  populateRepresentadoSelect(viewer.role);
+  const subtitle = qs('rep-subtitle');
+  if (subtitle) {
+    subtitle.textContent =
+      viewer.role === 'jefatura'
+        ? 'En Jefatura seleccione su propia ficha de jefe/a para cargar su equipo a cargo.'
+        : 'En Trabajador seleccione su propia ficha personal para ver sus datos y liquidaciones.';
   }
-  document.querySelectorAll('.nav-module').forEach((button) => {
-    if (button.dataset.module === target) button.setAttribute('aria-current', 'page');
-    else button.removeAttribute('aria-current');
-  });
-
-  if (target === 'dashboard') {
-    refreshStats();
-  } else if (target === 'entities') {
-    clearEntityForm();
-    refreshEntityOptions();
-  } else if (target === 'documents') {
-    clearDocumentForm();
-    refreshDocumentEntityOptions();
-    refreshDocumentOptions();
-  } else if (target === 'search') {
-    renderSearch();
-  } else if (target === 'rrhh') {
-    renderRrhh();
-  }
+  showSection('representado');
 }
 
 function renderRrhh(tab) {
@@ -142,217 +119,173 @@ function renderRrhh(tab) {
     doc: document,
     config: modelConfig,
     viewer: getViewer(),
-    initialTab: tab,
-    onRoleRequired: () => setRole('jefatura'),
+    initialTab: tab || 'resumen',
+    onRoleRequired: () => {},
     onLiquidationView: (view) => {
       liquidationView = view;
     }
   });
 }
 
-function handleEntitySubmit(event) {
+function goAfterAuth() {
+  const viewer = getViewer();
+  updateUserBadge();
+  if (needsRepresentado(viewer)) {
+    showRepresentadoScreen();
+    return;
+  }
+  showSection('rrhh');
+  renderRrhh('resumen');
+}
+
+function handleLoginSubmit(event) {
   event.preventDefault();
-  const record = readEntityForm();
-  const validation = validateEntity(record);
-  if (!validation.valid) {
-    showEntityErrors(validation.errors);
-    return;
-  }
-  const id = qs('entity-id').value;
+  const role = qs('login-role')?.value || '';
+  const password = qs('login-password')?.value || '';
+  const feedback = qs('login-feedback');
   try {
-    if (id) updateEntity(id, record);
-    else addEntity(record);
-  } catch (error) {
-    showEntityErrors(error.errors || { name: error.message });
-    return;
+    if (!validateDemoCredentials(role, password)) {
+      if (feedback) {
+        feedback.hidden = false;
+        feedback.textContent =
+          'Credenciales inválidas. Use: administrador/admin123, analista/analista123, jefatura/jefatura123, trabajador/trabajador123';
+      }
+      return;
+    }
+    if (feedback) {
+      feedback.hidden = true;
+      feedback.textContent = '';
+    }
+    completeLoginSession(role);
+    goAfterAuth();
+  } catch (err) {
+    console.error('Error en login:', err);
+    if (feedback) {
+      feedback.hidden = false;
+      feedback.textContent = 'Ocurrió un error al iniciar sesión.';
+    }
   }
-  clearEntityForm();
-  refreshEntityOptions();
-  refreshStats();
 }
 
-function handleEntitySelection() {
-  const id = qs('edit-entity').value;
-  const entity = loadGenericEntities().find((item) => item.id === id);
-  if (entity) fillEntityForm(entity);
-  else clearEntityForm();
-}
-
-function handleEntityDelete() {
-  const id = qs('edit-entity').value;
-  if (!id) return;
-  const entity = loadGenericEntities().find((item) => item.id === id);
-  if (!entity) {
-    showFeedback(
-      'entity-feedback',
-      'El registro seleccionado no se gestiona en la pantalla genérica.'
-    );
-    return;
-  }
-  if (
-    typeof confirm === 'function' &&
-    !confirm(`¿Eliminar ${entity.name}? Se eliminarán también sus documentos.`)
-  ) {
-    return;
-  }
-  try {
-    deleteEntity(id);
-  } catch (error) {
-    showFeedback('entity-feedback', error.message);
-    return;
-  }
-  showFeedback('entity-feedback', '');
-  clearEntityForm();
-  refreshEntityOptions();
-  refreshStats();
-}
-
-function handleDocumentSubmit(event) {
+function handleRepSubmit(event) {
   event.preventDefault();
-  const record = readDocumentForm();
-  const validation = validateDocument(record);
-  if (!validation.valid) {
-    showDocumentErrors(validation.errors);
+  const selectEl = qs('rep-select');
+  const val = selectEl?.value || '';
+  const feedbackEl = qs('rep-feedback');
+  if (!val) {
+    if (feedbackEl) {
+      feedbackEl.hidden = false;
+      feedbackEl.textContent = 'Seleccione un trabajador.';
+    }
     return;
   }
-  const id = qs('document-id').value;
-  try {
-    if (id) updateDocument(id, record);
-    else addDocument(record);
-  } catch (error) {
-    showDocumentErrors(error.errors || { status: error.message });
-    return;
+  if (feedbackEl) {
+    feedbackEl.hidden = true;
+    feedbackEl.textContent = '';
   }
-  clearDocumentForm();
-  refreshDocumentEntityOptions();
-  refreshDocumentOptions();
-  refreshStats();
-}
-
-function handleDocumentSelection() {
-  const id = qs('edit-document').value;
-  const documentRecord = loadGenericDocuments().find((item) => item.id === id);
-  if (documentRecord) fillDocumentForm(documentRecord);
-  else clearDocumentForm();
-}
-
-function handleDocumentDelete() {
-  const id = qs('edit-document').value;
-  if (!id) return;
-  const documentRecord = loadGenericDocuments().find((item) => item.id === id);
-  if (!documentRecord) {
-    showFeedback(
-      'document-feedback',
-      'El documento seleccionado no se gestiona en la pantalla genérica.'
-    );
-    return;
-  }
-  if (typeof confirm === 'function' && !confirm('¿Eliminar el documento seleccionado?')) return;
-  try {
-    deleteDocument(id);
-  } catch (error) {
-    showFeedback('document-feedback', error.message);
-    return;
-  }
-  showFeedback('document-feedback', '');
-  clearDocumentForm();
-  refreshDocumentOptions();
-  refreshStats();
+  const session = getSession();
+  const trabajadores = listTrabajadores({ incluirBaja: true });
+  const equipo =
+    session.rol === 'jefatura'
+      ? trabajadores
+          .filter((t) => t.jefeId && String(t.jefeId) === String(val))
+          .map((t) => t.entityId || t.id)
+      : [];
+  setSession({ trabajadorId: val, equipo });
+  goAfterAuth();
 }
 
 function handleSeedDataRestore() {
   const message =
     'Esto reemplazará los datos de RR.HH. de ejemplo por el dataset de prueba. ¿Continuar?';
   if (typeof confirm === 'function' && !confirm(message)) return;
-
   const summary = restoreSeedData();
   if (!summary) {
-    showFeedback('rrhh-seed-feedback', 'La carga de datos de prueba no está disponible.');
+    const fb = qs('rrhh-seed-feedback');
+    if (fb) {
+      fb.hidden = false;
+      fb.textContent = 'No se pudo cargar datos de prueba.';
+    }
     return;
   }
-
-  refreshStats();
-  if (modelConfig?.rrhh?.enabled && qs('view-rrhh') && !qs('view-rrhh').hidden) {
-    renderRrhh();
+  if (getViewer().role && !qs('view-rrhh').hidden) renderRrhh(rrhhView?.getActiveTab?.() || 'resumen');
+  const fb = qs('rrhh-seed-feedback');
+  if (fb) {
+    fb.hidden = false;
+    fb.textContent = `Cargados: ${summary.trabajadores} trabajadores, ${summary.contratos} contratos.`;
   }
-  showFeedback(
-    'rrhh-seed-feedback',
-    `Datos de prueba cargados: ${summary.trabajadores} trabajadores, ${summary.contratos} contratos, ${summary.novedades} novedades y ${summary.liquidaciones} liquidaciones.`
-  );
 }
 
 function bindEvents() {
-  for (const name of views()) {
-    const button = qs(`nav-${name}`);
-    if (button) button.addEventListener('click', () => showView(name));
+  const loginForm = qs('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', handleLoginSubmit);
   }
-
-  const roleSelect = qs('role-select');
-  if (roleSelect) {
-    roleSelect.addEventListener('change', () => {
-      setRole(roleSelect.value);
-      if (modelConfig?.rrhh?.enabled && qs('view-rrhh') && !qs('view-rrhh').hidden) {
-        renderRrhh();
+  // Respaldo: si el submit no se dispara, el botón con type=submit igual dispara submit; si no, manejar click.
+  const loginBtn = document.querySelector('#login-form button[type="submit"]');
+  if (loginBtn && loginForm) {
+    loginBtn.addEventListener('click', (e) => {
+      // Si el formulario tiene validación HTML5, dejar que submit lo maneje; si no, forzar submit.
+      if (typeof loginForm.requestSubmit === 'function') {
+        try {
+          loginForm.requestSubmit();
+        } catch {
+          // fallback
+          e.preventDefault();
+          handleLoginSubmit(e);
+        }
+      } else {
+        // fallback para navegadores antiguos
+        e.preventDefault();
+        handleLoginSubmit(e);
       }
     });
   }
-
-  const newEntity = qs('action-new-entity');
-  if (newEntity) {
-    newEntity.addEventListener('click', () => {
-      showView('entities');
-      qs('name').focus();
-    });
-  }
-
-  const newDocument = qs('action-new-document');
-  if (newDocument) {
-    newDocument.addEventListener('click', () => {
-      showView('documents');
-      qs('document-entity').focus();
-    });
-  }
-
-  const openEntities = qs('action-open-entities');
-  if (openEntities) openEntities.addEventListener('click', () => showView('entities'));
-
-  const seedButton = qs('rrhh-seed-button');
-  if (seedButton) seedButton.addEventListener('click', handleSeedDataRestore);
-
-  const find = qs('action-find');
-  if (find) {
-    find.addEventListener('click', () => {
-      showView('search');
-      qs('search-input').focus();
-    });
-  }
-
-  qs('entity-form').addEventListener('submit', handleEntitySubmit);
-  qs('edit-entity').addEventListener('change', handleEntitySelection);
-  qs('delete-entity').addEventListener('click', handleEntityDelete);
-
-  qs('document-form').addEventListener('submit', handleDocumentSubmit);
-  qs('edit-document').addEventListener('change', handleDocumentSelection);
-  qs('delete-document').addEventListener('click', handleDocumentDelete);
-
-  bindSearch(qs('search-input'), renderSearch);
+  qs('rep-form')?.addEventListener('submit', handleRepSubmit);
+  qs('rrhh-logout-btn')?.addEventListener('click', () => {
+    logout();
+    liquidationView?.dispose?.();
+    liquidationView = null;
+    rrhhView?.dispose?.();
+    rrhhView = null;
+    updateUserBadge();
+    showSection('login');
+  });
+  qs('rrhh-seed-button')?.addEventListener('click', handleSeedDataRestore);
 }
 
-function showFeedback(id, message) {
-  const node = qs(id);
-  if (!node) return;
-  node.hidden = !message;
-  node.textContent = message || '';
-}
-
-function renderRrhhExclusionNotes() {
-  const enabled = Boolean(modelConfig?.rrhh?.enabled);
-  for (const id of ['entities-rrhh-note', 'documents-rrhh-note']) {
-    const note = qs(id);
-    if (note) note.hidden = !enabled;
+function clearCorruptedStorage() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const keys = ['erp_rrhh:auth', 'erp_rrhh:sesion'];
+      for (const k of keys) {
+        try {
+          const raw = localStorage.getItem(k);
+          if (raw) JSON.parse(raw);
+        } catch {
+          try {
+            localStorage.removeItem(k);
+          } catch {
+            // ignore
+          }
+        }
+      }
+    }
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        const raw = sessionStorage.getItem('erp_rrhh:auth');
+        if (raw) JSON.parse(raw);
+      } catch {
+        try {
+          sessionStorage.removeItem('erp_rrhh:auth');
+        } catch {
+          // ignore
+        }
+      }
+    }
+  } catch {
+    // ignore
   }
-  const seedButton = qs('rrhh-seed-button');
-  if (seedButton) seedButton.hidden = !enabled;
 }
 
 function showConfigErrors(errors) {
@@ -360,44 +293,35 @@ function showConfigErrors(errors) {
   if (!banner) return;
   if (errors && errors.length > 0) {
     banner.hidden = false;
-    banner.textContent = `Revisa la configuración del módulo: ${errors.join(' ')}`;
+    banner.textContent = `Revisa la configuración: ${errors.join(' ')}`;
   } else {
     banner.hidden = true;
     banner.textContent = '';
   }
 }
 
-/**
- * Boot the workspace with the module profile declared in module-config.js.
- */
 export async function boot(options = {}) {
   const result = await loadModuleConfig();
   return initApp(result, options);
 }
 
-/**
- * Initialize the workspace with an already-normalized configuration.
- */
-export async function initApp(result, options = {}) {
+export async function initApp(result, _options = {}) {
+  clearCorruptedStorage();
   const normalized = result || (await loadModuleConfig());
-  exclusiveMode = false;
   setActiveConfig(normalized.config || null);
   modelConfig = getConfig();
   ensureSeedOnFirstBoot();
-
-  renderShell(modelConfig);
-  renderRrhhExclusionNotes();
-  renderDashboard(modelConfig);
-  renderEntityCustomFields();
-  renderDocumentCustomFields();
-  renderStatusControl(null);
-
-  clearEntityForm();
-  clearDocumentForm();
   bindEvents();
-  showView('dashboard');
-  applyExclusiveMode(Boolean(options.exclusive && isRrhhOnly()));
   showConfigErrors(normalized.errors);
-
+  updateUserBadge();
+  const viewer = getViewer();
+  if (!viewer.role) {
+    showSection('login');
+  } else if (needsRepresentado(viewer)) {
+    showRepresentadoScreen();
+  } else {
+    showSection('rrhh');
+    renderRrhh('resumen');
+  }
   return modelConfig;
 }

@@ -115,7 +115,15 @@ export function renderLiquidacionesView(
 
   function liquidations() {
     const rows = allLiquidations();
-    return selectedPeriod ? rows.filter((row) => periodoKey(row) === selectedPeriod) : rows;
+    let filtered = selectedPeriod ? rows.filter((row) => periodoKey(row) === selectedPeriod) : rows;
+    if (viewer?.role === 'trabajador' && viewer?.trabajadorId) {
+      const tid = String(viewer.trabajadorId);
+      filtered = filtered.filter((row) => {
+        const rowTid = String(row?.trabajador?.id || row?.entityId || row?.trabajadorEntityId || '');
+        return rowTid === tid && (row?.estado === 'aprobada' || row?.estado === 'pagada');
+      });
+    }
+    return filtered;
   }
 
   function renderFilter(rows) {
@@ -206,6 +214,9 @@ export function renderLiquidacionesView(
   function lifecycleActions(liquidacion) {
     actionsContainer.textContent = '';
     if (!liquidacion) return;
+    if (viewer?.role === 'trabajador') {
+      return;
+    }
     const cerrado =
       isPeriodoCerrado(periodoKey(liquidacion)) || liquidacion.periodo?.cerrado === true;
     const siguientes = estadosSiguientes(liquidacion.estado);

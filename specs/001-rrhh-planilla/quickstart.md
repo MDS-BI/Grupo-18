@@ -8,8 +8,10 @@
 
 ## Flujo de RR.HH. y Planilla
 
-1. En la barra superior, seleccione el rol simulado (administrador/a de RR.HH., analista de remuneraciones, jefatura o Trabajador). No se solicitan credenciales; la sesión vive solo en memoria. Al elegir jefatura o Trabajador, seleccione el Trabajador que representa (jefatura: activo; Trabajador: activo o desvinculado). Al cambiar de rol en sesión activa, los permisos se aplican de inmediato, se vuelve a pedir el representado cuando corresponda y el cambio queda registrado en la bitácora.
-2. Con rol Administrador, cargue un conjunto completo de parámetros legales (UF, UTM, IMM, tasas, topes y tramos) para un mes y año, con fuente. El conjunto se bloquea desde su primer uso. No hay integración con servicios externos.
+1. Inicie sesión con **rol y clave demo** (ej. administrador/admin123). Use el botón **Cerrar sesión** en el encabezado para salir. Para usar otro rol, cierre sesión e ingrese de nuevo.
+2. Si ingresa como **Jefatura** o **Trabajador**, seleccione el **Trabajador representado** cuando el sistema lo solicite (jefatura: equipo permitido; Trabajador: propio, activo o desvinculado según reglas).
+3. Con rol Administrador, cargue un conjunto completo de parámetros legales (UF, UTM, IMM, tasas, topes y tramos) para un mes y año. El conjunto se bloquea desde su primer uso.
+4. Cree fichas/contratos según permisos; registre novedades y siga el flujo de aprobación/cálculo/cierre como antes (ver secciones siguientes de este documento).
 3. Cree o abra la ficha de un Trabajador y registre su contrato con sueldo base, jornada, tipo y vigencia. Si cambia el sueldo, registre un nuevo contrato o anexo sin sobrescribir el anterior.
 4. Abra el período mensual en `Planilla` y registre las novedades del mes (horas extra, licencias médicas o ausencias). Las licencias solo guardan tipo y días, sin diagnósticos.
 5. Con rol Jefatura, apruebe o rechace las novedades pendientes. Con rol Analista no se permite aprobar; una novedad rechazada puede corregirse y reenviarse.

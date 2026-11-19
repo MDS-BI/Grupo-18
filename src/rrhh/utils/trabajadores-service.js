@@ -54,6 +54,13 @@ function normalizeSearch(value) {
   return normalizeText(value).replace(/[^a-z0-9]/g, '');
 }
 
+function normalizeWords(value) {
+  return normalizeText(value)
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-z0-9]/g, ''))
+    .filter(Boolean);
+}
+
 function normalizeRut(value) {
   return String(value ?? '')
     .replace(/[^0-9kK]/g, '')
@@ -79,10 +86,10 @@ function profileFor(entityId) {
 function workerIsActive(entity, profile) {
   return Boolean(
     entity &&
-    !entity.bajaLogica &&
-    entity.activo !== false &&
-    profile?.activo !== false &&
-    profile?.estadoLaboral !== 'Desvinculado'
+      !entity.bajaLogica &&
+      entity.activo !== false &&
+      profile?.activo !== false &&
+      profile?.estadoLaboral !== 'Desvinculado'
   );
 }
 
@@ -218,19 +225,23 @@ export function listTrabajadores({ term = '', incluirBaja = false, viewer } = {}
   const query = normalizeSearch(term);
   if (!query) return rows.sort((a, b) => a.name.localeCompare(b.name));
   return rows
-    .filter((row) =>
-      [
-        row.name,
-        row.code,
-        row.rut,
-        row.email,
-        row.cargo,
-        row.departamento,
-        row.centroCosto,
-        row.estadoLaboral,
-        row.jefeNombre
-      ].some((value) => normalizeSearch(value).includes(query))
-    )
+    .filter((row) => {
+      const nameQ = normalizeSearch(row.name);
+      const codeQ = normalizeSearch(row.code);
+      const rutQ = normalizeRut(row.rut);
+      const cargoQ = normalizeSearch(row.cargo);
+      const nameWords = normalizeWords(row.name);
+      const cargoWords = normalizeWords(row.cargo);
+      const startsAt = (s) => s.startsWith(query);
+      return (
+        startsAt(nameQ) ||
+        nameWords.some(startsAt) ||
+        startsAt(codeQ) ||
+        startsAt(rutQ) ||
+        startsAt(cargoQ) ||
+        cargoWords.some(startsAt)
+      );
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -398,9 +409,6 @@ export function tieneNovedadesPendientes(entityId) {
 
 /**
  * Register a worker's desvinculación.
- *
- * The date is mandatory, pending novedades block the operation, the active
- * contract is terminated, and direct reports are left without a jefatura.
  */
 export function desactivarTrabajador(entityId, fechaDesvinculacion, viewer) {
   let fecha = fechaDesvinculacion;
