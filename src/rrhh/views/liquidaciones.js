@@ -120,7 +120,12 @@ export function renderLiquidacionesView(
       const tid = String(viewer.trabajadorId);
       filtered = filtered.filter((row) => {
         const rowTid = String(row?.trabajador?.id || row?.entityId || row?.trabajadorEntityId || '');
-        return rowTid === tid && (row?.estado === 'aprobada' || row?.estado === 'pagada');
+        const cerrado = isPeriodoCerrado(periodoKey(row)) || row?.periodo?.cerrado === true;
+        return (
+          rowTid === tid &&
+          cerrado &&
+          (row?.estado === 'aprobada' || row?.estado === 'pagada')
+        );
       });
     }
     return filtered;
@@ -152,7 +157,16 @@ export function renderLiquidacionesView(
     return rows;
   }
 
+  function placeDetail(id) {
+    const target = [...listContainer.querySelectorAll('[data-liquidacion-id]')].find(
+      (item) => item.dataset.liquidacionId === String(id)
+    );
+    if (target) target.appendChild(liquidationRoot);
+    else container.appendChild(liquidationRoot);
+  }
+
   function renderList(rows) {
+    if (liquidationRoot.parentNode) liquidationRoot.parentNode.removeChild(liquidationRoot);
     listContainer.textContent = '';
     if (rows.length === 0) {
       const empty = el(
@@ -280,8 +294,10 @@ export function renderLiquidacionesView(
     selectedId = liquidacion?.id || null;
     liquidationController?.dispose?.();
     liquidationController = null;
+    liquidationRoot.hidden = !liquidacion;
     if (!liquidacion) {
       liquidationRoot.textContent = '';
+      placeDetail(null);
       lifecycleActions(null);
       onLiquidationView?.(null);
       return;
@@ -295,6 +311,7 @@ export function renderLiquidacionesView(
         el(documentRef, 'p', null, 'No tienes permiso para ver esta liquidación.')
       );
       liquidationRoot.appendChild(denied);
+      placeDetail(id);
       lifecycleActions(null);
       return;
     }
@@ -312,6 +329,7 @@ export function renderLiquidacionesView(
       actor: viewer?.usuario || viewer?.role,
       rol: viewer?.role
     });
+    placeDetail(liquidacion.id);
     onLiquidationView?.(liquidationController);
     lifecycleActions(liquidacion);
   }
@@ -336,10 +354,22 @@ export function renderLiquidacionesView(
     const rows = liquidations();
     renderFilter(rows);
     renderList(rows);
-    const target = preferredId
-      ? allLiquidations().find((row) => row.id === preferredId)
-      : rows.find((row) => row.id === selectedId) || rows[0] || allLiquidations()[0];
-    selectLiquidation(target?.id);
+
+    // El detalle solo se muestra tras una acción explícita: pulsar "Ver
+    // liquidación" o conservar la selección después de cambiar su estado.
+    const id = preferredId || (rows.some((row) => row.id === selectedId) ? selectedId : null);
+    if (!id) {
+      selectedId = null;
+      liquidationController?.dispose?.();
+      liquidationController = null;
+      liquidationRoot.textContent = '';
+      liquidationRoot.hidden = true;
+      placeDetail(null);
+      lifecycleActions(null);
+      onLiquidationView?.(null);
+      return;
+    }
+    selectLiquidation(id);
   }
 
   refresh();

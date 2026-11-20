@@ -8,6 +8,8 @@ import {
 } from '../utils/trabajadores-service.js';
 import { listCatalogos } from '../utils/catalogos-service.js';
 import { renderTrabajadorForm } from '../components/trabajador-form.js';
+import { createFormPanel } from '../components/form-panel.js';
+import { createPagination } from '../components/pagination.js';
 import {
   badge,
   button,
@@ -47,6 +49,12 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
   container.id = 'rrhh-trabajadores-view';
   container.setAttribute('aria-labelledby', 'rrhh-trabajadores-title');
 
+  const drawer = createFormPanel(documentRef, {
+    id: 'trabajadores-form-drawer',
+    title: 'Registrar trabajador'
+  });
+  container.appendChild(drawer.element);
+
   const header = el(documentRef, 'div', 'rrhh-section-header');
   const title = el(documentRef, 'h3', null, 'Trabajadores');
   title.id = 'rrhh-trabajadores-title';
@@ -59,12 +67,25 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
       'Ficha única por trabajador: identidad, RUT validado, cargo, departamento y centro de costo.'
     )
   );
+  if (canManage) {
+    header.appendChild(
+      button(documentRef, {
+        id: 'trabajadores-registrar',
+        label: 'Registrar trabajador',
+        className: 'button button-primary rrhh-primary-action',
+        onClick: () => {
+          form?.reset();
+          drawer.setTitle('Registrar trabajador');
+          drawer.open();
+        }
+      })
+    );
+  }
   container.appendChild(header);
 
-  const layout = el(documentRef, 'div', 'rrhh-split');
+  const layout = el(documentRef, 'div', 'rrhh-list-layout');
 
-  const formPanel = el(documentRef, 'div', 'rrhh-split-aside');
-  layout.appendChild(formPanel);
+  const formPanel = el(documentRef, 'div', 'rrhh-drawer-form');
 
   const listPanel = el(documentRef, 'div', 'panel rrhh-list-panel');
   const toolbar = el(documentRef, 'div', 'rrhh-toolbar');
@@ -156,6 +177,12 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
   empty.hidden = true;
   listPanel.appendChild(empty);
 
+  const pagination = createPagination(documentRef, {
+    id: 'trabajadores-pagination',
+    onChange: () => refresh()
+  });
+  listPanel.appendChild(pagination.element);
+
   layout.appendChild(listPanel);
   container.appendChild(layout);
   root.appendChild(container);
@@ -166,9 +193,14 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
         viewer,
         catalogos: listCatalogos(),
         trabajadores: listTrabajadores({ incluirBaja: true }),
-        onSaved: () => refresh()
+        onSaved: () => {
+          drawer.markSaved();
+          refresh();
+          drawer.close({ force: true });
+        }
       })
     : null;
+  if (canManage) drawer.content.appendChild(formPanel);
 
   if (!canManage) {
     formPanel.appendChild(
@@ -233,6 +265,8 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
     desvDate.value = new Date().toISOString().slice(0, 10);
     hideFeedback(desvFeedback);
     desvPanel.hidden = false;
+    drawer.setTitle('Desvincular trabajador');
+    drawer.open();
     desvDate.focus?.();
   }
 
@@ -257,7 +291,8 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
       viewer
     });
     tbody.textContent = '';
-    for (const row of rows) {
+    pagination.render(rows.length);
+    for (const row of pagination.slice(rows)) {
       const tr = el(documentRef, 'tr');
       tr.dataset.entityId = row.entityId;
       tr.appendChild(el(documentRef, 'td', null, row.code));
@@ -276,7 +311,11 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
             label: 'Editar',
             className: 'button button-secondary button-small',
             ariaLabel: `Editar ${row.name}`,
-            onClick: () => form?.edit(row)
+            onClick: () => {
+              form?.edit(row);
+              drawer.setTitle(`Editar ${row.name}`);
+              drawer.open();
+            }
           })
         );
         if (row.estadoLaboral === 'Activo') {
@@ -306,17 +345,28 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
 
   criterioSelect.addEventListener('change', () => {
     setCriterio();
+    pagination.reset();
     refresh();
   });
-  searchInput.addEventListener('input', refresh);
-  cargoSelect.addEventListener('change', refresh);
-  includeBaja.addEventListener('change', refresh);
+  searchInput.addEventListener('input', () => {
+    pagination.reset();
+    refresh();
+  });
+  cargoSelect.addEventListener('change', () => {
+    pagination.reset();
+    refresh();
+  });
+  includeBaja.addEventListener('change', () => {
+    pagination.reset();
+    refresh();
+  });
   setCriterio();
   refresh();
 
   return {
     refresh,
     dispose() {
+      drawer.dispose();
       container.remove();
     }
   };

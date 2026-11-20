@@ -826,9 +826,21 @@ h3 {
   gap: 18px;
 }
 
+.rrhh-section-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
 .rrhh-section-header h3,
 .rrhh-section-header h4 {
-  margin: 0 0 6px;
+  margin: 0;
+}
+
+.rrhh-section-header .panel-copy {
+  flex: 1 1 320px;
+  margin: 0;
 }
 
 .rrhh-toolbar {
@@ -869,6 +881,15 @@ h3 {
 
 .rrhh-list-panel {
   overflow-x: auto;
+  width: 100%;
+}
+
+.rrhh-list-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  width: 100%;
 }
 
 .rrhh-checkbox {
@@ -935,6 +956,83 @@ table.rrhh-table th {
 
 table.rrhh-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Resumen del Trabajador: tarjeta destacada con tabla de datos compacta. */
+.rrhh-worker-summary {
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+  box-shadow: var(--shadow);
+}
+
+.rrhh-worker-summary__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.rrhh-worker-summary__title {
+  margin: 2px 0 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.rrhh-worker-state {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rrhh-worker-state[data-estado='vencido'],
+.rrhh-worker-state[data-estado='terminado'] {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+table.rrhh-resumen-table th {
+  width: 42%;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text);
+}
+
+table.rrhh-resumen-table td {
+  font-weight: 600;
+  color: var(--text);
+}
+
+table.rrhh-resumen-table tbody tr:nth-child(even) td {
+  background: #fbfcfe;
+}
+
+table.rrhh-resumen-table tbody tr:last-child th,
+table.rrhh-resumen-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rrhh-resumen-table .rrhh-vencido {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .rrhh-worker-summary__header {
+    flex-direction: column;
+  }
+
+  table.rrhh-resumen-table th {
+    width: 50%;
+  }
 }
 
 .button-ghost {
@@ -1427,6 +1525,23 @@ table.rrhh-table tbody tr:last-child td {
     display: none !important;
   }
 
+  body.print-clean {
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-clean .app-shell {
+    display: none !important;
+  }
+
+  .print-clean #rrhh-print-host {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
   .print-clean .main-content,
   .print-clean .rrhh-main-only,
   .print-clean #view-rrhh,
@@ -1490,5 +1605,172 @@ table.rrhh-table tbody tr:last-child td {
   .print-clean table {
     width: 100% !important;
     table-layout: auto !important;
+  }
+}
+
+/* Password visibility control (FR-113). */
+.rrhh-password-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rrhh-password-field input {
+  flex: 1 1 auto;
+}
+
+.rrhh-password-toggle {
+  flex: 0 0 auto;
+  min-width: 40px;
+  height: 38px;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 6px;
+  background: var(--color-surface, #fff);
+  color: inherit;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.rrhh-password-toggle:focus-visible {
+  outline: 2px solid var(--color-focus, #2563eb);
+  outline-offset: 2px;
+}
+
+/* Right-hand drawer for high forms (FR-110/FR-116). */
+.rrhh-primary-action {
+  margin-left: auto;
+}
+
+.rrhh-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.rrhh-drawer[hidden] {
+  display: none;
+}
+
+.rrhh-drawer-panel {
+  width: min(560px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--color-surface, #fff);
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.2);
+  padding: 16px 20px 24px;
+}
+
+.rrhh-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.rrhh-drawer-content .panel {
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .rrhh-drawer-panel {
+    width: 100%;
+    padding: 12px 16px 20px;
+  }
+}
+
+/* Expanded liquidation under the selected row (FR-115). */
+.rrhh-table-row-selectable {
+  cursor: pointer;
+}
+
+.rrhh-table-row-selected {
+  outline: 2px solid var(--color-focus, #2563eb);
+  outline-offset: -2px;
+}
+
+.rrhh-planilla-detalle {
+  margin: 6px 0 12px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--color-focus, #2563eb);
+  background: var(--color-surface-muted, #f8fafc);
+}
+
+#rrhh-liquidacion-root {
+  margin: 8px 0;
+}
+
+/* 25-row pagination (FR-108). */
+.rrhh-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.rrhh-pagination-status {
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #475569);
+}
+
+/* Accessible report bars (FR-111). */
+.rrhh-grafico-fila {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 2fr auto;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.rrhh-grafico-barra {
+  display: block;
+  min-height: 12px;
+  background: var(--color-primary, #2563eb);
+  border-radius: 4px;
+}
+
+/* Selección de Trabajador representado: extendida y centrada (US6/FR-110). */
+.rrhh-representado-form {
+  width: 100%;
+  max-width: none;
+  margin: 24px 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 12px 16px;
+}
+
+.rrhh-representado-form .field {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+}
+
+.rrhh-representado-form #rep-feedback {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.rrhh-representado-form .form-actions {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .rrhh-representado-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rrhh-representado-form .field,
+  .rrhh-representado-form .form-actions {
+    grid-column: 1;
+    grid-row: auto;
   }
 }

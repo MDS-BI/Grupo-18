@@ -9,6 +9,7 @@ import {
 } from '../utils/contratos-service.js';
 import { listTrabajadores } from '../utils/trabajadores-service.js';
 import { renderContratoForm } from '../components/contrato-form.js';
+import { createFormPanel } from '../components/form-panel.js';
 import { badge, button, el, formatMoney, input, select } from '../components/dom.js';
 
 function accessDenied(documentRef, root) {
@@ -50,6 +51,12 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   container.id = 'rrhh-contratos-view';
   container.setAttribute('aria-labelledby', 'rrhh-contratos-title');
 
+  const drawer = createFormPanel(documentRef, {
+    id: 'contratos-form-drawer',
+    title: 'Registrar contrato'
+  });
+  container.appendChild(drawer.element);
+
   const header = el(documentRef, 'div', 'rrhh-section-header');
   const title = el(documentRef, 'h3', null, 'Contratos');
   title.id = 'rrhh-contratos-title';
@@ -64,10 +71,24 @@ export function renderContratosView(root, { doc, viewer } = {}) {
         : 'Cada contrato tiene vigencia propia. Los cambios de sueldo cierran el contrato anterior y dejan historial completo.'
     )
   );
+  if (canManage) {
+    header.appendChild(
+      button(documentRef, {
+        id: 'contratos-registrar',
+        label: 'Registrar contrato',
+        className: 'button button-primary rrhh-primary-action',
+        onClick: () => {
+          form?.reset();
+          drawer.setTitle('Registrar contrato');
+          drawer.open();
+        }
+      })
+    );
+  }
   container.appendChild(header);
 
-  const layout = el(documentRef, 'div', 'rrhh-split');
-  const formPanel = el(documentRef, 'div', 'rrhh-split-aside');
+  const layout = el(documentRef, 'div', 'rrhh-list-layout');
+  const formPanel = el(documentRef, 'div', 'rrhh-drawer-form');
   const listPanel = el(documentRef, 'div', 'panel rrhh-list-panel');
 
   const form = canManage
@@ -75,9 +96,14 @@ export function renderContratosView(root, { doc, viewer } = {}) {
         doc: documentRef,
         viewer,
         trabajadores,
-        onSaved: () => refresh()
+        onSaved: () => {
+          drawer.markSaved();
+          refresh();
+          drawer.close({ force: true });
+        }
       })
     : null;
+  if (canManage) drawer.content.appendChild(formPanel);
 
   if (!canManage) {
     formPanel.appendChild(
@@ -153,7 +179,6 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   empty.hidden = true;
   listPanel.appendChild(empty);
 
-  layout.appendChild(formPanel);
   layout.appendChild(listPanel);
   container.appendChild(layout);
   root.appendChild(container);
@@ -193,7 +218,11 @@ export function renderContratosView(root, { doc, viewer } = {}) {
           button(documentRef, {
             label: 'Editar',
             className: 'button button-secondary button-small',
-            onClick: () => form?.edit(row)
+            onClick: () => {
+              form?.edit(row);
+              drawer.setTitle(`Editar contrato de ${workerName(row.entityId)}`);
+              drawer.open();
+            }
           })
         );
         if (row.estado !== 'terminado') {
@@ -201,7 +230,11 @@ export function renderContratosView(root, { doc, viewer } = {}) {
             button(documentRef, {
               label: 'Cambio sueldo',
               className: 'button button-ghost button-small',
-              onClick: () => form?.prepareCambio(row)
+              onClick: () => {
+                form?.prepareCambio(row);
+                drawer.setTitle(`Cambio de sueldo · ${workerName(row.entityId)}`);
+                drawer.open();
+              }
             })
           );
           actions.appendChild(
@@ -229,6 +262,7 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   return {
     refresh,
     dispose() {
+      drawer.dispose();
       container.remove();
     }
   };

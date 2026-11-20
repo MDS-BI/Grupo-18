@@ -73,6 +73,28 @@ describe('US5 - clean printing and PDF', () => {
     result.dispose();
   });
 
+  it('mueve el detalle de Ver liquidación a la hoja de impresión y lo devuelve después', () => {
+    const result = mount();
+    const detalle = dom.window.document.getElementById('root');
+    const padreOriginal = detalle.parentNode;
+    const siguienteOriginal = detalle.nextSibling;
+    const boton = dom.window.document.getElementById('liq-print');
+
+    click(boton);
+
+    const host = dom.window.document.getElementById('rrhh-print-host');
+    expect(host).not.toBeNull();
+    expect(detalle.parentNode).toBe(host);
+    expect(host.textContent).toContain('Detalle de la liquidación');
+    expect(host.textContent).toContain('Líquido a pagar');
+
+    dom.window.dispatchEvent(new dom.window.Event('afterprint'));
+    expect(detalle.parentNode).toBe(padreOriginal);
+    expect(detalle.nextSibling).toBe(siguienteOriginal);
+    expect(dom.window.document.getElementById('rrhh-print-host')).toBeNull();
+    result.dispose();
+  });
+
   it('uses matchMedia as a fallback when print events are unavailable', () => {
     let handler = null;
     const mediaQuery = {
@@ -136,6 +158,19 @@ describe('US5 - clean printing and PDF', () => {
     result.dispose();
   });
 
+  it('no repite el cargo cuando un dato guardado lo trae también como departamento', () => {
+    const base = createDemoLiquidacion();
+    const cargo = base.trabajador.cargo;
+    const result = mount({
+      ...base,
+      trabajador: { ...base.trabajador, departamento: cargo }
+    });
+
+    const bloque = dom.window.document.querySelector('.liq-worker-name').parentElement;
+    expect(bloque.textContent.split(cargo).length - 1).toBe(1);
+    result.dispose();
+  });
+
   it('does not render editable or navigation controls inside the printable view', () => {
     const result = mount();
     const root = dom.window.document.getElementById('root');
@@ -162,6 +197,8 @@ describe('US5 - clean printing and PDF', () => {
     expect(css).toMatch(/\.print-clean[^{]*\.liq-explanation-hint[^{]*\{[^}]*display:\s*none/s);
     expect(css).not.toMatch(/\.print-clean\s+#liq-explanation\s*\{[^}]*display:\s*none/s);
     expect(css).toMatch(/\.print-clean[^{]*#rrhh-liquidacion-root[^{]*\{[^}]*width:\s*100%/s);
+    expect(css).toMatch(/\.print-clean[^{]*#rrhh-print-host[^{]*\{[^}]*display:\s*block/s);
+    expect(css).toMatch(/\.print-clean[^{]*\.app-shell[^{]*\{[^}]*display:\s*none/s);
     expect(css).toMatch(/page-break-inside:\s*avoid/);
     expect(css).toMatch(/size:\s*(letter|A4)/i);
   });

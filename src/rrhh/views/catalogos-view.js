@@ -20,6 +20,7 @@ import {
   select,
   showFeedback
 } from '../components/dom.js';
+import { createFormPanel } from '../components/form-panel.js';
 
 function errorMessages(error) {
   if (!error) return ['No se pudo guardar el catálogo.'];
@@ -53,6 +54,12 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
   container.id = 'rrhh-catalogos-view';
   container.setAttribute('aria-labelledby', 'rrhh-catalogos-title');
 
+  const drawer = createFormPanel(documentRef, {
+    id: 'catalogos-form-drawer',
+    title: 'Nuevo registro de catálogo'
+  });
+  container.appendChild(drawer.element);
+
   const header = el(documentRef, 'div', 'rrhh-section-header');
   const title = el(documentRef, 'h3', null, 'Catálogos base');
   title.id = 'rrhh-catalogos-title';
@@ -65,10 +72,24 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
       'Cargos, departamentos y centros de costo reutilizables por todas las fichas de trabajadores.'
     )
   );
+  if (canManage) {
+    header.appendChild(
+      button(documentRef, {
+        id: 'catalogos-nuevo-registro',
+        label: 'Nuevo registro de catálogo',
+        className: 'button button-primary rrhh-primary-action',
+        onClick: () => {
+          formPanel.resetForm?.();
+          drawer.setTitle('Nuevo registro de catálogo');
+          drawer.open();
+        }
+      })
+    );
+  }
   container.appendChild(header);
 
-  const layout = el(documentRef, 'div', 'rrhh-split');
-  const formPanel = el(documentRef, 'div', 'rrhh-split-aside');
+  const layout = el(documentRef, 'div', 'rrhh-list-layout');
+  const formPanel = el(documentRef, 'div', 'rrhh-drawer-form');
   const listPanel = el(documentRef, 'div', 'panel rrhh-list-panel');
 
   let tipoSelect;
@@ -151,13 +172,16 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
           showFeedback(messages, 'Catálogo creado.', 'ok');
         }
         resetForm();
+        drawer.markSaved();
         refresh();
+        drawer.close({ force: true });
       } catch (error) {
         showFeedback(messages, errorMessages(error).join(' '), 'error');
       }
     });
 
     formPanel.appendChild(form);
+    drawer.content.appendChild(formPanel);
 
     function resetForm() {
       editing = null;
@@ -169,6 +193,7 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
       formTitle.textContent = 'Nuevo registro';
     }
 
+    formPanel.resetForm = resetForm;
     formPanel.edit = (row) => {
       editing = row;
       tipoSelect.value = row.tipo;
@@ -229,7 +254,6 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
   empty.hidden = true;
   listPanel.appendChild(empty);
 
-  layout.appendChild(formPanel);
   layout.appendChild(listPanel);
   container.appendChild(layout);
   root.appendChild(container);
@@ -262,7 +286,11 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
           button(documentRef, {
             label: 'Editar',
             className: 'button button-secondary button-small',
-            onClick: () => formPanel.edit?.(row)
+            onClick: () => {
+              formPanel.edit?.(row);
+              drawer.setTitle(`Editar ${TIPO_CATALOGO_LABELS[row.tipo] || row.tipo}`);
+              drawer.open();
+            }
           })
         );
         if (row.activo !== false) {
@@ -291,6 +319,7 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
   return {
     refresh,
     dispose() {
+      drawer.dispose();
       container.remove();
     }
   };

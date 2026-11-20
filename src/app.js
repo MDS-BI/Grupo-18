@@ -10,10 +10,12 @@ import {
 import { ensureSeedOnFirstBoot, restoreSeedData } from './rrhh/data/seed.js';
 import { listTrabajadores } from './rrhh/utils/trabajadores-service.js';
 import { renderRrhhWorkspace } from './rrhh/views/rrhh-router.js';
+import { createPasswordToggle } from './rrhh/components/password-toggle.js';
 
 let modelConfig = null;
 let rrhhView = null;
 let liquidationView = null;
+let passwordToggle = null;
 
 function qs(id) {
   return document.getElementById(id);
@@ -145,6 +147,7 @@ function handleLoginSubmit(event) {
   const feedback = qs('login-feedback');
   try {
     if (!validateDemoCredentials(role, password)) {
+      passwordToggle?.hide();
       if (feedback) {
         feedback.hidden = false;
         feedback.textContent =
@@ -217,6 +220,7 @@ function handleSeedDataRestore() {
 }
 
 function bindEvents() {
+  passwordToggle = createPasswordToggle(document);
   const loginForm = qs('login-form');
   if (loginForm) {
     loginForm.addEventListener('submit', handleLoginSubmit);
@@ -243,6 +247,7 @@ function bindEvents() {
   }
   qs('rep-form')?.addEventListener('submit', handleRepSubmit);
   qs('rrhh-logout-btn')?.addEventListener('click', () => {
+    passwordToggle?.hide();
     logout();
     liquidationView?.dispose?.();
     liquidationView = null;

@@ -29,8 +29,8 @@ export const RRHH_TABS = [
 ];
 
 const RENDERERS = {
-  resumen: (panel) => {
-    panel.innerHTML = renderResumenView();
+  resumen: (panel, context) => {
+    panel.innerHTML = renderResumenView({ viewer: context.viewer });
     return null;
   },
   trabajadores: renderTrabajadoresView,
@@ -79,6 +79,9 @@ export class RrhhWorkspace {
   filterTabsByRole(tabs) {
     const role = this.viewer?.role || '';
     const allowed = [];
+    if (role === 'trabajador') {
+      return tabs.filter((tab) => ['resumen', 'liquidaciones'].includes(tab.dataset.rrhhTab));
+    }
     for (const tab of tabs) {
       const name = tab.dataset.rrhhTab;
       if (!name) continue;
@@ -106,6 +109,7 @@ export class RrhhWorkspace {
     if (selected && this.panels.has(selected.dataset.rrhhTab)) {
       return selected.dataset.rrhhTab;
     }
+    if (this.viewer?.role === 'trabajador' && this.panels.has('resumen')) return 'resumen';
     return this.panels.has('liquidaciones')
       ? 'liquidaciones'
       : RRHH_TABS.find((name) => this.panels.has(name));

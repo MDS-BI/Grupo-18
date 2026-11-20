@@ -1,13 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
+  ensureClosedPeriodLiquidations,
   getSeedSummary,
   loadSeedData,
   PERIODO_CALCULADO,
+  PERIODO_CERRADO,
+  SEED_CLOSED_PERIOD_KEY,
   SEED_DATASET,
   SEED_DISABLE_FLAG
 } from '../../src/rrhh/data/seed.js';
 import { contratosPorVencer } from '../../src/rrhh/utils/alertas-service.js';
-import { listLiquidacionesPeriodo } from '../../src/rrhh/utils/liquidacion-service.js';
+import {
+  listLiquidacionesPeriodo,
+  STORAGE_KEY as LIQUIDACIONES_KEY
+} from '../../src/rrhh/utils/liquidacion-service.js';
 import { listTrabajadores } from '../../src/rrhh/utils/trabajadores-service.js';
 import { renderResumenView } from '../../src/rrhh/views/resumen-view.js';
 
@@ -41,8 +47,8 @@ describe('Datos de prueba RRHH', () => {
       trabajadores: 12,
       contratos: 12,
       novedades: 5,
-      periodos: 2,
-      liquidaciones: 10,
+      periodos: 3,
+      liquidaciones: 20,
       catalogos: 13
     });
 
@@ -103,6 +109,22 @@ describe('Datos de prueba RRHH', () => {
     expect(resumen).not.toContain('Sin contratos por vencer');
   });
 
+  it('muestra el resumen del Trabajador como tabla con etiquetas destacadas', () => {
+    const trabajador = listTrabajadores({ incluirBaja: true })[0];
+    const html = renderResumenView({
+      viewer: { role: 'trabajador', trabajadorId: trabajador.entityId }
+    });
+
+    expect(html).toContain('rrhh-worker-summary');
+    expect(html).toContain('Resumen de mi contrato');
+    expect(html).toContain('rrhh-worker-state');
+    expect(html).toContain('rrhh-resumen-table');
+    expect(html).toContain('<th scope="row">Tipo de contrato</th>');
+    expect(html).toContain('<th scope="row">Vencimiento</th>');
+    expect(html).not.toContain('rrhh-alertas-list');
+    expect(html).not.toMatch(/\$\s?\d/);
+  });
+
   it('deja liquidaciones en borrador, aprobada y pagada', () => {
     const liquidaciones = listLiquidacionesPeriodo(PERIODO_CALCULADO);
     expect(liquidaciones).toHaveLength(10);
@@ -117,5 +139,31 @@ describe('Datos de prueba RRHH', () => {
       aprobada: 2,
       pagada: 2
     });
+  });
+
+  it('no repite el cargo como departamento en la liquidación generada', () => {
+    const liquidacion = listLiquidacionesPeriodo(PERIODO_CALCULADO)[0];
+    expect(liquidacion.trabajador.cargo).toBeTruthy();
+    expect(liquidacion.trabajador.departamento).not.toBe(liquidacion.trabajador.cargo);
+  });
+
+  it('incluye liquidaciones pagadas en un período cerrado', () => {
+    const cerradas = listLiquidacionesPeriodo(PERIODO_CERRADO);
+    expect(cerradas).toHaveLength(10);
+    expect(cerradas.every((row) => row.estado === 'pagada')).toBe(true);
+    expect(cerradas.every((row) => row.periodo?.cerrado === true)).toBe(true);
+  });
+
+  it('parchea instalaciones previas que no tenían el período cerrado', () => {
+    store.delete(SEED_CLOSED_PERIOD_KEY);
+    const liquidaciones = JSON.parse(store.get(LIQUIDACIONES_KEY)).filter(
+      (row) => row.periodoId !== PERIODO_CERRADO
+    );
+    store.set(LIQUIDACIONES_KEY, JSON.stringify(liquidaciones));
+    expect(listLiquidacionesPeriodo(PERIODO_CERRADO)).toHaveLength(0);
+
+    expect(ensureClosedPeriodLiquidations()).toBe(true);
+    expect(listLiquidacionesPeriodo(PERIODO_CERRADO)).toHaveLength(10);
+    expect(ensureClosedPeriodLiquidations()).toBe(false);
   });
 });

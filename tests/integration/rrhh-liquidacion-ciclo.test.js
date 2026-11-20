@@ -146,6 +146,12 @@ describe('US15 - liquidation approval, payment, annulment and traceability', () 
     });
 
     expect(document.getElementById('liquidaciones-list')).not.toBeNull();
+    expect(document.getElementById('liq-approve')).toBeNull();
+    click(
+      [...document.querySelectorAll('#liquidaciones-list button')].find(
+        (button) => button.textContent === 'Ver liquidación'
+      )
+    );
     expect(document.getElementById('liq-approve')).not.toBeNull();
     click(document.getElementById('liq-approve'));
 

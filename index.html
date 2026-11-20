@@ -47,7 +47,10 @@
             </div>
             <div class="field">
               <label for="login-password">Clave *</label>
-              <input type="password" id="login-password" name="login-password" autocomplete="current-password" />
+              <div class="rrhh-password-field">
+                <input type="password" id="login-password" name="login-password" autocomplete="current-password" />
+                <button type="button" id="login-password-toggle" class="rrhh-password-toggle" aria-label="Mostrar contraseña" aria-pressed="false">👁</button>
+              </div>
               <p class="field-error" id="error-login-password"></p>
             </div>
             <p class="panel-copy" style="font-size:0.85rem;">Demo: administrador/admin123, analista/analista123, jefatura/jefatura123, trabajador/trabajador123</p>
@@ -66,7 +69,7 @@
               <p id="rep-subtitle" class="hero-subtitle">Elija el trabajador correspondiente.</p>
             </div>
           </div>
-          <form id="rep-form" class="panel form-panel" style="max-width: 520px;" novalidate>
+          <form id="rep-form" class="panel form-panel rrhh-representado-form" novalidate>
             <div class="field">
               <label for="rep-select">Trabajador *</label>
               <select id="rep-select" name="rep-select"></select>
@@ -97,7 +100,7 @@
             <button type="button" class="rrhh-tab" data-rrhh-tab="trabajadores" role="tab">Trabajadores</button>
             <button type="button" class="rrhh-tab" data-rrhh-tab="contratos" role="tab">Contratos</button>
             <button type="button" class="rrhh-tab" data-rrhh-tab="catalogos" role="tab">Catálogos</button>
-            <button type="button" class="rrhh-tab" data-rrhh-tab="novedades" role="tab">Novedades</button>
+            <button type="button" class="rrhh-tab" data-rrhh-tab="novedades" role="tab">Asistencia</button>
             <button type="button" class="rrhh-tab" data-rrhh-tab="periodos" role="tab">Períodos</button>
             <button type="button" class="rrhh-tab" data-rrhh-tab="planilla" role="tab">Planilla</button>
             <button type="button" class="rrhh-tab" data-rrhh-tab="liquidaciones" role="tab">Liquidaciones</button>

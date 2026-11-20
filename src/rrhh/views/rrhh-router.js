@@ -15,7 +15,7 @@ export const RRHH_ROUTES = {
   trabajadores: 'Trabajadores',
   contratos: 'Contratos',
   catalogos: 'Catálogos',
-  novedades: 'Novedades',
+  novedades: 'Asistencia',
   periodos: 'Períodos',
   planilla: 'Planilla',
   liquidaciones: 'Liquidaciones',

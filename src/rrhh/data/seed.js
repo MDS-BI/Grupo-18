@@ -50,7 +50,7 @@ import {
   clearPeriodos,
   marcarPeriodoCalculado
 } from '../utils/periodos-service.js';
-import { rangoPeriodo } from '../utils/periodos.js';
+import { etiquetaPeriodo, rangoPeriodo } from '../utils/periodos.js';
 import {
   actualizarTrabajador,
   clearTrabajadores,
@@ -60,11 +60,13 @@ import {
 } from '../utils/trabajadores-service.js';
 
 export const SEED_LOADED_KEY = 'erp_rrhh:seedLoaded';
+export const SEED_CLOSED_PERIOD_KEY = 'erp_rrhh:seedClosedPeriod';
 export const SEED_DISABLE_FLAG = '__ERP_BASE_SEED_DISABLED__';
 
 /** Deliberately invalid; exported only for validation tests. */
 export const RUT_INVALIDO_EJEMPLO = '12.345.678-9';
 
+export const PERIODO_CERRADO = '2026-08';
 export const PERIODO_CALCULADO = '2026-09';
 export const PERIODO_ABIERTO = '2026-10';
 
@@ -90,6 +92,7 @@ const JEFATURA = {
 
 export const SEED_DATASET = Object.freeze({
   periodos: [
+    { id: PERIODO_CERRADO, estado: 'cerrado' },
     { id: PERIODO_CALCULADO, estado: 'abierto' },
     { id: PERIODO_ABIERTO, estado: 'abierto' }
   ],
@@ -700,6 +703,45 @@ function applyEstadosLiquidacion(workers) {
   }
 }
 
+/**
+ * Historical, closed-period liquidations.
+ *
+ * The Trabajador role may only consult liquidaciones from closed periods, so
+ * the demo dataset needs at least one closed period with paid liquidations.
+ * They are derived from the calculated snapshot to keep amounts consistent.
+ */
+function crearLiquidacionesPeriodoCerrado() {
+  asegurarPeriodo(PERIODO_CERRADO, { estado: 'cerrado' });
+  const origen = listLiquidacionesPeriodo(PERIODO_CALCULADO);
+  if (origen.length === 0) return;
+  const rango = rangoPeriodo(PERIODO_CERRADO);
+  const periodo = {
+    id: PERIODO_CERRADO,
+    anio: 2026,
+    mes: 8,
+    etiqueta: etiquetaPeriodo(PERIODO_CERRADO),
+    fechaInicio: rango.fechaInicio,
+    fechaFin: rango.fechaFin,
+    cerrado: true
+  };
+
+  for (const liquidacion of origen) {
+    const entityId = liquidacion.trabajador?.entityId || liquidacion.trabajador?.id;
+    if (!entityId) continue;
+    const id = `liq-${PERIODO_CERRADO}-${entityId}`;
+    saveLiquidacion({
+      ...liquidacion,
+      id,
+      document_id: id,
+      numero: `LIQ-${PERIODO_CERRADO}-${entityId}`,
+      estado: 'pagada',
+      periodoId: PERIODO_CERRADO,
+      periodo: { ...periodo },
+      fechaEmision: rango.fechaFin
+    });
+  }
+}
+
 function seedWorkerForCalculation(entity) {
   const entityId = entity.entityId || entity.entity_id || entity.id;
   return {
@@ -829,8 +871,12 @@ export function loadSeedData({ reset = true, mark = true } = {}) {
   marcarPeriodoCalculado(PERIODO_CALCULADO);
   applyBonos(workers);
   applyEstadosLiquidacion(workers);
+  crearLiquidacionesPeriodoCerrado();
 
-  if (mark) storage().setItem(SEED_LOADED_KEY, 'loaded');
+  if (mark) {
+    storage().setItem(SEED_LOADED_KEY, 'loaded');
+    storage().setItem(SEED_CLOSED_PERIOD_KEY, 'loaded');
+  }
   return getSeedSummary();
 }
 
@@ -838,12 +884,21 @@ export function restoreSeedData() {
   return loadSeedData({ reset: true, mark: true });
 }
 
+/** Patch existing demo data so Trabajador sessions have closed-period liquidaciones. */
+export function ensureClosedPeriodLiquidations() {
+  if (isSeedDisabled() || !storage()) return false;
+  if (storage().getItem(SEED_CLOSED_PERIOD_KEY)) return false;
+  crearLiquidacionesPeriodoCerrado();
+  storage().setItem(SEED_CLOSED_PERIOD_KEY, 'loaded');
+  return true;
+}
+
 export function ensureSeedOnFirstBoot() {
   if (isSeedDisabled() || !storage()) return false;
-  if (storage().getItem(SEED_LOADED_KEY)) return false;
+  if (storage().getItem(SEED_LOADED_KEY)) return ensureClosedPeriodLiquidations();
   if (hasStoredRrhhData()) {
     storage().setItem(SEED_LOADED_KEY, 'skipped-existing-data');
-    return false;
+    return ensureClosedPeriodLiquidations();
   }
   loadSeedData({ reset: false, mark: true });
   return true;

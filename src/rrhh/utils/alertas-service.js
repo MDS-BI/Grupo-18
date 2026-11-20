@@ -73,3 +73,29 @@ export function resumenAlertas(options = {}) {
     alertas: alerts
   };
 }
+
+/**
+ * Contract summary for the Trabajador panel. Deliberately omits salary data.
+ *
+ * @returns {{tipo, fechaInicio, fechaTermino, diasRestantes, estado, vencido}|null}
+ */
+export function resumenContratoTrabajador(entityId, { hoy = new Date() } = {}) {
+  if (!entityId) return null;
+  const contratos = listContratos({ incluirTerminados: true }).filter(
+    (row) => String(row.entityId || row.entity_id) === String(entityId)
+  );
+  if (contratos.length === 0) return null;
+  const contrato =
+    contratos.find((row) => row.estado === 'vigente') ||
+    contratos.find((row) => row.estado === 'vencido') ||
+    contratos[contratos.length - 1];
+  const diasRestantes = contrato.fechaTermino ? diasHastaVencimiento(contrato.fechaTermino, hoy) : null;
+  return {
+    tipo: contrato.tipoContrato || '',
+    fechaInicio: contrato.fechaInicio || '',
+    fechaTermino: contrato.fechaTermino || '',
+    diasRestantes,
+    estado: contrato.estado || '',
+    vencido: diasRestantes !== null && diasRestantes < 0
+  };
+}

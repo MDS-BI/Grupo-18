@@ -110,9 +110,11 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 
 ---
 
-## Phase 5: User Story 3 — Novedades y Aprobación (Priority: P1)
+## Phase 5: User Story 3 — Asistencia (Novedades) y Aprobación (Priority: P1)
 
 **Goal**: Registrar horas extra, licencias y ausencias; aprobar o rechazar con segregación de funciones.
+
+**Nota**: la pestaña superior se llama **Asistencia**; los registros del dominio siguen llamándose "novedades".
 
 **Independent Test**: Con trabajadores y contratos semilla, registrar novedades, aprobar/rechazar y verificar bloqueo por pendientes y por período cerrado.
 
@@ -361,6 +363,66 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 
 ---
 
+## Phase 16: Actualizaciones de Historias de Usuario (FR-108–FR-116, Asistencia)
+
+**Purpose**: Incorporar las tareas derivadas de los cambios aplicados a las historias de usuario. Ejecutar cada bloque dentro de la fase de su historia; se agrupan aquí para conservar los IDs existentes y la trazabilidad FR/SC.
+
+### Tests para las actualizaciones
+
+- [X] T121 [P] [US6] Crear pruebas de contraseña oculta/visible, escritura con el control activado conservando foco y cursor, etiquetas accesibles, ocultamiento al cerrar sesión o tras intento rechazado y no registro en bitácora en `tests/unit/rrhh-password.test.js` y `tests/integration/rrhh-login-password.test.js` (FR-113, US6 escenarios 12–14)
+- [X] T124 [P] [US2] Crear pruebas de avisos del panel principal por rol (todos, jefatura sin alertas, Trabajador solo su resumen sin sueldo base, indefinido sin alerta, sin contrato y desvinculado histórico) en `tests/unit/rrhh-alertas-roles.test.js` y `tests/integration/rrhh-panel-principal.test.js` (FR-114, US2 escenarios 15–19)
+- [X] T126 [P] [US5] Crear prueba de que el Trabajador ve solo las pestañas "Resumen" y "Liquidaciones" y que "Resumen" muestra únicamente su contrato en `tests/integration/rrhh-trabajador-pestanas.test.js` (FR-114, US5 escenario 9, US6 escenario 16)
+- [ ] T129 [P] [US4] Crear prueba de que la liquidación se despliega justo debajo de la fila del Trabajador seleccionado en cálculo y se contrae la anterior en `tests/integration/rrhh-calculo-despliegue.test.js` (FR-115, US4 escenario 19)
+- [X] T130 [P] [US5] Crear prueba de "Ver liquidación" bajo la persona seleccionada, nunca al final del listado, con Trabajador solo suya y administrador/a o analista todas en `tests/integration/rrhh-ver-liquidacion.test.js` (FR-115, US5 escenarios 9–10)
+- [X] T134 [P] [US1] Crear prueba del botón "Registrar trabajador"/"Nuevo registro de catálogo" y panel lateral derecho con Guardar/Cancelar, edición, confirmación al cerrar con cambios y ancho completo en pantallas estrechas en `tests/integration/rrhh-panel-lateral-us1.test.js` (FR-116, US1 escenarios 14–15)
+- [X] T135 [P] [US2] Crear prueba del botón "Registrar contrato" y panel lateral derecho con Guardar/Cancelar, edición, confirmación y ancho completo en pantallas estrechas en `tests/integration/rrhh-panel-lateral-us2.test.js` (FR-116, US2 escenario 20)
+- [X] T143 [P] Crear prueba unitaria de paginación de 25 filas, orden alfabético, controles anterior/siguiente, total de registros y conservación de búsqueda y filtros en `tests/unit/rrhh-pagination.test.js` (FR-108)
+- [X] T154 [P] [US3] Crear prueba de que la pestaña superior se llama "Asistencia" y no "Novedades", y que al seleccionarla se accede al registro y aprobación de novedades en `tests/integration/rrhh-asistencia-pestana.test.js` (US3 escenario 18)
+- [ ] T155 [P] Verificar que el 100% de los escenarios de aceptación de US1–US12 tiene una prueba automatizada que pasa en `tests/integration/rrhh-cobertura-escenarios.test.js` (SC-030)
+- [X] T156 [P] [US6] Crear prueba de que la pantalla de selección del Trabajador representado queda extendida y centrada, sin tope estrecho, en `tests/integration/rrhh-representado-layout.test.js` (FR-110, US6 escenario 17)
+- [X] T157 [P] [US5/US6] Crear pruebas de liquidaciones del Trabajador en período cerrado, del parche a instalaciones previas y del flujo completo hasta PDF en `tests/unit/rrhh-seed.test.js` y `tests/integration/rrhh-trabajador-liquidaciones.test.js` (US5 escenario 12, US6 escenarios 3–4, 16 y 18)
+- [X] T158 [P] [US6] Crear prueba de que el resumen del Trabajador se muestra como tarjeta con título en negrita, estado destacado y tabla compacta, sin sueldo base, en `tests/integration/rrhh-panel-principal.test.js` y `tests/unit/rrhh-seed.test.js` (FR-110, US6 escenario 16)
+- [X] T159 [P] [US5] Crear pruebas de que `Imprimir / Guardar en PDF` reproduce `Ver liquidación`, mueve el detalle a la hoja de impresión, lo restaura y empieza en la primera página sin hojas en blanco en `tests/integration/rrhh-liquidacion-print.test.js` y `tests/integration/rrhh-trabajador-liquidaciones.test.js` (FR-044, FR-046, US5 escenario 12)
+- [X] T164 [P] [US5] Crear prueba de que el cargo del Trabajador aparece una sola vez y no se copia como departamento en la liquidación generada en `tests/unit/rrhh-seed.test.js` y `tests/integration/rrhh-trabajador-liquidaciones.test.js` (FR-046, US5 escenario 12)
+
+### Implementación de las actualizaciones
+
+- [X] T120 [P] [US6] Implementar control con ícono de ojo para mostrar/ocultar contraseña, operable por teclado, con etiquetas "Mostrar contraseña"/"Ocultar contraseña", conservando foco y cursor al seguir escribiendo, ocultándola al cerrar sesión o tras intento rechazado y sin registrarla en bitácora en `src/rrhh/components/password-toggle.js` y `src/rrhh/views/login.js` (FR-113)
+- [X] T122 [P] [US2] Implementar resumen del contrato del Trabajador (tipo, fechas, días restantes y estado, sin sueldo base) y alertas de próximo vencimiento/vencido en `src/rrhh/views/resumen-view.js` y `src/rrhh/utils/alertas-service.js` (FR-114, FR-072)
+- [X] T123 [P] [US6] Aplicar visibilidad por rol del panel principal: administrador/a y analista ven todas las alertas; jefatura ninguna; Trabajador solo su resumen, también si es indefinido; sin contrato sin resumen; desvinculado solo histórico sin alertas en `src/rrhh/views/resumen-view.js` (FR-114, FR-052, FR-085)
+- [X] T125 [P] [US5] Implementar pestañas superiores del Trabajador "Resumen" y "Liquidaciones", con selector de período cerrado en "Liquidaciones", en `src/rrhh/views/workspace.js` y `src/rrhh/views/rrhh-router.js` (FR-114)
+- [X] T127 [US4] Implementar despliegue automático de la liquidación justo debajo de la fila del Trabajador seleccionado en la pantalla de cálculo, contrayendo la anterior al seleccionar otro, en `src/rrhh/views/planilla.js` (FR-115)
+- [X] T128 [US5] Implementar botón "Ver liquidación" que despliega el detalle con líneas y explicaciones justo debajo de la persona seleccionada, nunca al final del listado: Trabajador solo suya de período cerrado; administrador/a y analista todas, en `src/rrhh/views/liquidaciones.js` y `src/rrhh/components/liquidacion-detalle.js` (FR-115, US5 escenarios 9–10)
+- [X] T131 [P] [US1] Implementar botón "Registrar trabajador" en la esquina superior derecha y panel lateral derecho con Guardar/Cancelar, edición en el mismo panel, confirmación al cerrar con cambios sin guardar y ancho completo en pantallas estrechas en `src/rrhh/views/trabajadores-view.js` y `src/rrhh/components/form-panel.js` (FR-116)
+- [X] T132 [P] [US1] Implementar botón "Nuevo registro de catálogo" con el mismo panel lateral derecho en `src/rrhh/views/catalogos-view.js` (FR-116)
+- [X] T133 [US2] Implementar botón "Registrar contrato" en la esquina superior derecha y panel lateral derecho con Guardar/Cancelar, edición, confirmación y ancho completo en pantallas estrechas en `src/rrhh/views/contratos-view.js` (FR-116)
+- [X] T136 [P] Crear componente reutilizable de paginación de 25 filas, ordenado alfabéticamente por nombre del Trabajador, con páginas anterior/siguiente, total de registros y conservación de búsqueda y filtros en `src/rrhh/components/pagination.js` (FR-108)
+- [ ] T137 [P] [US1] Aplicar la paginación de T136 a fichas de trabajadores y catálogos en `src/rrhh/views/trabajadores-view.js` y `src/rrhh/views/catalogos-view.js` (FR-108)
+- [ ] T138 [P] [US2] Aplicar la paginación de T136 al historial de contratos en `src/rrhh/views/contratos-view.js` (FR-108)
+- [ ] T139 [P] [US3] Aplicar la paginación de T136 al listado de Asistencia/novedades en `src/rrhh/views/novedades.js` (FR-108)
+- [ ] T140 [P] [US5] Aplicar la paginación de T136 al listado de liquidaciones en `src/rrhh/views/liquidaciones.js` (FR-108)
+- [ ] T141 [P] [US7] Aplicar la paginación de T136 al listado de solicitudes de vacaciones en `src/rrhh/views/vacaciones.js` (FR-108)
+- [ ] T142 [P] [US8] Aplicar la paginación de T136 al listado de cargas familiares en `src/rrhh/views/cargas.js` (FR-108)
+- [ ] T144 [P] Crear componente de avisos visibles de éxito/error, anunciados a lectores de pantalla, y mostrar cada error de validación junto al campo que lo causa en `src/rrhh/components/feedback.js` (FR-109)
+- [ ] T145 [P] [US1] Aplicar el componente de T144 en formularios y listados de fichas y catálogos en `src/rrhh/views/trabajadores-view.js` y `src/rrhh/views/catalogos-view.js` (FR-109)
+- [ ] T146 [P] [US2] Aplicar el componente de T144 en contratos en `src/rrhh/views/contratos-view.js` (FR-109)
+- [ ] T147 [P] [US3] Aplicar el componente de T144 en Asistencia/novedades en `src/rrhh/views/novedades.js` (FR-109)
+- [ ] T148 [P] [US4] Aplicar el componente de T144 en períodos, cálculo y cierre en `src/rrhh/views/periodos.js`, `src/rrhh/views/planilla.js` y `src/rrhh/components/calculo-resumen.js` (FR-109)
+- [ ] T149 [P] [US5] Aplicar el componente de T144 en liquidaciones en `src/rrhh/views/liquidaciones.js` (FR-109)
+- [ ] T150 [P] Aplicar la guía de estilo común (colores, tipografía, espaciados, título y acciones principales en la misma posición, fila de encabezado de tablas, sin textos cortados o desbordados y contraste WCAG 2.2 AA) y verificar la lista de chequeo visual de SC-030 en `src/styles.css` y `src/rrhh/views/` (FR-110, SC-030)
+- [ ] T151 [P] [US10] Agregar un gráfico de barras simple con los mismos datos de cada tabla de reporte, con título y descripción accesibles, en `src/rrhh/components/grafico-reporte.js` y `src/rrhh/views/reportes.js` (FR-111)
+- [ ] T152 [P] Verificar que todas las pantallas de RR.HH. se muestran completas y operables entre 768 px y 1920 px sin desplazamiento horizontal de la página, permitiendo scroll interno solo en tablas anchas, en `src/styles.css` y `tests/integration/rrhh-responsive.test.js` (SC-031)
+- [X] T153 [P] [US3] Renombrar el rótulo de la pestaña superior de "Novedades" a "Asistencia" en `src/rrhh/views/workspace.js` y `src/rrhh/views/rrhh-router.js`, manteniendo "novedades" como término del dominio (US3 escenario 18)
+- [X] T160 [P] [US6] Extender y centrar el selector del Trabajador representado en `index.html` y `src/styles.css`, ocupando todo el ancho disponible con la acción "Continuar" alineada a la derecha (FR-110, US6 escenario 17)
+- [X] T161 [P] [US5/US6] Agregar el período cerrado `2026-08` con liquidaciones pagadas y el parche automático para datos previos en `src/rrhh/data/seed.js` (US5 escenario 12, US6 escenarios 3–4, 16 y 18)
+- [X] T162 [P] [US6] Presentar el resumen del Trabajador como tarjeta atractiva con títulos en negrita, distintivo de estado y tabla compacta, sin sueldo base, en `src/rrhh/views/resumen-view.js` y `src/styles.css` (FR-110, US6 escenario 16)
+- [X] T163 [P] [US5] Ajustar `Imprimir / Guardar en PDF` para reproducir exactamente `Ver liquidación`, extraer el detalle a una hoja de impresión, restaurarlo después y comenzar en la primera página sin hojas en blanco en `src/rrhh/views/liquidacion.js` y `src/styles.css` (FR-044, FR-046, US5 escenario 12)
+- [X] T165 [P] [US5] Evitar que `trabajadorDesdeEntidad` copie `category` como `departamento` o `centroCosto` y ocultar en el render un `departamento` idéntico al cargo, de modo que el cargo aparezca una sola vez incluso con datos guardados anteriores, en `src/rrhh/utils/liquidacion-service.js` y `src/rrhh/views/liquidacion.js` (FR-046, US5 escenario 12)
+
+**Checkpoint**: Todas las historias quedan alineadas con FR-108–FR-116, SC-030/SC-031 y el rótulo "Asistencia". Las tareas T156–T165 cubren los ajustes finales de representado, liquidaciones del Trabajador, resumen, impresión/PDF y cargo único en el comprobante.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -368,7 +430,8 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 - **Setup (Phase 1)**: sin dependencias
 - **Foundational (Phase 2)**: depende de Setup; BLOCKS todas las historias
 - **User Stories (Phases 3–14)**: dependen de Foundational
-- **Polish (Phase 15)**: depende de todas las historias incluidas
+- **Phase 16 (actualizaciones)**: sus tareas se ejecutan dentro de la fase de su historia; las tareas compartidas (T136, T144, T150, T152, T155) se ejecutan después de Foundational y antes del cierre de la historia correspondiente
+- **Polish (Phase 15)**: depende de todas las historias incluidas y de Phase 16
 
 ### User Story Completion Order
 
@@ -386,6 +449,8 @@ P2: US5 (tras US4) · US7 (tras US3/US6) · US8 (tras US4)
   ↓
 P3: US9 (tras parámetros base)
   ↓
+Actualizaciones US1–US12 (T120–T165): integrar en cada fase; Asistencia T153/T154 en US3; ajustes finales T156–T165 en US5/US6
+   ↓
 Polish (T108–T119)
 ```
 
@@ -419,6 +484,15 @@ Polish (T108–T119)
 | US10 | T088 + T089 + T090; T091 + T093 + T094 |
 | US11 | T097 + T098 |
 | US12 | T060 + T061; T063 |
+| Actualizaciones US1 | T131 + T132 + T134; T137 + T145 |
+| Actualizaciones US2 | T122 + T124 + T133 + T135; T138 + T146 |
+| Actualizaciones US3 | T139 + T147; T153 + T154 |
+| Actualizaciones US4 | T127 + T129; T148 |
+| Actualizaciones US5 | T125 + T126 + T128 + T130 + T157 + T159 + T164; T140 + T149; T161 + T163 + T165 |
+| Actualizaciones US6 | T120 + T121 + T123 + T156 + T157 + T158; T160 + T161 + T162 |
+| Actualizaciones US7/US8 | T141 + T142 |
+| Actualizaciones US10 | T151 |
+| Compartidas | T136 + T143; T144; T150 + T152 + T155 |
 
 ---
 
@@ -429,8 +503,8 @@ Polish (T108–T119)
 1. Complete Phase 1: Setup
 2. Complete Phase 2: Foundational (CRITICAL — blocks all stories)
 3. Complete Phase 3: US1
-4. **STOP and VALIDATE**: ejecutar T020/T021 y verificar US1 de forma independiente
-5. Demo del workspace ERP base con fichas y catálogos
+4. **STOP and VALIDATE**: ejecutar T020/T021, T131/T132/T134, T137/T145 y verificar US1 de forma independiente
+5. Demo del workspace RR.HH.-only con fichas y catálogos, formulario oculto hasta pulsar "Registrar trabajador"/"Nuevo registro de catálogo"
 
 ### Incremental Delivery
 
@@ -441,7 +515,8 @@ Polish (T108–T119)
 5. US4 → motor/cierre → primer valor completo de planilla
 6. US6 → gobierno de datos transversal
 7. US5, US7, US8, US10, US11, US9 → incrementos P2/P3
-8. Polish → release
+8. Phase 16 → integrar FR-108–FR-116, SC-030/SC-031 y el rótulo "Asistencia" en la fase de cada historia
+9. Polish → release
 
 ### Parallel Team Strategy
 

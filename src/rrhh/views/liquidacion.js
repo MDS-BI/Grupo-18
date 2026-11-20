@@ -18,6 +18,17 @@ function el(doc, tag, className, text) {
   return node;
 }
 
+function mismoTexto(a, b) {
+  return (
+    String(a || '')
+      .trim()
+      .toLowerCase() ===
+    String(b || '')
+      .trim()
+      .toLowerCase()
+  );
+}
+
 function appendField(doc, parent, label, value) {
   const row = el(doc, 'div', 'liq-detail-row');
   row.appendChild(el(doc, 'dt', null, label));
@@ -33,20 +44,40 @@ function appendField(doc, parent, label, value) {
  * liquidation, so cancelling the browser dialog restores the exact same DOM
  * and the current selection.
  */
-export function createPrintController({ root, win, mediaQuery, onPrint } = {}) {
+export function createPrintController({
+  root,
+  win,
+  mediaQuery,
+  onPrint,
+  onBeforePrint,
+  onAfterPrint
+} = {}) {
   const targetRoot = root || (typeof document !== 'undefined' ? document.body : null);
   const targetWin = win || (typeof window !== 'undefined' ? window : null);
   let active = false;
 
-  const setActive = (value) => {
-    active = Boolean(value);
+  const applyClass = (value) => {
     if (targetRoot && targetRoot.classList) {
-      targetRoot.classList.toggle('print-clean', active);
+      targetRoot.classList.toggle('print-clean', Boolean(value));
     }
   };
 
-  const beforePrint = () => setActive(true);
-  const afterPrint = () => setActive(false);
+  const activate = () => {
+    if (active) return;
+    active = true;
+    onBeforePrint?.();
+    applyClass(true);
+  };
+
+  const deactivate = () => {
+    if (!active) return;
+    applyClass(false);
+    active = false;
+    onAfterPrint?.();
+  };
+
+  const beforePrint = () => activate();
+  const afterPrint = () => deactivate();
 
   targetWin?.addEventListener?.('beforeprint', beforePrint);
   targetWin?.addEventListener?.('afterprint', afterPrint);
@@ -55,14 +86,17 @@ export function createPrintController({ root, win, mediaQuery, onPrint } = {}) {
   if (!mq && typeof targetWin?.matchMedia === 'function') {
     mq = targetWin.matchMedia('print');
   }
-  const mediaListener = (event) => setActive(Boolean(event.matches));
+  const mediaListener = (event) => {
+    if (event.matches) activate();
+    else deactivate();
+  };
   if (mq?.addEventListener) mq.addEventListener('change', mediaListener);
 
   return {
     beforePrint,
     afterPrint,
     print() {
-      setActive(true);
+      activate();
       onPrint?.();
       if (typeof targetWin?.print === 'function') targetWin.print();
     },
@@ -73,7 +107,7 @@ export function createPrintController({ root, win, mediaQuery, onPrint } = {}) {
       targetWin?.removeEventListener?.('beforeprint', beforePrint);
       targetWin?.removeEventListener?.('afterprint', afterPrint);
       if (mq?.removeEventListener) mq.removeEventListener('change', mediaListener);
-      setActive(false);
+      deactivate();
     }
   };
 }
@@ -125,6 +159,7 @@ class LiquidationView {
     this.selectedId = null;
     this.rows = [];
     this.printController = null;
+    this.restorePrintRoot = null;
     this.build();
   }
 
@@ -164,9 +199,11 @@ class LiquidationView {
       el(doc, 'p', 'liq-worker-name', liq.trabajador?.nombre || 'Trabajador sin identificar')
     );
     if (liq.trabajador?.rut) worker.appendChild(el(doc, 'p', null, `RUT ${liq.trabajador.rut}`));
-    if (liq.trabajador?.cargo) worker.appendChild(el(doc, 'p', null, liq.trabajador.cargo));
-    if (liq.trabajador?.departamento) {
-      worker.appendChild(el(doc, 'p', null, liq.trabajador.departamento));
+    const cargo = liq.trabajador?.cargo || '';
+    const departamento = liq.trabajador?.departamento || '';
+    if (cargo) worker.appendChild(el(doc, 'p', null, cargo));
+    if (departamento && !mismoTexto(departamento, cargo)) {
+      worker.appendChild(el(doc, 'p', null, departamento));
     }
     meta.appendChild(worker);
 
@@ -398,9 +435,36 @@ class LiquidationView {
       button.type = 'button';
       button.id = 'liq-print';
       button.setAttribute('aria-label', 'Imprimir la liquidación o guardar en PDF');
+
+      const printHost = el(doc, 'div', 'rrhh-print-host');
+      printHost.id = 'rrhh-print-host';
+      let originalParent = null;
+      let originalNext = null;
+
+      const moveToPrintHost = () => {
+        if (!this.root.parentNode || this.root.parentNode === printHost) return;
+        originalParent = this.root.parentNode;
+        originalNext = this.root.nextSibling;
+        printHost.appendChild(this.root);
+        if (!printHost.parentNode) doc.body.appendChild(printHost);
+      };
+
+      const restoreFromPrintHost = () => {
+        if (this.root.parentNode !== printHost) return;
+        if (originalParent && originalParent.isConnected) {
+          originalParent.insertBefore(this.root, originalNext);
+        } else if (doc.body) {
+          doc.body.appendChild(this.root);
+        }
+        printHost.remove();
+      };
+      this.restorePrintRoot = restoreFromPrintHost;
+
       this.printController = createPrintController({
         root: doc.body,
-        win: this.win
+        win: this.win,
+        onBeforePrint: moveToPrintHost,
+        onAfterPrint: restoreFromPrintHost
       });
       button.addEventListener('click', () => this.printController.print());
       actions.appendChild(button);
@@ -428,6 +492,8 @@ class LiquidationView {
   dispose() {
     this.printController?.dispose();
     this.printController = null;
+    this.restorePrintRoot?.();
+    this.restorePrintRoot = null;
   }
 }
 

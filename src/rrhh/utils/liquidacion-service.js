@@ -163,8 +163,8 @@ function trabajadorDesdeEntidad(entity = {}) {
     nombre: entity.name || entity.nombre || 'Trabajador sin identificar',
     rut: entity.taxId || entity.rut || 'Sin RUT',
     cargo: entity.cargo || entity.category || '',
-    departamento: entity.departamento || entity.category || '',
-    centroCosto: entity.centroCosto || entity.departamentoCentroCosto || entity.category || ''
+    departamento: entity.departamento || '',
+    centroCosto: entity.centroCosto || entity.departamentoCentroCosto || ''
   };
 }
 

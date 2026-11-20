@@ -8,6 +8,7 @@ import { getPeriodo, isPeriodoCerrado, listPeriodos } from '../utils/periodos-se
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
 import { can } from '../seguridad/roles.js';
 import { renderCalculoResumen } from '../components/calculo-resumen.js';
+import { renderLiquidacion } from './liquidacion.js';
 import {
   button,
   currentPeriodoId,
@@ -42,7 +43,7 @@ export function contratoDesdeEntidad(entity = {}) {
   };
 }
 
-export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
+export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {}) {
   const documentRef = doc || root.ownerDocument;
   const container = el(documentRef, 'section', 'rrhh-section rrhh-planilla-view');
   container.id = 'rrhh-planilla-view';
@@ -114,6 +115,10 @@ export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
   const resultsContainer = el(documentRef, 'div', 'rrhh-results-container');
   container.appendChild(resultsContainer);
 
+  let selectedRow = null;
+  let detailNode = null;
+  let detailController = null;
+
   function renderEligibility() {
     const periodo = getPeriodo(selected);
     const cerrado = isPeriodoCerrado(selected);
@@ -150,7 +155,29 @@ export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
     }
   }
 
+  function expandLiquidacion(liquidacion, row) {
+    detailController?.dispose?.();
+    detailController = null;
+    if (detailNode?.parentNode) detailNode.parentNode.removeChild(detailNode);
+    if (selectedRow) selectedRow.classList.remove('rrhh-table-row-selected');
+    selectedRow = row;
+    row.classList.add('rrhh-table-row-selected');
+    detailNode = el(documentRef, 'div', 'rrhh-planilla-detalle');
+    detailNode.id = 'planilla-liquidacion-detalle';
+    row.after(detailNode);
+    detailController = renderLiquidacion(detailNode, liquidacion, {
+      doc: documentRef,
+      win: documentRef.defaultView,
+      viewer,
+      empresa: config?.empresa ? { ...config.empresa } : undefined
+    });
+  }
+
   function renderResults(result) {
+    detailController?.dispose?.();
+    detailController = null;
+    detailNode = null;
+    selectedRow = null;
     resultsContainer.textContent = '';
     const list = el(documentRef, 'div', 'rrhh-table');
     list.id = 'planilla-resultados';
@@ -167,7 +194,19 @@ export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
     for (const liquidacion of result.liquidaciones) {
       const row = el(documentRef, 'div', 'rrhh-table-row');
       row.setAttribute('role', 'row');
+      row.tabIndex = 0;
+      row.classList.add('rrhh-table-row-selectable');
       row.dataset.liquidacionId = liquidacion.id;
+      row.setAttribute(
+        'aria-label',
+        `Ver la liquidación de ${liquidacion.trabajador?.nombre || 'trabajador'}`
+      );
+      row.addEventListener('click', () => expandLiquidacion(liquidacion, row));
+      row.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        expandLiquidacion(liquidacion, row);
+      });
       for (const value of [
         liquidacion.trabajador?.nombre || '—',
         formatMoney(liquidacion.totales?.haberes),
@@ -254,6 +293,8 @@ export function renderPlanillaView(root, { doc, viewer, onNavigate } = {}) {
   return {
     refresh: renderEligibility,
     dispose() {
+      detailController?.dispose?.();
+      detailController = null;
       root.textContent = '';
     }
   };
