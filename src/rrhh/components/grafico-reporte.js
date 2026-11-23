@@ -3,7 +3,10 @@
  * It renders the same figures as the accompanying table.
  */
 
-export function renderGraficoReporte(root, { doc, titulo = 'Gráfico del reporte', datos = [] } = {}) {
+export function renderGraficoReporte(
+  root,
+  { doc, titulo = 'Gráfico del reporte', datos = [] } = {}
+) {
   const documentRef = doc || root.ownerDocument;
   root.textContent = '';
   const section = documentRef.createElement('section');

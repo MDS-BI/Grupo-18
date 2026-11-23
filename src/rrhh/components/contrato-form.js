@@ -270,17 +270,19 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     hideFeedback(messages);
     const values = getValues();
     try {
+      let message;
       if (editing) {
         actualizarContrato(editing.id, values, viewer);
-        showFeedback(messages, 'Contrato actualizado.', 'ok');
+        message = 'Contrato actualizado.';
       } else if (cambioSueldo) {
         registrarCambioSueldo(values.entityId, values, viewer);
-        showFeedback(messages, 'Cambio de sueldo registrado.', 'ok');
+        message = 'Cambio de sueldo registrado.';
       } else {
         crearContrato(values, viewer);
-        showFeedback(messages, 'Contrato registrado.', 'ok');
+        message = 'Contrato registrado.';
       }
       reset();
+      showFeedback(messages, message, 'ok');
       onSaved?.();
     } catch (error) {
       showFeedback(messages, errorMessages(error).join(' '), 'error');

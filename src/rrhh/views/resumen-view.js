@@ -1,7 +1,4 @@
-import {
-  contratosPorVencer,
-  resumenContratoTrabajador
-} from '../utils/alertas-service.js';
+import { contratosPorVencer, resumenContratoTrabajador } from '../utils/alertas-service.js';
 import { TIPO_CONTRATO_LABELS } from '../utils/contratos-service.js';
 
 function esc(s) {
@@ -13,7 +10,9 @@ function esc(s) {
 }
 
 function etiquetaEstado(estado) {
-  const normalizado = String(estado || '').trim().toLowerCase();
+  const normalizado = String(estado || '')
+    .trim()
+    .toLowerCase();
   if (!normalizado) return '—';
   return normalizado.charAt(0).toUpperCase() + normalizado.slice(1);
 }

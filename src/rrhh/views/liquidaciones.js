@@ -119,12 +119,12 @@ export function renderLiquidacionesView(
     if (viewer?.role === 'trabajador' && viewer?.trabajadorId) {
       const tid = String(viewer.trabajadorId);
       filtered = filtered.filter((row) => {
-        const rowTid = String(row?.trabajador?.id || row?.entityId || row?.trabajadorEntityId || '');
+        const rowTid = String(
+          row?.trabajador?.id || row?.entityId || row?.trabajadorEntityId || ''
+        );
         const cerrado = isPeriodoCerrado(periodoKey(row)) || row?.periodo?.cerrado === true;
         return (
-          rowTid === tid &&
-          cerrado &&
-          (row?.estado === 'aprobada' || row?.estado === 'pagada')
+          rowTid === tid && cerrado && (row?.estado === 'aprobada' || row?.estado === 'pagada')
         );
       });
     }

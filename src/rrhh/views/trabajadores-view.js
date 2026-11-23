@@ -196,7 +196,6 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
         onSaved: () => {
           drawer.markSaved();
           refresh();
-          drawer.close({ force: true });
         }
       })
     : null;

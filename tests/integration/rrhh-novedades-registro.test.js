@@ -110,6 +110,10 @@ describe('US14 - novedad registration form', () => {
     });
     expect(document.getElementById('novedades-list').textContent).toContain('Ana Torres');
     expect(document.getElementById('novedades-list').textContent).toContain('Pendiente');
+
+    const feedback = document.getElementById('novedad-form-errors');
+    expect(feedback.hidden).toBe(false);
+    expect(feedback.textContent).toMatch(/pendiente/i);
   });
 
   it('shows inline validation errors and persists nothing on invalid input', () => {

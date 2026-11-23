@@ -72,7 +72,10 @@ export class RrhhWorkspace {
       if (panel && !this.panels.has(name)) panel.hidden = true;
     }
     this.bind();
-    const start = RRHH_TABS.includes(initialTab) && this.panels.has(initialTab) ? initialTab : this.defaultTab();
+    const start =
+      RRHH_TABS.includes(initialTab) && this.panels.has(initialTab)
+        ? initialTab
+        : this.defaultTab();
     if (start) this.show(start);
   }
 
@@ -85,7 +88,10 @@ export class RrhhWorkspace {
     for (const tab of tabs) {
       const name = tab.dataset.rrhhTab;
       if (!name) continue;
-      if (name === 'resumen') { allowed.push(tab); continue; }
+      if (name === 'resumen') {
+        allowed.push(tab);
+        continue;
+      }
       if (name === 'auditoria') {
         if (role === 'administrador') allowed.push(tab);
         continue;
@@ -95,7 +101,9 @@ export class RrhhWorkspace {
         continue;
       }
       if (name === 'liquidaciones') {
-        if (role === 'administrador' || role === 'analista' || role === 'trabajador') allowed.push(tab);
+        if (role === 'administrador' || role === 'analista' || role === 'trabajador') {
+          allowed.push(tab);
+        }
         continue;
       }
       // trabajadores, contratos, catalogos, novedades: admin/analista/jefatura can see some; be permissive but views enforce
@@ -166,10 +174,13 @@ export class RrhhWorkspace {
     if (!panel || !renderer) return;
     this.disposeTabController(name);
     panel.textContent = '';
+    const payload = this.pendingPayload;
+    this.pendingPayload = null;
     const controller = renderer(panel, {
       doc: this.doc,
       config: this.config,
       viewer: this.viewer,
+      initialPeriodo: name === 'liquidaciones' ? payload?.periodo : undefined,
       onRoleRequired: this.onRoleRequired,
       onLiquidationView: this.onLiquidationView,
       onNavigate: (tab, payload) => {

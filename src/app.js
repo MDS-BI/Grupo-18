@@ -64,6 +64,33 @@ function updateUserBadge() {
   if (btn) btn.hidden = false;
 }
 
+function updateSeedControl() {
+  const button = qs('rrhh-seed-button');
+  const feedback = qs('rrhh-seed-feedback');
+  const allowed = getViewer().role === 'administrador';
+  if (button) button.hidden = !allowed;
+  if (!allowed && feedback) {
+    feedback.hidden = true;
+    feedback.textContent = '';
+  }
+}
+
+function showRoleRequired() {
+  const banner = qs('rrhh-role-feedback');
+  if (!banner) return;
+  banner.hidden = false;
+  banner.dataset.tone = 'error';
+  banner.textContent = 'Tu rol no tiene permiso para realizar esta acción.';
+}
+
+function clearRoleFeedback() {
+  const banner = qs('rrhh-role-feedback');
+  if (!banner) return;
+  banner.hidden = true;
+  banner.textContent = '';
+  delete banner.dataset.tone;
+}
+
 function needsRepresentado(viewer) {
   if (viewer.role === 'jefatura' || viewer.role === 'trabajador') {
     return !viewer.trabajadorId;
@@ -78,7 +105,9 @@ function populateRepresentadoSelect(role) {
   const trabajadores = listTrabajadores({ incluirBaja: true });
   const filtered =
     role === 'trabajador'
-      ? trabajadores.filter((t) => t.estadoLaboral === 'Activo' || t.estadoLaboral === 'Desvinculado')
+      ? trabajadores.filter(
+          (t) => t.estadoLaboral === 'Activo' || t.estadoLaboral === 'Desvinculado'
+        )
       : trabajadores.filter((t) => t.estadoLaboral === 'Activo');
   if (filtered.length === 0) {
     const opt = document.createElement('option');
@@ -122,22 +151,24 @@ function renderRrhh(tab) {
     config: modelConfig,
     viewer: getViewer(),
     initialTab: tab || 'resumen',
-    onRoleRequired: () => {},
+    onRoleRequired: showRoleRequired,
     onLiquidationView: (view) => {
       liquidationView = view;
     }
   });
 }
 
-function goAfterAuth() {
+function goAfterAuth(tab = 'resumen') {
   const viewer = getViewer();
   updateUserBadge();
+  updateSeedControl();
+  clearRoleFeedback();
   if (needsRepresentado(viewer)) {
     showRepresentadoScreen();
     return;
   }
   showSection('rrhh');
-  renderRrhh('resumen');
+  renderRrhh(tab);
 }
 
 function handleLoginSubmit(event) {
@@ -199,23 +230,29 @@ function handleRepSubmit(event) {
 }
 
 function handleSeedDataRestore() {
+  if (getViewer().role !== 'administrador') return;
   const message =
-    'Esto reemplazará los datos de RR.HH. de ejemplo por el dataset de prueba. ¿Continuar?';
+    'Esto reemplazará los datos de RR.HH. de ejemplo por el dataset de prueba, incluidos catálogos, contratos, liquidaciones y períodos, y reiniciará la bitácora de auditoría. ¿Continuar?';
   if (typeof confirm === 'function' && !confirm(message)) return;
-  const summary = restoreSeedData();
-  if (!summary) {
-    const fb = qs('rrhh-seed-feedback');
+  const activeTab = rrhhView?.activeTab || 'resumen';
+  const fb = qs('rrhh-seed-feedback');
+  try {
+    const summary = restoreSeedData();
+    if (!summary) throw new Error('Carga de datos de prueba deshabilitada.');
+    goAfterAuth(activeTab);
     if (fb) {
       fb.hidden = false;
-      fb.textContent = 'No se pudo cargar datos de prueba.';
+      fb.textContent = `Cargados: ${summary.trabajadores} trabajadores, ${summary.contratos} contratos.`;
     }
-    return;
-  }
-  if (getViewer().role && !qs('view-rrhh').hidden) renderRrhh(rrhhView?.getActiveTab?.() || 'resumen');
-  const fb = qs('rrhh-seed-feedback');
-  if (fb) {
-    fb.hidden = false;
-    fb.textContent = `Cargados: ${summary.trabajadores} trabajadores, ${summary.contratos} contratos.`;
+  } catch (error) {
+    console.error('Error al cargar datos de prueba:', error);
+    if (fb) {
+      fb.hidden = false;
+      fb.textContent =
+        error.message === 'Carga de datos de prueba deshabilitada.'
+          ? 'La carga de datos de prueba está deshabilitada en este entorno.'
+          : 'No se pudo cargar datos de prueba.';
+    }
   }
 }
 
@@ -224,26 +261,6 @@ function bindEvents() {
   const loginForm = qs('login-form');
   if (loginForm) {
     loginForm.addEventListener('submit', handleLoginSubmit);
-  }
-  // Respaldo: si el submit no se dispara, el botón con type=submit igual dispara submit; si no, manejar click.
-  const loginBtn = document.querySelector('#login-form button[type="submit"]');
-  if (loginBtn && loginForm) {
-    loginBtn.addEventListener('click', (e) => {
-      // Si el formulario tiene validación HTML5, dejar que submit lo maneje; si no, forzar submit.
-      if (typeof loginForm.requestSubmit === 'function') {
-        try {
-          loginForm.requestSubmit();
-        } catch {
-          // fallback
-          e.preventDefault();
-          handleLoginSubmit(e);
-        }
-      } else {
-        // fallback para navegadores antiguos
-        e.preventDefault();
-        handleLoginSubmit(e);
-      }
-    });
   }
   qs('rep-form')?.addEventListener('submit', handleRepSubmit);
   qs('rrhh-logout-btn')?.addEventListener('click', () => {
@@ -254,6 +271,8 @@ function bindEvents() {
     rrhhView?.dispose?.();
     rrhhView = null;
     updateUserBadge();
+    updateSeedControl();
+    clearRoleFeedback();
     showSection('login');
   });
   qs('rrhh-seed-button')?.addEventListener('click', handleSeedDataRestore);
@@ -319,6 +338,7 @@ export async function initApp(result, _options = {}) {
   bindEvents();
   showConfigErrors(normalized.errors);
   updateUserBadge();
+  updateSeedControl();
   const viewer = getViewer();
   if (!viewer.role) {
     showSection('login');

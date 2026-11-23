@@ -89,7 +89,9 @@ export function resumenContratoTrabajador(entityId, { hoy = new Date() } = {}) {
     contratos.find((row) => row.estado === 'vigente') ||
     contratos.find((row) => row.estado === 'vencido') ||
     contratos[contratos.length - 1];
-  const diasRestantes = contrato.fechaTermino ? diasHastaVencimiento(contrato.fechaTermino, hoy) : null;
+  const diasRestantes = contrato.fechaTermino
+    ? diasHastaVencimiento(contrato.fechaTermino, hoy)
+    : null;
   return {
     tipo: contrato.tipoContrato || '',
     fechaInicio: contrato.fechaInicio || '',

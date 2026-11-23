@@ -10,7 +10,10 @@ export function paginateRows(rows, page = 1, pageSize = PAGE_SIZE) {
   return rows.slice(start, start + pageSize);
 }
 
-export function createPagination(doc, { id = 'rrhh-pagination', pageSize = PAGE_SIZE, onChange } = {}) {
+export function createPagination(
+  doc,
+  { id = 'rrhh-pagination', pageSize = PAGE_SIZE, onChange } = {}
+) {
   const documentRef = doc || (typeof document !== 'undefined' ? document : null);
   const element = documentRef.createElement('nav');
   element.id = id;

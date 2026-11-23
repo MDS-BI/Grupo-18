@@ -1,5 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
+import { addEntity } from '../../src/storage.js';
+import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
+import { renderPlanillaView } from '../../src/rrhh/views/planilla.js';
+import { RrhhWorkspace } from '../../src/rrhh/views/workspace.js';
 import {
   anularLiquidacion,
   aprobarLiquidacion,
@@ -50,6 +54,33 @@ function calculate(periodo = '2026-09') {
 
 function click(node) {
   node.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+}
+
+function setValue(id, value) {
+  const node = document.getElementById(id);
+  node.value = value;
+  node.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+}
+
+function setupPlanillaData() {
+  const entity = addEntity({
+    name: 'Ana Torres',
+    code: 'TR-001',
+    taxId: '12.345.678-5',
+    cargo: 'Analista'
+  });
+  crearContrato(
+    {
+      entityId: entity.entity_id,
+      tipoContrato: 'indefinido',
+      sueldoBase: 1000000,
+      jornadaHorasSemanales: 42,
+      fechaInicio: '2026-01-01',
+      modalidadGratificacion: 'art50'
+    },
+    admin
+  );
+  return entity;
 }
 
 beforeEach(() => {
@@ -162,5 +193,59 @@ describe('US15 - liquidation approval, payment, annulment and traceability', () 
     click(document.getElementById('liq-pay'));
     expect(document.getElementById('liquidaciones-feedback').textContent).toMatch(/pagada/i);
     expect(listLiquidacionesPeriodo('2026-09')[0].estado).toBe('pagada');
+  });
+});
+
+describe('UI de cálculo de planilla', () => {
+  it('mantiene resultados y feedback en Planilla y no navega automáticamente tras calcular', () => {
+    setupPlanillaData();
+    const onNavigate = vi.fn();
+    renderPlanillaView(root, { doc: document, viewer: analista, onNavigate });
+    setValue('planilla-periodo', '2026-09');
+    click(document.getElementById('planilla-calcular'));
+
+    expect(document.getElementById('planilla-feedback').textContent).toMatch(/Planilla calculada/);
+    expect(document.getElementById('planilla-resultados')).not.toBeNull();
+    expect(document.getElementById('planilla-ir-liquidaciones').hidden).toBe(false);
+    expect(onNavigate).not.toHaveBeenCalled();
+  });
+
+  it('navega a Liquidaciones solo al pulsar el botón explícito con el período elegido', () => {
+    setupPlanillaData();
+    const onNavigate = vi.fn();
+    renderPlanillaView(root, { doc: document, viewer: analista, onNavigate });
+    setValue('planilla-periodo', '2026-09');
+    click(document.getElementById('planilla-calcular'));
+    expect(onNavigate).not.toHaveBeenCalled();
+
+    click(document.getElementById('planilla-ir-liquidaciones'));
+    expect(onNavigate).toHaveBeenCalledWith('liquidaciones', { periodo: '2026-09' });
+  });
+
+  it('entrega pendingPayload como initialPeriodo al renderer de Liquidaciones', () => {
+    setupPlanillaData();
+    root.innerHTML = `
+      <button data-rrhh-tab="planilla" role="tab">Planilla</button>
+      <button data-rrhh-tab="liquidaciones" role="tab">Liquidaciones</button>
+      <div id="rrhh-panel-planilla" hidden></div>
+      <div id="rrhh-panel-liquidaciones" hidden><div id="rrhh-liquidacion-root"></div></div>
+    `;
+
+    const workspace = new RrhhWorkspace({
+      doc: document,
+      config: { rrhh: { enabled: true } },
+      viewer: admin,
+      initialTab: 'planilla'
+    });
+    try {
+      setValue('planilla-periodo', '2026-09');
+      click(document.getElementById('planilla-calcular'));
+      click(document.getElementById('planilla-ir-liquidaciones'));
+
+      expect(document.getElementById('rrhh-panel-liquidaciones').hidden).toBe(false);
+      expect(document.getElementById('liquidaciones-periodo').value).toBe('2026-09');
+    } finally {
+      workspace.dispose();
+    }
   });
 });

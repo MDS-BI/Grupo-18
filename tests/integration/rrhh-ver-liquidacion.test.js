@@ -32,7 +32,9 @@ let dom;
 let root;
 
 beforeEach(() => {
-  dom = new JSDOM('<!DOCTYPE html><body><div id="root"></div></body>', { url: 'http://localhost/' });
+  dom = new JSDOM('<!DOCTYPE html><body><div id="root"></div></body>', {
+    url: 'http://localhost/'
+  });
   globalThis.window = dom.window;
   globalThis.document = dom.window.document;
   globalThis.localStorage = dom.window.localStorage;
@@ -64,9 +66,7 @@ describe('Ver liquidación despliega bajo la persona seleccionada (FR-115)', () 
     boton.click();
     const detalle = document.getElementById('rrhh-liquidacion-root');
     expect(detalle.textContent).toContain('DETALLE DE LIQUIDACIÓN');
-    expect(detalle.parentElement).toBe(
-      document.querySelector('[data-liquidacion-id="liq-1"]')
-    );
+    expect(detalle.parentElement).toBe(document.querySelector('[data-liquidacion-id="liq-1"]'));
     vista.dispose();
   });
 });

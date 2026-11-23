@@ -19,12 +19,15 @@
         </div>
         <div class="topbar-meta">
           <span id="rrhh-user-badge" class="env-badge" hidden></span>
-          <button type="button" id="rrhh-logout-btn" class="button button-secondary" hidden>Cerrar sesión</button>
+          <button type="button" id="rrhh-logout-btn" class="button button-secondary" hidden>
+            Cerrar sesión
+          </button>
         </div>
       </header>
 
       <main id="main-content" class="main-content rrhh-main-only">
         <div id="config-errors" class="config-errors" role="alert" hidden></div>
+        <p id="rrhh-role-feedback" class="rrhh-feedback" role="alert" hidden></p>
 
         <section id="view-login" class="view" aria-labelledby="login-heading">
           <div class="hero">
@@ -34,7 +37,7 @@
               <p class="hero-subtitle">Ingrese rol y clave demo para continuar.</p>
             </div>
           </div>
-          <form id="login-form" class="panel form-panel" style="max-width: 420px;" novalidate>
+          <form id="login-form" class="panel form-panel" style="max-width: 420px" novalidate>
             <div class="field">
               <label for="login-role">Rol *</label>
               <select id="login-role" name="login-role">
@@ -48,12 +51,28 @@
             <div class="field">
               <label for="login-password">Clave *</label>
               <div class="rrhh-password-field">
-                <input type="password" id="login-password" name="login-password" autocomplete="current-password" />
-                <button type="button" id="login-password-toggle" class="rrhh-password-toggle" aria-label="Mostrar contraseña" aria-pressed="false">👁</button>
+                <input
+                  type="password"
+                  id="login-password"
+                  name="login-password"
+                  autocomplete="current-password"
+                />
+                <button
+                  type="button"
+                  id="login-password-toggle"
+                  class="rrhh-password-toggle"
+                  aria-label="Mostrar contraseña"
+                  aria-pressed="false"
+                >
+                  👁
+                </button>
               </div>
               <p class="field-error" id="error-login-password"></p>
             </div>
-            <p class="panel-copy" style="font-size:0.85rem;">Demo: administrador/admin123, analista/analista123, jefatura/jefatura123, trabajador/trabajador123</p>
+            <p class="panel-copy" style="font-size: 0.85rem">
+              Demo: administrador/admin123, analista/analista123, jefatura/jefatura123,
+              trabajador/trabajador123
+            </p>
             <p id="login-feedback" class="field-error" role="alert" hidden></p>
             <div class="form-actions">
               <button type="submit" class="button button-primary">Entrar</button>
@@ -90,11 +109,14 @@
               <p class="panel-copy">Gestione personal, contratos, nómina y reportes del módulo.</p>
             </div>
             <div class="rrhh-seed-actions">
-              <button type="button" id="rrhh-seed-button" class="btn secondary">Cargar/Restaurar Datos de Prueba</button>
+              <button type="button" id="rrhh-seed-button" class="btn secondary" hidden>
+                Cargar/Restaurar Datos de Prueba
+              </button>
               <p id="rrhh-seed-feedback" class="rrhh-seed-feedback" role="status" hidden></p>
             </div>
           </div>
 
+          <!-- prettier-ignore -->
           <div class="rrhh-tabs" role="tablist" aria-label="Secciones de RRHH y Planilla">
             <button type="button" class="rrhh-tab" data-rrhh-tab="resumen" role="tab">Resumen</button>
             <button type="button" class="rrhh-tab" data-rrhh-tab="trabajadores" role="tab">Trabajadores</button>

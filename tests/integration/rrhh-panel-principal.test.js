@@ -20,7 +20,9 @@ describe('Avisos del panel principal por rol (FR-114)', () => {
   });
 
   it('el Trabajador ve su resumen sin sueldo base', () => {
-    const html = renderResumenView({ viewer: { role: 'trabajador', trabajadorId: 'sin-contrato' } });
+    const html = renderResumenView({
+      viewer: { role: 'trabajador', trabajadorId: 'sin-contrato' }
+    });
     expect(html).toContain('rrhh-resumen-trabajador');
     expect(html).toContain('rrhh-worker-summary');
     expect(html).toContain('rrhh-worker-summary__title');

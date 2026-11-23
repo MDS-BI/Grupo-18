@@ -8,7 +8,10 @@
 const SHOWN_LABEL = 'Ocultar contraseña';
 const HIDDEN_LABEL = 'Mostrar contraseña';
 
-export function createPasswordToggle(doc, { inputId = 'login-password', buttonId = 'login-password-toggle' } = {}) {
+export function createPasswordToggle(
+  doc,
+  { inputId = 'login-password', buttonId = 'login-password-toggle' } = {}
+) {
   const documentRef = doc || (typeof document !== 'undefined' ? document : null);
   const input = documentRef?.getElementById(inputId);
   const button = documentRef?.getElementById(buttonId);

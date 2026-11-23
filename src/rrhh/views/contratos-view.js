@@ -99,7 +99,6 @@ export function renderContratosView(root, { doc, viewer } = {}) {
         onSaved: () => {
           drawer.markSaved();
           refresh();
-          drawer.close({ force: true });
         }
       })
     : null;

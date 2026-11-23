@@ -293,14 +293,16 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
       return;
     }
     try {
+      let message;
       if (editing) {
         actualizarNovedad(editing.id, values, viewer);
-        showFeedback(errorsNode, 'Novedad pendiente actualizada.', 'ok');
+        message = 'Novedad pendiente actualizada.';
       } else {
         crearNovedad(values, viewer);
-        showFeedback(errorsNode, 'Novedad registrada en estado pendiente.', 'ok');
+        message = 'Novedad registrada en estado pendiente.';
       }
       reset();
+      showFeedback(errorsNode, message, 'ok');
       onSaved?.();
     } catch (error) {
       const messages = error.errors || [error.message];

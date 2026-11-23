@@ -209,14 +209,16 @@ export function renderTrabajadorForm(
     hideFeedback(messages);
     const values = getValues();
     try {
+      let message;
       if (editing) {
         actualizarTrabajador(editing.entityId, values, viewer);
-        showFeedback(messages, 'Trabajador actualizado.', 'ok');
+        message = 'Trabajador actualizado.';
       } else {
         crearTrabajador(values, viewer);
-        showFeedback(messages, 'Trabajador registrado.', 'ok');
+        message = 'Trabajador registrado.';
       }
       reset();
+      showFeedback(messages, message, 'ok');
       onSaved?.();
     } catch (error) {
       showFeedback(messages, errorMessages(error).join(' '), 'error');

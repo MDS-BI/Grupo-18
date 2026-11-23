@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
-import {
-  loadSeedData,
-  PERIODO_CERRADO,
-  SEED_DISABLE_FLAG
-} from '../../src/rrhh/data/seed.js';
+import { loadSeedData, PERIODO_CERRADO, SEED_DISABLE_FLAG } from '../../src/rrhh/data/seed.js';
 import { listLiquidacionesPeriodo } from '../../src/rrhh/utils/liquidacion-service.js';
 import { renderLiquidacionesView } from '../../src/rrhh/views/liquidaciones.js';
 

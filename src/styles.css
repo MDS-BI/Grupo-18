@@ -1255,13 +1255,21 @@ table.rrhh-resumen-table tbody tr:last-child td {
   font-size: 0.9rem;
 }
 
-.rrhh-feedback[data-tone='ok'] {
-  background: #ecfdf3;
-  border-color: #abefc6;
-  color: #067647;
+.rrhh-feedback[data-tone='ok'],
+#trabajador-form-errors[data-tone='ok'],
+#contrato-form-errors[data-tone='ok'],
+#novedad-form-errors[data-tone='ok'] {
+  color: #15803d;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
 }
 
-.rrhh-feedback[data-tone='error'] {
+.rrhh-feedback[data-tone='error'],
+#trabajador-form-errors[data-tone='error'],
+#contrato-form-errors[data-tone='error'],
+#novedad-form-errors[data-tone='error'] {
   background: var(--danger-soft);
   border-color: #fecdca;
   color: var(--danger);

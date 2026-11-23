@@ -115,6 +115,16 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
   const resultsContainer = el(documentRef, 'div', 'rrhh-results-container');
   container.appendChild(resultsContainer);
 
+  const navigateButton = button(documentRef, {
+    id: 'planilla-ir-liquidaciones',
+    label: 'Ir a liquidaciones',
+    className: 'button button-secondary',
+    ariaLabel: 'Ir a liquidaciones del período calculado',
+    onClick: () => onNavigate?.('liquidaciones', { periodo: selected })
+  });
+  navigateButton.hidden = true;
+  container.appendChild(navigateButton);
+
   let selectedRow = null;
   let detailNode = null;
   let detailController = null;
@@ -231,6 +241,7 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
         )
       );
     }
+    navigateButton.hidden = false;
   }
 
   function calculate() {
@@ -272,7 +283,6 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
         `Planilla calculada: ${result.liquidaciones.length} liquidación(es).${exclusion}`,
         'ok'
       );
-      onNavigate?.('liquidaciones', { periodo: selected });
     } catch (error) {
       const detail = (error.errors || [error.message]).join(' ');
       showFeedback(messages, detail, 'error');
@@ -284,6 +294,7 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
     hideFeedback(messages);
     summaryContainer.textContent = '';
     resultsContainer.textContent = '';
+    navigateButton.hidden = true;
     renderEligibility();
   });
 

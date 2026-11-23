@@ -5,7 +5,10 @@
  * visibility, labelling and the close/cancel affordance.
  */
 
-export function createFormPanel(doc, { id = 'rrhh-form-drawer', title = 'Formulario', onClose } = {}) {
+export function createFormPanel(
+  doc,
+  { id = 'rrhh-form-drawer', title = 'Formulario', onClose } = {}
+) {
   const documentRef = doc || (typeof document !== 'undefined' ? document : null);
   const overlay = documentRef.createElement('div');
   overlay.id = id;
@@ -56,7 +59,11 @@ export function createFormPanel(doc, { id = 'rrhh-form-drawer', title = 'Formula
   function close({ force = false } = {}) {
     if (!force && hasUnsavedChanges()) {
       const win = documentRef.defaultView;
-      if (win && typeof win.confirm === 'function' && !win.confirm('Descartar los cambios sin guardar?')) {
+      if (
+        win &&
+        typeof win.confirm === 'function' &&
+        !win.confirm('Descartar los cambios sin guardar?')
+      ) {
         return false;
       }
     }

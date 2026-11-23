@@ -11,7 +11,12 @@ function setup() {
     { url: 'http://localhost/' }
   );
   const toggle = createPasswordToggle(dom.window.document);
-  return { dom, toggle, input: dom.window.document.getElementById('login-password'), button: dom.window.document.getElementById('login-password-toggle') };
+  return {
+    dom,
+    toggle,
+    input: dom.window.document.getElementById('login-password'),
+    button: dom.window.document.getElementById('login-password-toggle')
+  };
 }
 
 describe('Control de visibilidad de contraseña (FR-113)', () => {
@@ -37,7 +42,9 @@ describe('Control de visibilidad de contraseña (FR-113)', () => {
     const { toggle, input, button, dom } = setup();
     input.focus();
     input.setSelectionRange(1, 2);
-    button.dispatchEvent(new dom.window.MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    button.dispatchEvent(
+      new dom.window.MouseEvent('mousedown', { bubbles: true, cancelable: true })
+    );
     button.click();
     expect(dom.window.document.activeElement).toBe(input);
     expect(input.selectionStart).toBe(1);

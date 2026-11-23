@@ -79,10 +79,10 @@ function profileFor(entityId) {
 function workerIsActive(entity, profile) {
   return Boolean(
     entity &&
-      !entity.bajaLogica &&
-      entity.activo !== false &&
-      profile?.activo !== false &&
-      profile?.estadoLaboral !== 'Desvinculado'
+    !entity.bajaLogica &&
+    entity.activo !== false &&
+    profile?.activo !== false &&
+    profile?.estadoLaboral !== 'Desvinculado'
   );
 }
 
