@@ -1624,6 +1624,11 @@ table.rrhh-resumen-table tbody tr:last-child td {
   }
 }
 
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
+  display: none;
+}
+
 /* Password visibility control (FR-113). */
 .rrhh-password-field {
   display: flex;
