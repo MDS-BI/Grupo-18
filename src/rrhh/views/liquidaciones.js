@@ -7,6 +7,7 @@ import {
 } from '../utils/liquidacion-service.js';
 import { ESTADO_LIQUIDACION_LABELS, estadosSiguientes } from '../utils/liquidacion-estados.js';
 import { isPeriodoCerrado } from '../utils/periodos-service.js';
+import { esPeriodoFuturo } from '../utils/limites-fechas.js';
 import { can, canViewLiquidacion } from '../seguridad/roles.js';
 import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { createPagination } from '../components/pagination.js';
@@ -143,9 +144,9 @@ export function renderLiquidacionesView(
 
   function renderFilter(rows) {
     const all = allLiquidations();
-    const periods = [...new Set(all.map(periodoKey).filter(Boolean))].sort((a, b) =>
-      b.localeCompare(a)
-    );
+    const periods = [
+      ...new Set(all.map(periodoKey).filter((id) => id && !esPeriodoFuturo(id)))
+    ].sort((a, b) => b.localeCompare(a));
     const hadFocus = documentRef.activeElement?.id === 'liquidaciones-periodo';
     filterContainer.textContent = '';
     const filter = select(documentRef, {

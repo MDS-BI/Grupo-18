@@ -13,6 +13,7 @@ import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { can } from '../seguridad/roles.js';
 import { listContratos, terminarContrato } from './contratos-service.js';
 import { equipoDeJefatura } from './jefatura.js';
+import { FECHA_MINIMA_LABORAL, errorFechaNoFutura } from './limites-fechas.js';
 import { TIPO_CATALOGO_LABELS, listCatalogos } from './catalogos-service.js';
 
 export const TRABAJADORES_TABLE = 'trabajadores';
@@ -138,6 +139,11 @@ export function validarTrabajador(input = {}, context = {}) {
   }
   if (input.fechaIngreso && !isValidDate(input.fechaIngreso)) {
     errors.fechaIngreso = 'La fecha de ingreso debe ser una fecha válida (AAAA-MM-DD).';
+  } else if (input.fechaIngreso) {
+    const fueraDeRango = errorFechaNoFutura(input.fechaIngreso, 'La fecha de ingreso', {
+      minimo: FECHA_MINIMA_LABORAL
+    });
+    if (fueraDeRango) errors.fechaIngreso = fueraDeRango;
   }
   if (input.estadoLaboral && !ESTADOS_LABORALES.includes(input.estadoLaboral)) {
     errors.estadoLaboral = `El estado laboral debe ser uno de: ${ESTADOS_LABORALES.join(', ')}.`;
@@ -435,6 +441,8 @@ export function desactivarTrabajador(entityId, fechaDesvinculacion, viewer) {
       'FECHA_DESVINCULACION_INVALIDA'
     );
   }
+  const futura = errorFechaNoFutura(fecha, 'La fecha de desvinculación');
+  if (futura) fail(futura, 'FECHA_DESVINCULACION_INVALIDA');
   if (current.fechaIngreso && fecha < current.fechaIngreso) {
     fail(
       'La fecha de desvinculación no puede ser anterior a la fecha de ingreso.',

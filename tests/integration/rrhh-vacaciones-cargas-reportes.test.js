@@ -211,9 +211,7 @@ describe('FR-112 - resumen en la ficha del trabajador', () => {
       onNavigate: (tab, payload) => navegaciones.push([tab, payload])
     });
     const fila = root.querySelector(`tr[data-entity-id="${worker.entityId}"]`);
-    [...fila.querySelectorAll('button')]
-      .find((b) => b.textContent === 'Vacaciones y cargas')
-      .click();
+    [...fila.querySelectorAll('button')].find((b) => b.textContent === 'Resumen').click();
     const resumen = document.getElementById('trabajador-resumen');
     expect(resumen.hidden).toBe(false);
     expect(resumen.textContent).toContain('Saldo de vacaciones');
@@ -226,9 +224,7 @@ describe('FR-112 - resumen en la ficha del trabajador', () => {
     const jefatura = { role: 'jefatura', usuario: 'Jefa Equipo', trabajadorId: jefe.entityId };
     renderTrabajadoresView(root, { doc: document, viewer: jefatura });
     const fila = root.querySelector(`tr[data-entity-id="${worker.entityId}"]`);
-    [...fila.querySelectorAll('button')]
-      .find((b) => b.textContent === 'Vacaciones y cargas')
-      .click();
+    [...fila.querySelectorAll('button')].find((b) => b.textContent === 'Resumen').click();
     const resumen = document.getElementById('trabajador-resumen');
     expect(resumen.textContent).toContain('Saldo de vacaciones');
     expect(resumen.textContent).not.toContain('Cargas familiares');

@@ -6,6 +6,7 @@ import { listContratos } from '../utils/contratos-service.js';
 import { estadoElegibilidad, listNovedades } from '../utils/novedades-service.js';
 import { getPeriodo, isPeriodoCerrado, listPeriodos } from '../utils/periodos-service.js';
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
+import { periodoActual, periodosHastaHoy } from '../utils/limites-fechas.js';
 import { can } from '../seguridad/roles.js';
 import { renderCalculoResumen } from '../components/calculo-resumen.js';
 import { createPagination } from '../components/pagination.js';
@@ -77,7 +78,7 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
     container.appendChild(notice);
   }
 
-  const periods = listPeriodos().map((row) => row.id);
+  const periods = periodosHastaHoy(listPeriodos().map((row) => row.id));
   let selected = periods[0] || currentPeriodoId();
 
   const toolbar = el(documentRef, 'div', 'rrhh-toolbar');
@@ -89,6 +90,7 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
     type: 'month',
     value: selected
   });
+  periodInput.max = periodoActual();
   toolbar.appendChild(periodInput);
 
   const calculateButton = button(documentRef, {

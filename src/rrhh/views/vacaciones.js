@@ -21,6 +21,7 @@ import {
 } from '../utils/vacaciones-service.js';
 import { listFeriados, puedeGestionarFeriados } from '../utils/feriados-service.js';
 import { esFechaISO } from '../utils/fechas.js';
+import { limiteFeriados, limiteVacaciones } from '../utils/limites-fechas.js';
 import { createPagination } from '../components/pagination.js';
 import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { agregarFila, crearTabla } from '../components/tabla.js';
@@ -136,6 +137,11 @@ export function renderVacacionesView(root, { doc, viewer, payload } = {}) {
   const grid = el(documentRef, 'div', 'field-grid');
   const inicioInput = input(documentRef, { id: 'vacaciones-inicio', type: 'date' });
   const finInput = input(documentRef, { id: 'vacaciones-fin', type: 'date' });
+  const rangoVacaciones = limiteVacaciones();
+  for (const control of [inicioInput, finInput]) {
+    control.min = rangoVacaciones.min;
+    control.max = rangoVacaciones.max;
+  }
   const obsInput = input(documentRef, { id: 'vacaciones-observacion' });
   grid.appendChild(
     field(documentRef, { id: 'vacaciones-inicio', label: 'Fecha de inicio *', input: inicioInput })
@@ -252,6 +258,9 @@ export function renderVacacionesView(root, { doc, viewer, payload } = {}) {
     const feriadoForm = el(documentRef, 'form', 'rrhh-toolbar');
     feriadoForm.noValidate = true;
     feriadoFecha = input(documentRef, { id: 'feriado-fecha', type: 'date' });
+    const rangoFeriados = limiteFeriados();
+    feriadoFecha.min = rangoFeriados.min;
+    feriadoFecha.max = rangoFeriados.max;
     feriadoNombre = input(documentRef, { id: 'feriado-nombre' });
     feriadoForm.appendChild(
       field(documentRef, { id: 'feriado-fecha', label: 'Fecha', input: feriadoFecha })

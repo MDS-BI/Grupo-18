@@ -12,6 +12,7 @@ import { equipoDeJefatura } from '../utils/jefatura.js';
 import { TIPO_NOVEDAD_LABELS } from '../utils/novedades-data.js';
 import { getPeriodo, isPeriodoCerrado, listPeriodos } from '../utils/periodos-service.js';
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
+import { esPeriodoFuturo } from '../utils/limites-fechas.js';
 import { renderNovedadForm } from '../components/novedad-form.js';
 import { renderNovedadList } from '../components/novedad-list.js';
 import { renderRegistroAsistencia } from '../components/registro-asistencia.js';
@@ -44,7 +45,11 @@ function availablePeriods() {
     if (parsePeriodo(novedad.periodo)) values.add(novedad.periodo);
   }
   values.add(currentPeriodoId());
-  return [...values].sort((a, b) => b.localeCompare(a));
+  // A future month only appears when a medical leave already runs into it.
+  const conRegistros = new Set(listNovedades().map((novedad) => novedad.periodo));
+  return [...values]
+    .filter((id) => !esPeriodoFuturo(id) || conRegistros.has(id))
+    .sort((a, b) => b.localeCompare(a));
 }
 
 function isJefatura(viewer) {

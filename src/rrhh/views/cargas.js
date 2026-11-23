@@ -15,6 +15,7 @@ import {
   terminarCarga
 } from '../utils/cargas-service.js';
 import { hoyISO } from '../utils/fechas.js';
+import { FECHA_MINIMA } from '../utils/limites-fechas.js';
 import { createPagination } from '../components/pagination.js';
 import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { agregarFila, crearTabla } from '../components/tabla.js';
@@ -188,6 +189,10 @@ export function renderCargasView(root, { doc, viewer, payload } = {}) {
       vigenteDesde: 'Vigente desde *',
       vigenteHasta: 'Vigente hasta (opcional)'
     };
+    for (const key of ['fechaNacimiento', 'resolucionFecha', 'vigenteDesde']) {
+      controls[key].min = FECHA_MINIMA;
+      controls[key].max = hoyISO();
+    }
     for (const [key, control] of Object.entries(controls)) {
       grid.appendChild(field(documentRef, { id: control.id, label: labels[key], input: control }));
     }

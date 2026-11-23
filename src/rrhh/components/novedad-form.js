@@ -6,10 +6,16 @@ import {
   UNIDAD_POR_TIPO,
   validarNovedad
 } from '../utils/novedades-data.js';
-import { crearNovedad, actualizarNovedad } from '../utils/novedades-service.js';
+import {
+  DIAS_MAXIMOS_LICENCIA_FUTURA,
+  actualizarNovedad,
+  crearNovedad
+} from '../utils/novedades-service.js';
 import { equipoDeJefatura } from '../utils/jefatura.js';
 import { loadEntities } from '../../storage.js';
 import { rangoPeriodo } from '../utils/periodos.js';
+import { hoyISO, sumarDias } from '../utils/fechas.js';
+import { FECHA_MINIMA, periodoActual } from '../utils/limites-fechas.js';
 import {
   currentPeriodoId,
   el,
@@ -104,6 +110,7 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     type: 'month',
     value: periodo || currentPeriodoId()
   });
+  periodInput.max = periodoActual();
   fields.appendChild(fieldWrapper(documentRef, 'novedad-periodo', 'Período *', periodInput));
 
   const typeSelect = select(documentRef, {
@@ -126,11 +133,15 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
   );
 
   const startInput = input(documentRef, { id: 'novedad-fecha-inicio', type: 'date' });
+  startInput.min = FECHA_MINIMA;
+  startInput.max = hoyISO();
   fields.appendChild(
     fieldWrapper(documentRef, 'novedad-fecha-inicio', 'Fecha de inicio *', startInput)
   );
 
   const endInput = input(documentRef, { id: 'novedad-fecha-fin', type: 'date' });
+  endInput.min = FECHA_MINIMA;
+  endInput.max = hoyISO();
   fields.appendChild(fieldWrapper(documentRef, 'novedad-fecha-fin', 'Fecha de fin *', endInput));
 
   const observationField = fieldWrapper(
@@ -212,12 +223,17 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     if (tipo !== 'horas_extra') {
       justificationField.querySelector('textarea').value = '';
     }
+    // Only a medical leave may run past today.
+    endInput.max =
+      tipo === 'licencia_medica' ? sumarDias(hoyISO(), DIAS_MAXIMOS_LICENCIA_FUTURA) : hoyISO();
   }
 
   function fillDates(value) {
     const range = rangoPeriodo(value);
-    if (range.fechaInicio && !startInput.value) startInput.value = range.fechaInicio;
-    if (range.fechaFin && !endInput.value) endInput.value = range.fechaFin;
+    const hoy = hoyISO();
+    const tope = (fecha) => (fecha > hoy ? hoy : fecha);
+    if (range.fechaInicio && !startInput.value) startInput.value = tope(range.fechaInicio);
+    if (range.fechaFin && !endInput.value) endInput.value = tope(range.fechaFin);
   }
 
   typeSelect.addEventListener('change', updateUnitHint);

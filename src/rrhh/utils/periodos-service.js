@@ -1,4 +1,5 @@
 import { insert, list, update } from '../storage-rrhh.js';
+import { esPeriodoFuturo, mensajePeriodoFuturo } from './limites-fechas.js';
 import { can } from '../seguridad/roles.js';
 import { registrarAuditoria } from '../seguridad/auditoria.js';
 import {
@@ -72,6 +73,12 @@ export function puedeGestionarPeriodo(viewer) {
 /** Open a period. Jefatura/Administrador only. */
 export function abrirPeriodo(id, viewer, extra = {}) {
   if (!puedeGestionarPeriodo(viewer)) throw new PeriodoPermisoError('abrir');
+  if (esPeriodoFuturo(id)) {
+    const error = new Error(mensajePeriodoFuturo());
+    error.code = 'PERIODO_FUTURO';
+    error.errors = [error.message];
+    throw error;
+  }
   const existing = getPeriodo(id);
   if (existing && existing.estado !== 'abierto') {
     if (!transicionPeriodoValida(existing.estado, 'abierto')) {

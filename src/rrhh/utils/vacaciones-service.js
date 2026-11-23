@@ -15,6 +15,7 @@ import { equipoDeJefatura, jefeDirectoDe } from './jefatura.js';
 import { listNovedades } from './novedades-service.js';
 import { getTrabajador } from './trabajadores-service.js';
 import { crearFeriado, eliminarFeriado, fechasFeriado } from './feriados-service.js';
+import { errorFechaEnRango, limiteVacaciones } from './limites-fechas.js';
 import {
   aFechaISO,
   esFechaISO,
@@ -241,6 +242,17 @@ export function validarSolicitud(input = {}, { excluirId, hoy } = {}) {
 
   if (fechaFin < fechaInicio) {
     errors.push('La fecha de término debe ser igual o posterior a la fecha de inicio.');
+    return { valid: false, errors, diasHabiles: 0 };
+  }
+  const limites = limiteVacaciones(hoy);
+  const fueraDeRango = errorFechaEnRango(fechaInicio, 'La fecha de inicio', {
+    desde: limites.min,
+    hasta: limites.max,
+    textoDesde: 'no puede ser anterior a hoy',
+    textoHasta: 'no puede estar a más de un año de anticipación'
+  });
+  if (fueraDeRango) {
+    errors.push(fueraDeRango);
     return { valid: false, errors, diasHabiles: 0 };
   }
   const diasHabiles = contarDiasHabiles(fechaInicio, fechaFin);

@@ -11,6 +11,7 @@ import {
 } from '../utils/contratos-service.js';
 import { el, feedback, hideFeedback, input, select, showFeedback } from './dom.js';
 import { clearFieldErrors, setFieldErrors } from './feedback.js';
+import { limiteContrato } from '../utils/limites-fechas.js';
 
 const CONTRATO_FIELDS = [
   'entityId',
@@ -111,6 +112,11 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
   fields.appendChild(wrap(documentRef, 'contrato-fechaInicio', 'Fecha de inicio *', inicioInput));
 
   const terminoInput = input(documentRef, { id: 'contrato-fechaTermino', type: 'date' });
+  const limites = limiteContrato();
+  inicioInput.min = limites.minInicio;
+  inicioInput.max = limites.maxInicio;
+  terminoInput.min = limites.minInicio;
+  terminoInput.max = limites.maxTermino;
   fields.appendChild(wrap(documentRef, 'contrato-fechaTermino', 'Fecha de término', terminoInput));
 
   const modalidadSelect = select(documentRef, {

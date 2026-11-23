@@ -2069,3 +2069,45 @@ input[type='password']::-ms-clear {
     grid-row: 2;
   }
 }
+
+/* ------------------------------------------- cargas familiares en la ficha */
+
+.rrhh-cargas-ficha {
+  margin: 16px 0 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.rrhh-cargas-ficha legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.rrhh-cargas-ficha-lista {
+  display: grid;
+  gap: 12px;
+}
+
+.rrhh-carga-fila {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-alt);
+  align-items: end;
+}
+
+.rrhh-nowrap {
+  white-space: nowrap;
+}
+
+.rrhh-trabajadores-view .rrhh-row-actions {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Wide tables scroll inside their own panel, never the page (SC-031). */
+.rrhh-trabajadores-view .rrhh-list-panel {
+  overflow-x: auto;
+}

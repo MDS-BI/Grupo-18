@@ -12,6 +12,7 @@ import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { getTrabajador } from './trabajadores-service.js';
 import { rangoPeriodo } from './periodos.js';
 import { aFechaISO, esFechaISO, rangosSeSuperponen, sumarAnios, sumarDias } from './fechas.js';
+import { errorFechaNoFutura } from './limites-fechas.js';
 
 export const CARGAS_TABLE = 'cargas-familiares';
 export const PARENTESCOS = ['hijo', 'conyuge', 'padre_madre', 'otro'];
@@ -114,11 +115,18 @@ function normalizar(input = {}) {
   };
 }
 
-export function validarCarga(input = {}, { excluirId } = {}) {
+/**
+ * Validate a dependant. With `sinTrabajador` the worker checks are skipped, so
+ * the dependants typed in the new-worker form can be validated before the
+ * worker exists (and nothing is stored if any of them is invalid).
+ */
+export function validarCarga(input = {}, { excluirId, sinTrabajador = false } = {}) {
   const carga = normalizar(input);
   const errors = [];
   const trabajador = carga.entityId ? getTrabajador(carga.entityId) : null;
-  if (!trabajador) errors.push('Selecciona el trabajador al que pertenece la carga.');
+  if (sinTrabajador) {
+    // The worker is created right after this validation.
+  } else if (!trabajador) errors.push('Selecciona el trabajador al que pertenece la carga.');
   else if (!trabajador.activo) {
     errors.push('El trabajador está desvinculado: no se le pueden registrar cargas.');
   }
@@ -126,14 +134,25 @@ export function validarCarga(input = {}, { excluirId } = {}) {
   if (!validarRut(carga.rut)) errors.push('El RUT de la carga no es válido.');
   if (!PARENTESCOS.includes(carga.parentesco)) errors.push('Selecciona el parentesco.');
   if (!esFechaISO(carga.fechaNacimiento)) errors.push('La fecha de nacimiento no es válida.');
+  else {
+    const nacimiento = errorFechaNoFutura(carga.fechaNacimiento, 'La fecha de nacimiento');
+    if (nacimiento) errors.push(nacimiento);
+  }
   if (!TIPOS_CARGA.includes(carga.tipo)) errors.push('Selecciona el tipo de carga.');
   if (!carga.resolucionNumero) {
     errors.push('El número de la resolución de reconocimiento es obligatorio.');
   }
   if (!esFechaISO(carga.resolucionFecha)) {
     errors.push('La fecha de la resolución de reconocimiento es obligatoria.');
+  } else {
+    const resolucion = errorFechaNoFutura(carga.resolucionFecha, 'La fecha de la resolución');
+    if (resolucion) errors.push(resolucion);
   }
   if (!esFechaISO(carga.vigenteDesde)) errors.push('La fecha de inicio de vigencia no es válida.');
+  else {
+    const desde = errorFechaNoFutura(carga.vigenteDesde, 'La fecha de inicio de vigencia');
+    if (desde) errors.push(desde);
+  }
   if (carga.vigenteHasta && !esFechaISO(carga.vigenteHasta)) {
     errors.push('La fecha de término de vigencia no es válida.');
   } else if (
@@ -226,6 +245,18 @@ export function avisosEdadLimite({ hoy, dias = DIAS_AVISO_EDAD } = {}) {
       fechaFinVigencia: sumarDias(limite, -1)
     }))
     .sort((a, b) => a.fechaFinVigencia.localeCompare(b.fechaFinVigencia));
+}
+
+/** Number of valid dependants per worker on a date (one pass over the table). */
+export function conteoCargasVigentes({ hoy } = {}) {
+  const fecha = aFechaISO(hoy);
+  const conteo = new Map();
+  for (const row of list(CARGAS_TABLE)) {
+    if (!vigenteEn(row, fecha)) continue;
+    const key = String(row.entityId);
+    conteo.set(key, (conteo.get(key) || 0) + 1);
+  }
+  return conteo;
 }
 
 export function resumenCargasTrabajador(entityId, { hoy } = {}) {

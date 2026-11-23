@@ -7,6 +7,10 @@ import {
   generoDeTrabajador
 } from '../utils/trabajadores-service.js';
 import { listCatalogos } from '../utils/catalogos-service.js';
+import { hoyISO } from '../utils/fechas.js';
+import { FECHA_MINIMA_LABORAL } from '../utils/limites-fechas.js';
+import { puedeGestionarCargas } from '../utils/cargas-service.js';
+import { renderCargasFicha } from './cargas-ficha.js';
 import { el, feedback, hideFeedback, input, select, showFeedback } from './dom.js';
 import { clearFieldErrors, setFieldErrors } from './feedback.js';
 
@@ -106,6 +110,8 @@ export function renderTrabajadorForm(
   fields.appendChild(wrap(documentRef, 'trabajador-phone', 'Teléfono', phoneInput));
 
   const dateInput = input(documentRef, { id: 'trabajador-fechaIngreso', type: 'date' });
+  dateInput.min = FECHA_MINIMA_LABORAL;
+  dateInput.max = hoyISO();
   fields.appendChild(wrap(documentRef, 'trabajador-fechaIngreso', 'Fecha de ingreso', dateInput));
 
   const jefeSelect = select(documentRef, {
@@ -148,6 +154,11 @@ export function renderTrabajadorForm(
   );
 
   form.appendChild(fields);
+
+  // Dependants can be registered together with the worker file (US8).
+  const cargas = puedeGestionarCargas(viewer)
+    ? renderCargasFicha(form, { doc: documentRef })
+    : null;
 
   const messages = feedback(documentRef, 'trabajador-form-errors', 'field-error rrhh-form-errors');
   form.appendChild(messages);
@@ -224,6 +235,7 @@ export function renderTrabajadorForm(
     jefeSelect.value = '';
     clearFieldErrors(form);
     hideFeedback(messages);
+    cargas?.limpiar();
     cancel.hidden = true;
     submit.textContent = 'Guardar trabajador';
     title.textContent = 'Registrar trabajador';
@@ -244,15 +256,28 @@ export function renderTrabajadorForm(
     clearFieldErrors(form);
     hideFeedback(messages);
     const values = getValues();
+    const erroresCargas = cargas?.validar() || [];
+    if (erroresCargas.length > 0) {
+      showFeedback(
+        messages,
+        `Revisa las cargas familiares antes de guardar: ${erroresCargas.join(' ')}`,
+        'error'
+      );
+      return;
+    }
     try {
       let message;
+      let entityId;
       if (editing) {
         actualizarTrabajador(editing.entityId, values, viewer);
+        entityId = editing.entityId;
         message = 'Trabajador actualizado.';
       } else {
-        crearTrabajador(values, viewer);
+        entityId = crearTrabajador(values, viewer).entityId;
         message = 'Trabajador registrado.';
       }
+      const nuevasCargas = cargas?.cantidad ? cargas.guardar(entityId, viewer).length : 0;
+      if (nuevasCargas > 0) message += ` Se registraron ${nuevasCargas} carga(s) familiar(es).`;
       reset();
       showFeedback(messages, message, 'ok');
       onSaved?.();

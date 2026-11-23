@@ -11,8 +11,13 @@ import { renderTrabajadorForm } from '../components/trabajador-form.js';
 import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { createFormPanel } from '../components/form-panel.js';
 import { createPagination } from '../components/pagination.js';
+import { hoyISO } from '../utils/fechas.js';
 import { puedeVerVacaciones, resumenVacacionesTrabajador } from '../utils/vacaciones-service.js';
-import { puedeVerCargas, resumenCargasTrabajador } from '../utils/cargas-service.js';
+import {
+  conteoCargasVigentes,
+  puedeVerCargas,
+  resumenCargasTrabajador
+} from '../utils/cargas-service.js';
 import {
   badge,
   button,
@@ -162,7 +167,12 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired, onNa
   const table = el(documentRef, 'table', 'rrhh-table');
   const thead = el(documentRef, 'thead');
   const headRow = el(documentRef, 'tr');
-  for (const label of ['Código', 'Nombre', 'RUT', 'Cargo', 'Departamento', 'Estado', '']) {
+  // Dependants are third-party data: the column is shown only to roles allowed to see them.
+  const verCargas = puedeVerCargas(viewer);
+  const columnas = ['Código', 'Nombre', 'RUT', 'Cargo', 'Departamento'];
+  if (verCargas) columnas.push('Cargas familiares');
+  columnas.push('Estado', '');
+  for (const label of columnas) {
     headRow.appendChild(el(documentRef, 'th', null, label));
   }
   thead.appendChild(headRow);
@@ -306,8 +316,9 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired, onNa
   const desvDate = input(documentRef, {
     id: 'desvinculacion-fecha',
     type: 'date',
-    value: new Date().toISOString().slice(0, 10)
+    value: hoyISO()
   });
+  desvDate.max = hoyISO();
   desvPanel.appendChild(desvDate);
   const desvFeedback = feedback(documentRef, 'desvinculacion-feedback');
   desvPanel.appendChild(desvFeedback);
@@ -338,7 +349,8 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired, onNa
   function openDesv(row) {
     desvRow = row;
     desvTitle.textContent = `Desvincular a ${row.name}`;
-    desvDate.value = new Date().toISOString().slice(0, 10);
+    desvDate.value = hoyISO();
+    desvDate.max = hoyISO();
     clearFieldErrors(desvPanel);
     hideFeedback(desvFeedback);
     desvPanel.hidden = false;
@@ -373,14 +385,26 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired, onNa
     });
     tbody.textContent = '';
     pagination.render(rows.length);
+    const cargasPorTrabajador = verCargas ? conteoCargasVigentes() : null;
     for (const row of pagination.slice(rows)) {
       const tr = el(documentRef, 'tr');
       tr.dataset.entityId = row.entityId;
       tr.appendChild(el(documentRef, 'td', null, row.code));
       tr.appendChild(el(documentRef, 'td', null, row.name));
-      tr.appendChild(el(documentRef, 'td', null, row.rut || '—'));
+      tr.appendChild(el(documentRef, 'td', 'rrhh-nowrap', row.rut || '—'));
       tr.appendChild(el(documentRef, 'td', null, row.cargo || '—'));
       tr.appendChild(el(documentRef, 'td', null, row.departamento || '—'));
+      if (verCargas) {
+        const cantidad = cargasPorTrabajador.get(String(row.entityId)) || 0;
+        const cargasCell = el(
+          documentRef,
+          'td',
+          'rrhh-cargas-cell',
+          cantidad === 0 ? 'Sin cargas' : `${cantidad} vigente${cantidad === 1 ? '' : 's'}`
+        );
+        cargasCell.dataset.cargas = String(cantidad);
+        tr.appendChild(cargasCell);
+      }
       const stateCell = el(documentRef, 'td');
       stateCell.appendChild(badge(documentRef, row.estadoLaboral, statusTone(row.estadoLaboral)));
       tr.appendChild(stateCell);
@@ -421,7 +445,7 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired, onNa
       if (puedeVerVacaciones(viewer) || puedeVerCargas(viewer)) {
         actions.appendChild(
           button(documentRef, {
-            label: 'Vacaciones y cargas',
+            label: 'Resumen',
             className: 'button button-ghost button-small',
             ariaLabel: `Ver vacaciones y cargas de ${row.name}`,
             onClick: () => mostrarResumen(row)

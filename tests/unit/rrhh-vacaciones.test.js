@@ -23,6 +23,7 @@ import {
 } from '../../src/rrhh/utils/vacaciones-service.js';
 import { crearFeriado } from '../../src/rrhh/utils/feriados-service.js';
 import { hoyISO, sumarDias } from '../../src/rrhh/utils/fechas.js';
+import { rangoPeriodo } from '../../src/rrhh/utils/periodos.js';
 
 const admin = { role: 'administrador', usuario: 'Administrador RRHH' };
 
@@ -160,22 +161,26 @@ describe('US7 - solicitudes', () => {
   });
 
   it('rechaza una solicitud que se superpone con una licencia médica', () => {
-    const inicio = proximoLunes();
-    abrirPeriodo(inicio.slice(0, 7), admin);
+    // A leave starts today at the latest (no future attendance records) and
+    // may run past today within the current period.
+    const hoy = hoyISO();
+    const finDeMes = rangoPeriodo(hoy.slice(0, 7)).fechaFin;
+    const finLicencia = sumarDias(hoy, 3) < finDeMes ? sumarDias(hoy, 3) : finDeMes;
+    abrirPeriodo(hoy.slice(0, 7), admin);
     crearNovedad(
       {
         trabajadorEntityId: worker.entityId,
-        periodo: inicio.slice(0, 7),
+        periodo: hoy.slice(0, 7),
         tipo: 'licencia_medica',
         cantidad: 1,
-        fechaInicio: inicio,
-        fechaFin: inicio
+        fechaInicio: hoy,
+        fechaFin: finLicencia
       },
       admin
     );
     expect(() =>
       crearSolicitud(
-        { entityId: worker.entityId, fechaInicio: inicio, fechaFin: sumarDias(inicio, 2) },
+        { entityId: worker.entityId, fechaInicio: hoy, fechaFin: finLicencia },
         trabajador
       )
     ).toThrow(/licencia médica/);

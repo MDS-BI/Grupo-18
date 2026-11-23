@@ -1,11 +1,16 @@
 import { insert, list, readTable, update } from '../storage-rrhh.js';
 import { isValidDate, loadEntities } from '../../storage.js';
 import { registrarAuditoria } from '../seguridad/auditoria.js';
-import { assertPeriodoAbierto, getPeriodo } from './periodos-service.js';
+import { asegurarPeriodo, assertPeriodoAbierto, getPeriodo } from './periodos-service.js';
 import { getContratoVigente } from './contratos-service.js';
 import { equipoDeJefatura } from './jefatura.js';
 import { obtenerParametro } from './parametros-service.js';
 import { rangoPeriodo } from './periodos.js';
+import { errorFechaEnRango, errorFechaNoFutura, esPeriodoFuturo } from './limites-fechas.js';
+import { hoyISO, sumarDias } from './fechas.js';
+
+/** A medical leave may run into the future, up to one year from today. */
+export const DIAS_MAXIMOS_LICENCIA_FUTURA = 365;
 import {
   ESTADOS_NOVEDAD,
   TIPO_NOVEDAD_LABELS,
@@ -46,6 +51,57 @@ function contextoValidacion(periodoIdValue, extra = {}) {
     maxHorasExtraDia: Number.isFinite(maximo) && maximo > 0 ? maximo : 2,
     ...extra
   };
+}
+
+/**
+ * Attendance records describe what already happened: they cannot start in the
+ * future, and overtime or absences cannot end in the future either. A medical
+ * leave may run past today (its periods must still exist and be open).
+ */
+function assertFechasNovedad(record) {
+  const inicio = errorFechaNoFutura(record.fechaInicio, 'La fecha de inicio');
+  if (inicio) fail(inicio, 'FECHA_FUTURA');
+  if (record.tipo !== 'licencia_medica') {
+    const fin = errorFechaNoFutura(record.fechaFin, 'La fecha de término');
+    if (fin) {
+      fail(`${fin} Solo una licencia médica puede extenderse más allá de hoy.`, 'FECHA_FUTURA');
+    }
+    return;
+  }
+  const limite = errorFechaEnRango(record.fechaFin, 'La fecha de término de la licencia', {
+    hasta: sumarDias(hoyISO(), DIAS_MAXIMOS_LICENCIA_FUTURA),
+    textoHasta: 'no puede estar a más de un año de hoy'
+  });
+  if (limite) fail(limite, 'FECHA_FUTURA');
+}
+
+/**
+ * Future months a medical leave runs into. They are the only periods that may
+ * be created ahead of time, and only once the whole leave has been validated.
+ */
+function periodosFuturosDeLicencia(record, parts) {
+  if (record.tipo !== 'licencia_medica') return [];
+  return [
+    ...new Set(
+      parts
+        .map((part) => part.periodo)
+        .filter((periodo) => esPeriodoFuturo(periodo) && !getPeriodo(periodo))
+    )
+  ];
+}
+
+function crearPeriodosDeLicencia(periodos, viewer) {
+  for (const periodo of periodos) {
+    const created = asegurarPeriodo(periodo);
+    registrarAuditoria({
+      accion: 'abrir_periodo',
+      tabla: 'periodos',
+      registroId: created.id,
+      motivo: 'Período futuro creado automáticamente para una licencia médica que continúa',
+      actor: viewer?.usuario || viewer?.role,
+      rol: viewer?.role
+    });
+  }
 }
 
 function assertPeriodoParaNovedad(periodoIdValue) {
@@ -149,9 +205,14 @@ function dividirPorMes(record) {
   return parts;
 }
 
-function assertPeriodosDeNovedad(parts) {
+function assertPeriodosDeNovedad(parts, { futurosPermitidos = [] } = {}) {
+  const permitidos = new Set(futurosPermitidos);
   const missing = [
-    ...new Set(parts.map((part) => part.periodo).filter((periodo) => !getPeriodo(periodo)))
+    ...new Set(
+      parts
+        .map((part) => part.periodo)
+        .filter((periodo) => !getPeriodo(periodo) && !permitidos.has(periodo))
+    )
   ];
   if (missing.length > 0) {
     fail(
@@ -160,6 +221,7 @@ function assertPeriodosDeNovedad(parts) {
     );
   }
   for (const part of parts) {
+    if (permitidos.has(part.periodo)) continue;
     assertPeriodoAbierto(part.periodo);
   }
 }
@@ -238,8 +300,10 @@ export function crearNovedad(input, viewer) {
     registradoPorRol: viewer?.role || null,
     registradoPorId: viewer?.trabajadorId || null
   });
+  assertFechasNovedad(base);
   const parts = dividirPorMes(base);
-  assertPeriodosDeNovedad(parts);
+  const futuros = periodosFuturosDeLicencia(base, parts);
+  assertPeriodosDeNovedad(parts, { futurosPermitidos: futuros });
   assertAlcanceJefatura(viewer, base.trabajadorEntityId);
   assertTrabajadorActivo(base.trabajadorEntityId);
 
@@ -268,6 +332,9 @@ export function crearNovedad(input, viewer) {
     }
     pending.push(record);
   }
+
+  // Everything validated: only now create the future months the leave runs into.
+  crearPeriodosDeLicencia(futuros, viewer);
 
   const stored = [];
   for (const record of pending) {
@@ -306,6 +373,7 @@ export function actualizarNovedad(id, changes, viewer) {
     id: current.id,
     estado: 'pendiente'
   });
+  assertFechasNovedad(merged);
   if (dividirPorMes(merged).length > 1) {
     fail(
       'Para corregir un rango que cruza meses, anula esta novedad y registra una por cada período.',

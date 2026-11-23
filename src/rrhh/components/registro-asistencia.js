@@ -90,6 +90,7 @@ export function renderRegistroAsistencia(root, { doc, viewer, onExport } = {}) {
     ]
   });
   const desde = input(documentRef, { id: 'registro-desde', type: 'date' });
+  desde.max = hoyISO();
   const hasta = input(documentRef, { id: 'registro-hasta', type: 'date' });
   filtros.appendChild(field(documentRef, { id: texto.id, label: 'Trabajador', input: texto }));
   filtros.appendChild(field(documentRef, { id: tipo.id, label: 'Tipo', input: tipo }));

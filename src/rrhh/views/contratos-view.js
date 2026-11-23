@@ -8,6 +8,7 @@ import {
   terminarContrato
 } from '../utils/contratos-service.js';
 import { listTrabajadores } from '../utils/trabajadores-service.js';
+import { hoyISO } from '../utils/fechas.js';
 import { renderContratoForm } from '../components/contrato-form.js';
 import { createFormPanel } from '../components/form-panel.js';
 import { createPagination } from '../components/pagination.js';
@@ -284,7 +285,7 @@ export function renderContratosView(root, { doc, viewer } = {}) {
           const terminoInput = input(documentRef, {
             id: `contrato-terminar-fecha-${row.id}`,
             type: 'date',
-            value: new Date().toISOString().slice(0, 10)
+            value: hoyISO()
           });
           terminoInput.setAttribute(
             'aria-label',

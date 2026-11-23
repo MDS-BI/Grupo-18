@@ -7,6 +7,7 @@ import {
   puedeGestionarPeriodo
 } from '../utils/periodos-service.js';
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
+import { periodoActual } from '../utils/limites-fechas.js';
 import { renderPeriodoList } from '../components/periodo-list.js';
 import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import {
@@ -56,6 +57,8 @@ export function renderPeriodosView(root, { doc, viewer } = {}) {
     type: 'month',
     value: currentPeriodoId()
   });
+  // Future periods make no sense: the picker stops at the current month.
+  periodInput.max = periodoActual();
   const label = el(documentRef, 'label', null, 'Nuevo período');
   label.setAttribute('for', 'periodo-nuevo');
   toolbar.appendChild(label);

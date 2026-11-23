@@ -12,6 +12,7 @@ import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { can } from '../seguridad/roles.js';
 import { obtenerParametro } from './parametros-service.js';
 import { rangoPeriodo } from './periodos.js';
+import { errorFechaEnRango, limiteContrato } from './limites-fechas.js';
 
 export const CONTRATOS_TABLE = 'contratos';
 
@@ -181,14 +182,25 @@ export function validarContrato(input = {}, context = {}) {
     errors.tipoContrato = `El tipo de contrato debe ser uno de: ${TIPOS_CONTRATO.join(', ')}.`;
   }
 
+  const limites = limiteContrato();
   if (!isValidDate(input.fechaInicio)) {
     errors.fechaInicio = 'La fecha de inicio debe ser una fecha válida (AAAA-MM-DD).';
+  } else {
+    const fueraDeRango = errorFechaEnRango(input.fechaInicio, 'La fecha de inicio', {
+      desde: limites.minInicio,
+      hasta: limites.maxInicio,
+      textoDesde: `no puede ser anterior a ${limites.minInicio.slice(0, 4)}`,
+      textoHasta: 'no puede estar a más de un año en el futuro'
+    });
+    if (fueraDeRango) errors.fechaInicio = fueraDeRango;
   }
   if (input.fechaTermino) {
     if (!isValidDate(input.fechaTermino)) {
       errors.fechaTermino = 'La fecha de término debe ser una fecha válida (AAAA-MM-DD).';
     } else if (isValidDate(input.fechaInicio) && input.fechaTermino < input.fechaInicio) {
       errors.fechaTermino = 'La fecha de término no puede ser anterior a la fecha de inicio.';
+    } else if (input.fechaTermino > limites.maxTermino) {
+      errors.fechaTermino = 'La fecha de término no puede estar a más de 5 años en el futuro.';
     }
   } else if (input.tipoContrato === 'plazo_fijo') {
     errors.fechaTermino = 'Un contrato a plazo fijo requiere fecha de término.';

@@ -10,6 +10,7 @@
 import { clearTable, insert, list, remove } from '../storage-rrhh.js';
 import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { esFechaISO } from './fechas.js';
+import { errorFechaEnRango, limiteFeriados } from './limites-fechas.js';
 
 export const FERIADOS_TABLE = 'feriados';
 
@@ -39,6 +40,16 @@ export function validarFeriado(input = {}) {
   const nombre = String(input.nombre || '').trim();
   if (!esFechaISO(fecha)) errors.push('La fecha del feriado no es válida.');
   if (!nombre) errors.push('El nombre del feriado es obligatorio.');
+  if (esFechaISO(fecha)) {
+    const { min, max } = limiteFeriados();
+    const fueraDeRango = errorFechaEnRango(fecha, 'La fecha del feriado', {
+      desde: min,
+      hasta: max,
+      textoDesde: `debe estar entre ${min.slice(0, 4)} y ${max.slice(0, 4)}`,
+      textoHasta: `debe estar entre ${min.slice(0, 4)} y ${max.slice(0, 4)}`
+    });
+    if (fueraDeRango) errors.push(fueraDeRango);
+  }
   if (esFechaISO(fecha) && listFeriados().some((row) => row.fecha === fecha)) {
     errors.push('Ya existe un feriado registrado en esa fecha.');
   }
