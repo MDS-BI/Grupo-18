@@ -20,7 +20,16 @@ import {
   select,
   showFeedback
 } from '../components/dom.js';
+import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { createFormPanel } from '../components/form-panel.js';
+import { createPagination } from '../components/pagination.js';
+
+const CATALOGO_FIELD_MAP = {
+  tipo: 'catalogo-tipo',
+  codigo: 'catalogo-codigo',
+  nombre: 'catalogo-nombre',
+  descripcion: 'catalogo-descripcion'
+};
 
 function errorMessages(error) {
   if (!error) return ['No se pudo guardar el catálogo.'];
@@ -156,6 +165,7 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
+      clearFieldErrors(form);
       hideFeedback(messages);
       const values = {
         tipo: tipoSelect.value,
@@ -176,6 +186,7 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
         refresh();
         drawer.close({ force: true });
       } catch (error) {
+        setFieldErrors(form, error.errors, CATALOGO_FIELD_MAP);
         showFeedback(messages, errorMessages(error).join(' '), 'error');
       }
     });
@@ -187,6 +198,7 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
       editing = null;
       form.reset();
       tipoSelect.value = TIPOS_CATALOGO[0];
+      clearFieldErrors(form);
       hideFeedback(messages);
       cancelButton.hidden = true;
       submitButton.textContent = 'Guardar';
@@ -196,6 +208,7 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
     formPanel.resetForm = resetForm;
     formPanel.edit = (row) => {
       editing = row;
+      clearFieldErrors(form);
       tipoSelect.value = row.tipo;
       codigoInput.value = row.codigo;
       nombreInput.value = row.nombre;
@@ -254,6 +267,15 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
   empty.hidden = true;
   listPanel.appendChild(empty);
 
+  const paginationHost = el(documentRef, 'div', 'rrhh-pagination-host');
+  listPanel.appendChild(paginationHost);
+  const pagination = createPagination(documentRef, {
+    id: 'catalogos-pagination',
+    onChange: refresh
+  });
+  pagination.element.hidden = true;
+  paginationHost.appendChild(pagination.element);
+
   layout.appendChild(listPanel);
   container.appendChild(layout);
   root.appendChild(container);
@@ -264,7 +286,9 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
       incluirInactivos: includeInactive.checked
     });
     tbody.textContent = '';
-    for (const row of rows) {
+    pagination.render(rows.length);
+    pagination.element.hidden = rows.length === 0;
+    for (const row of pagination.slice(rows)) {
       const tr = el(documentRef, 'tr');
       tr.dataset.catalogoId = row.id;
       tr.appendChild(el(documentRef, 'td', null, TIPO_CATALOGO_LABELS[row.tipo] || row.tipo));
@@ -312,8 +336,14 @@ export function renderCatalogosView(root, { doc, viewer } = {}) {
     empty.hidden = rows.length > 0;
   }
 
-  filterSelect.addEventListener('change', refresh);
-  includeInactive.addEventListener('change', refresh);
+  filterSelect.addEventListener('change', () => {
+    pagination.reset();
+    refresh();
+  });
+  includeInactive.addEventListener('change', () => {
+    pagination.reset();
+    refresh();
+  });
   refresh();
 
   return {

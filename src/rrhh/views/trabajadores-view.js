@@ -8,6 +8,7 @@ import {
 } from '../utils/trabajadores-service.js';
 import { listCatalogos } from '../utils/catalogos-service.js';
 import { renderTrabajadorForm } from '../components/trabajador-form.js';
+import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { createFormPanel } from '../components/form-panel.js';
 import { createPagination } from '../components/pagination.js';
 import {
@@ -255,6 +256,7 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
   function closeDesv() {
     desvRow = null;
     desvPanel.hidden = true;
+    clearFieldErrors(desvPanel);
     hideFeedback(desvFeedback);
   }
 
@@ -262,6 +264,7 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
     desvRow = row;
     desvTitle.textContent = `Desvincular a ${row.name}`;
     desvDate.value = new Date().toISOString().slice(0, 10);
+    clearFieldErrors(desvPanel);
     hideFeedback(desvFeedback);
     desvPanel.hidden = false;
     drawer.setTitle('Desvincular trabajador');
@@ -272,11 +275,15 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
   desvCancel.addEventListener('click', closeDesv);
   desvConfirm.addEventListener('click', () => {
     if (!desvRow) return;
+    clearFieldErrors(desvPanel);
     try {
       desactivarTrabajador(desvRow.entityId, desvDate.value, viewer);
       closeDesv();
       refresh();
     } catch (error) {
+      setFieldErrors(desvPanel, error.errors, [
+        { key: 'fecha', id: desvDate.id, match: [/fecha/i, /per.odo/i] }
+      ]);
       showFeedback(desvFeedback, (error.errors || [error.message]).join(' '), 'error');
     }
   });

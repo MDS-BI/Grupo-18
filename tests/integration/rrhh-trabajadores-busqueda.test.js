@@ -3,6 +3,7 @@ import { JSDOM } from 'jsdom';
 import { crearCatalogo } from '../../src/rrhh/utils/catalogos-service.js';
 import { crearTrabajador } from '../../src/rrhh/utils/trabajadores-service.js';
 import { renderTrabajadoresView } from '../../src/rrhh/views/trabajadores-view.js';
+import { calcularDigitoVerificador } from '../../src/rrhh/calculo/rut.js';
 
 const analista = { role: 'analista', usuario: 'Analista RRHH' };
 const TODOS = ['Ana Pérez', 'Camila Soto', 'Cristina Rojas'];
@@ -32,6 +33,30 @@ function setSelect(id, value) {
 function nombresVisibles() {
   return [...document.querySelectorAll('#rrhh-trabajadores-view tbody tr')].map(
     (row) => row.cells[1].textContent
+  );
+}
+
+function seedTrabajadoresPaginados(total = 26) {
+  for (let index = 1; index <= total; index += 1) {
+    const sufijo = String(index).padStart(2, '0');
+    const cuerpo = String(20000000 + index);
+    crearTrabajador(
+      {
+        name: `Pagina ${sufijo}`,
+        code: `TRAB-PAG-${sufijo}`,
+        rut: `${cuerpo}${calcularDigitoVerificador(cuerpo)}`,
+        email: `pagina${sufijo}@example.com`,
+        fechaIngreso: '2024-01-15'
+      },
+      analista
+    );
+  }
+  vista.refresh();
+}
+
+function botonPagina(label) {
+  return [...document.querySelectorAll('#trabajadores-pagination button')].find(
+    (button) => button.textContent === label
   );
 }
 
@@ -176,5 +201,36 @@ describe('Buscador de Trabajadores por criterio', () => {
     setSelect('trabajadores-criterio', 'rut');
     setText('trabajadores-buscar', '1');
     expect(nombresVisibles()).toEqual([]);
+  });
+
+  it('paginates workers at 25 rows, preserves the search and resets on a new query', () => {
+    seedTrabajadoresPaginados();
+    const pagination = qs('trabajadores-pagination');
+    expect(pagination.tagName).toBe('NAV');
+    expect(pagination.getAttribute('aria-label')).toBe('Paginación de resultados');
+
+    const estado = () => pagination.querySelector('.rrhh-pagination-status').textContent;
+    expect(estado()).toBe('Página 1 de 2 · 29 registro(s)');
+    expect(nombresVisibles()).toHaveLength(25);
+    expect(nombresVisibles().length).toBeLessThanOrEqual(25);
+
+    botonPagina('Siguiente').click();
+    expect(estado()).toBe('Página 2 de 2 · 29 registro(s)');
+    expect(nombresVisibles()).toHaveLength(4);
+
+    setText('trabajadores-buscar', 'Pagina');
+    expect(qs('trabajadores-buscar').value).toBe('Pagina');
+    expect(estado()).toBe('Página 1 de 2 · 26 registro(s)');
+    expect(nombresVisibles()).toHaveLength(25);
+
+    botonPagina('Siguiente').click();
+    expect(qs('trabajadores-buscar').value).toBe('Pagina');
+    expect(estado()).toBe('Página 2 de 2 · 26 registro(s)');
+    expect(nombresVisibles()).toHaveLength(1);
+    expect(nombresVisibles()[0]).toMatch(/^Pagina /);
+
+    setText('trabajadores-buscar', 'Pagina 01');
+    expect(estado()).toBe('Página 1 de 1 · 1 registro(s)');
+    expect(nombresVisibles()).toEqual(['Pagina 01']);
   });
 });

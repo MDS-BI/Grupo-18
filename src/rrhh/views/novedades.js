@@ -14,6 +14,8 @@ import { getPeriodo, isPeriodoCerrado, listPeriodos } from '../utils/periodos-se
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
 import { renderNovedadForm } from '../components/novedad-form.js';
 import { renderNovedadList } from '../components/novedad-list.js';
+import { createPagination } from '../components/pagination.js';
+import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { can } from '../seguridad/roles.js';
 import {
   currentPeriodoId,
@@ -162,6 +164,15 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
   const listContainer = el(documentRef, 'div', 'rrhh-list-container');
   container.appendChild(listContainer);
 
+  const paginationHost = el(documentRef, 'div', 'rrhh-pagination-host');
+  container.appendChild(paginationHost);
+  const pagination = createPagination(documentRef, {
+    id: 'novedades-pagination',
+    onChange: refresh
+  });
+  pagination.element.hidden = true;
+  paginationHost.appendChild(pagination.element);
+
   const canRegister = can(viewer?.role, 'canRegisterNovedades');
   let form = null;
   if (canRegister) {
@@ -243,16 +254,25 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
     const rows = visibleNovedades(viewer, periodo);
     renderSummary(rows);
     renderEligibility(rows);
+    pagination.render(rows.length);
+    pagination.element.hidden = rows.length === 0;
     renderNovedadList(listContainer, {
       doc: documentRef,
       viewer,
-      novedades: rows,
+      novedades: pagination.slice(rows),
       entities: loadEntitiesSafe(),
       periodoAbierto: !cerrado,
       onApprove: (id) => act(() => aprobarNovedad(id, viewer), 'Novedad aprobada.'),
       onReject: (id, motivo) => {
+        clearFieldErrors(listContainer);
         if (!String(motivo || '').trim()) {
-          showFeedback(messages, 'El rechazo requiere un motivo.', 'error');
+          const detail = 'El rechazo requiere un motivo.';
+          setFieldErrors(
+            listContainer,
+            [detail],
+            [{ key: 'motivo', id: `motivo-rechazo-${id}`, match: /motivo/i }]
+          );
+          showFeedback(messages, detail, 'error');
           return;
         }
         act(() => rechazarNovedad(id, viewer, motivo), 'Novedad rechazada con motivo.');
@@ -291,6 +311,7 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
   periodSelect.addEventListener('change', () => {
     selected = periodSelect.value;
     hideFeedback(messages);
+    pagination.reset();
     refresh();
   });
 

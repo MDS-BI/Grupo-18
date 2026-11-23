@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { addEntity } from '../../src/storage.js';
 import { renderNovedadesView } from '../../src/rrhh/views/novedades.js';
-import { listNovedades } from '../../src/rrhh/utils/novedades-service.js';
+import { crearNovedad, listNovedades } from '../../src/rrhh/utils/novedades-service.js';
 import { asegurarPeriodo } from '../../src/rrhh/utils/periodos-service.js';
 import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 
@@ -21,6 +21,29 @@ function submit() {
   document
     .getElementById('novedad-form')
     .dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+}
+
+function seedNovedades(periodo, total = 26) {
+  for (let day = 1; day <= total; day += 1) {
+    const fecha = `${periodo}-${String(day).padStart(2, '0')}`;
+    crearNovedad(
+      {
+        trabajadorEntityId: entity.entity_id,
+        periodo,
+        tipo: 'horas_extra',
+        cantidad: 1,
+        fechaInicio: fecha,
+        fechaFin: fecha
+      },
+      { role: 'analista', usuario: 'Registrador' }
+    );
+  }
+}
+
+function paginationButton(label) {
+  return [...document.querySelectorAll('#novedades-pagination button')].find(
+    (button) => button.textContent === label
+  );
 }
 
 function fillBase({
@@ -162,5 +185,66 @@ describe('US14 - novedad registration form', () => {
     expect(row.diagnostico).toBeUndefined();
     expect(row.codigoCie).toBeUndefined();
     expect(JSON.stringify(row)).not.toMatch(/diagnost|cie-?10|tratamiento/i);
+  });
+
+  it('paginates the novedades list at 25 rows and resets to page 1 on period change', () => {
+    asegurarPeriodo('2026-10');
+    seedNovedades('2026-09');
+    seedNovedades('2026-10');
+    renderNovedadesView(root, {
+      doc: document,
+      viewer: { role: 'analista', usuario: 'Analista RRHH' },
+      initialPeriodo: '2026-09'
+    });
+
+    const pagination = document.getElementById('novedades-pagination');
+    expect(pagination.tagName).toBe('NAV');
+    expect(pagination.getAttribute('aria-label')).toBe('Paginación de resultados');
+
+    const status = () => pagination.querySelector('.rrhh-pagination-status').textContent;
+    const rowCount = () => document.querySelectorAll('#novedades-list .rrhh-novedad-item').length;
+
+    expect(status()).toBe('Página 1 de 2 · 26 registro(s)');
+    expect(rowCount()).toBeLessThanOrEqual(25);
+    expect(rowCount()).toBe(25);
+
+    paginationButton('Siguiente').click();
+    expect(status()).toBe('Página 2 de 2 · 26 registro(s)');
+    expect(rowCount()).toBe(1);
+
+    setValue('novedades-periodo', '2026-10');
+    expect(status()).toBe('Página 1 de 2 · 26 registro(s)');
+    expect(rowCount()).toBe(25);
+  });
+
+  it('shows a field error when the rejection reason is empty', () => {
+    const novedad = crearNovedad(
+      {
+        trabajadorEntityId: entity.entity_id,
+        periodo: '2026-09',
+        tipo: 'horas_extra',
+        cantidad: 1,
+        fechaInicio: '2026-09-10',
+        fechaFin: '2026-09-10'
+      },
+      { role: 'analista', usuario: 'Registrador' }
+    );
+    renderNovedadesView(root, {
+      doc: document,
+      viewer: { role: 'jefatura', usuario: 'Jefa RRHH', equipo: [entity.entity_id] },
+      initialPeriodo: '2026-09'
+    });
+
+    const reason = document.getElementById(`motivo-rechazo-${novedad.id}`);
+    expect(reason).not.toBeNull();
+    document.querySelector('.rrhh-reject').click();
+
+    const errorId = `motivo-rechazo-${novedad.id}-error`;
+    const error = document.getElementById(errorId);
+    expect(error).not.toBeNull();
+    expect(error.textContent).toMatch(/motivo/i);
+    expect(reason.getAttribute('aria-invalid')).toBe('true');
+    expect(reason.getAttribute('aria-describedby')).toContain(errorId);
+    expect(listNovedades({ periodo: '2026-09' })[0].estado).toBe('pendiente');
   });
 });

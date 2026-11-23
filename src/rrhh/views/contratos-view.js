@@ -10,7 +10,19 @@ import {
 import { listTrabajadores } from '../utils/trabajadores-service.js';
 import { renderContratoForm } from '../components/contrato-form.js';
 import { createFormPanel } from '../components/form-panel.js';
-import { badge, button, el, formatMoney, input, select } from '../components/dom.js';
+import { createPagination } from '../components/pagination.js';
+import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
+import {
+  badge,
+  button,
+  el,
+  feedback,
+  formatMoney,
+  hideFeedback,
+  input,
+  select,
+  showFeedback
+} from '../components/dom.js';
 
 function accessDenied(documentRef, root) {
   const denied = el(documentRef, 'div', 'rrhh-access-denied panel');
@@ -152,6 +164,9 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   toolbar.appendChild(includeLabel);
   listPanel.appendChild(toolbar);
 
+  const messages = feedback(documentRef, 'contratos-feedback');
+  container.appendChild(messages);
+
   const table = el(documentRef, 'table', 'rrhh-table');
   const thead = el(documentRef, 'thead');
   const headRow = el(documentRef, 'tr');
@@ -178,12 +193,40 @@ export function renderContratosView(root, { doc, viewer } = {}) {
   empty.hidden = true;
   listPanel.appendChild(empty);
 
+  const paginationHost = el(documentRef, 'div', 'rrhh-pagination-host');
+  listPanel.appendChild(paginationHost);
+  const pagination = createPagination(documentRef, {
+    id: 'contratos-pagination',
+    onChange: refresh
+  });
+  pagination.element.hidden = true;
+  paginationHost.appendChild(pagination.element);
+
   layout.appendChild(listPanel);
   container.appendChild(layout);
   root.appendChild(container);
 
   const workerName = (entityId) =>
     trabajadores.find((row) => row.entityId === entityId)?.name || entityId;
+
+  function terminarContratoSeleccionado(contratoId, fieldId, fecha) {
+    clearFieldErrors(listPanel);
+    hideFeedback(messages);
+    try {
+      terminarContrato(contratoId, fecha, viewer);
+      showFeedback(messages, 'Contrato terminado.', 'ok');
+      refresh();
+    } catch (error) {
+      setFieldErrors(listPanel, error.errors, [
+        {
+          key: 'fechaTermino',
+          id: fieldId,
+          match: [/fecha de t[ée]rmino/i, /anterior a la fecha de inicio/i]
+        }
+      ]);
+      showFeedback(messages, (error.errors || [error.message]).join(' '), 'error');
+    }
+  }
 
   function refresh() {
     const rowsAll = listContratos({
@@ -194,7 +237,9 @@ export function renderContratosView(root, { doc, viewer } = {}) {
       ? rowsAll.filter((row) => allowedEntityIds.has(row.entityId))
       : rowsAll;
     tbody.textContent = '';
-    for (const row of rows) {
+    pagination.render(rows.length);
+    pagination.element.hidden = rows.length === 0;
+    for (const row of pagination.slice(rows)) {
       const tr = el(documentRef, 'tr');
       tr.dataset.contratoId = row.id;
       tr.appendChild(el(documentRef, 'td', null, workerName(row.entityId)));
@@ -236,14 +281,22 @@ export function renderContratosView(root, { doc, viewer } = {}) {
               }
             })
           );
+          const terminoInput = input(documentRef, {
+            id: `contrato-terminar-fecha-${row.id}`,
+            type: 'date',
+            value: new Date().toISOString().slice(0, 10)
+          });
+          terminoInput.setAttribute(
+            'aria-label',
+            `Fecha de término del contrato de ${workerName(row.entityId)}`
+          );
+          actions.appendChild(terminoInput);
           actions.appendChild(
             button(documentRef, {
               label: 'Terminar',
               className: 'button button-ghost button-small',
-              onClick: () => {
-                terminarContrato(row.id, new Date().toISOString().slice(0, 10), viewer);
-                refresh();
-              }
+              onClick: () =>
+                terminarContratoSeleccionado(row.id, terminoInput.id, terminoInput.value)
             })
           );
         }
@@ -254,8 +307,14 @@ export function renderContratosView(root, { doc, viewer } = {}) {
     empty.hidden = rows.length > 0;
   }
 
-  filterSelect.addEventListener('change', refresh);
-  includeTerminated.addEventListener('change', refresh);
+  filterSelect.addEventListener('change', () => {
+    pagination.reset();
+    refresh();
+  });
+  includeTerminated.addEventListener('change', () => {
+    pagination.reset();
+    refresh();
+  });
   refresh();
 
   return {

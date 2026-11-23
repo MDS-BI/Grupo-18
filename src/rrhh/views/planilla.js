@@ -9,6 +9,7 @@ import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
 import { can } from '../seguridad/roles.js';
 import { renderCalculoResumen } from '../components/calculo-resumen.js';
 import { createPagination } from '../components/pagination.js';
+import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { renderLiquidacion } from './liquidacion.js';
 import {
   button,
@@ -260,15 +261,28 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
     navigateButton.hidden = false;
   }
 
+  function showPeriodErrors(detail) {
+    setFieldErrors(
+      container,
+      [detail],
+      [{ key: 'periodo', id: periodInput.id, match: /per.odo|formato|cerrado/i }]
+    );
+  }
+
   function calculate() {
+    clearFieldErrors(container);
     hideFeedback(messages);
     selected = periodInput.value;
     if (!parsePeriodo(selected)) {
-      showFeedback(messages, 'Selecciona un período válido con formato AAAA-MM.', 'error');
+      const detail = 'Selecciona un período válido con formato AAAA-MM.';
+      showPeriodErrors(detail);
+      showFeedback(messages, detail, 'error');
       return;
     }
     if (isPeriodoCerrado(selected)) {
-      showFeedback(messages, 'El período está cerrado: no se permite recalcular.', 'error');
+      const detail = 'El período está cerrado: no se permite recalcular.';
+      showPeriodErrors(detail);
+      showFeedback(messages, detail, 'error');
       return;
     }
     const entities = loadEntities();
@@ -302,12 +316,16 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
       );
     } catch (error) {
       const detail = (error.errors || [error.message]).join(' ');
+      setFieldErrors(container, error.errors || [error.message], [
+        { key: 'periodo', id: periodInput.id, match: /./ }
+      ]);
       showFeedback(messages, detail, 'error');
     }
   }
 
   periodInput.addEventListener('change', () => {
     selected = periodInput.value;
+    clearFieldErrors(container);
     hideFeedback(messages);
     summaryContainer.textContent = '';
     resultsContainer.textContent = '';

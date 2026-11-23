@@ -10,6 +10,7 @@ import { isPeriodoCerrado } from '../utils/periodos-service.js';
 import { can, canViewLiquidacion } from '../seguridad/roles.js';
 import { registrarAuditoria } from '../seguridad/auditoria.js';
 import { createPagination } from '../components/pagination.js';
+import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { renderLiquidacion } from './liquidacion.js';
 import {
   badge,
@@ -349,6 +350,7 @@ export function renderLiquidacionesView(
   }
 
   function changeState(id, hasta, motivo = '') {
+    clearFieldErrors(container);
     hideFeedback(messages);
     try {
       const updated = cambiarEstadoLiquidacion(id, hasta, { viewer, motivo });
@@ -359,6 +361,9 @@ export function renderLiquidacionesView(
       );
       refresh(updated.id);
     } catch (error) {
+      setFieldErrors(container, error.errors || [error.message], [
+        { key: 'motivo', id: 'liq-annul-motivo', match: [/motivo/i, /anulac[ií]n/i] }
+      ]);
       const detail = (error.errors || [error.message]).join(' ');
       showFeedback(messages, detail, 'error');
     }

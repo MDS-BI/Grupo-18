@@ -66,12 +66,13 @@ function setValue(id, value) {
   node.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 }
 
-function setupPlanillaData() {
+function setupPlanillaData(overrides = {}) {
   const entity = addEntity({
     name: 'Ana Torres',
     code: 'TR-001',
     taxId: '12.345.678-5',
-    cargo: 'Analista'
+    cargo: 'Analista',
+    ...overrides
   });
   crearContrato(
     {
@@ -258,19 +259,32 @@ describe('UI de cálculo de planilla', () => {
       fileURLToPath(new URL('../../src/styles.css', import.meta.url)),
       'utf8'
     );
-    expect(css).toMatch(/\.rrhh-table-cols-5\s+\.rrhh-table-row\s*\{[^}]*grid-template-columns:/s);
+    const rule = css.match(/\.rrhh-table-cols-5\s+\.rrhh-table-row\s*\{([^}]*)\}/);
+    expect(rule).not.toBeNull();
+    const tracks = rule[1]
+      .match(/grid-template-columns:\s*([^;]+);/)?.[1]
+      .trim()
+      .split(/\s+/);
+    expect(tracks).toHaveLength(5);
+    expect(tracks.every((track) => /^\d+(\.\d+)?fr$/.test(track))).toBe(true);
     setupPlanillaData();
     renderPlanillaView(root, { doc: document, viewer: analista });
     setValue('planilla-periodo', '2026-09');
     click(document.getElementById('planilla-calcular'));
 
-    expect(
-      document.getElementById('planilla-resultados').classList.contains('rrhh-table-cols-5')
-    ).toBe(true);
+    const list = document.getElementById('planilla-resultados');
+    expect(list.classList.contains('rrhh-table-cols-5')).toBe(true);
+    const rows = list.querySelectorAll('[data-liquidacion-id]');
+    expect(rows).toHaveLength(1);
     const nav = document.getElementById('planilla-pagination');
-    expect(nav.querySelector('.rrhh-pagination-status').textContent).toMatch(
-      /^Página 1 de 1 · \d+ registro\(s\)$/
+    expect(nav.querySelector('.rrhh-pagination-status').textContent).toBe(
+      `Página 1 de 1 · ${rows.length} registro(s)`
     );
+    const previous = [...nav.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Anterior'
+    );
+    expect(previous.disabled).toBe(true);
+    expect(previous.type).toBe('button');
   });
 
   it('pagina Liquidaciones a 25 y conserva el foco al paginar y filtrar', () => {
@@ -291,22 +305,62 @@ describe('UI de cálculo de planilla', () => {
     renderLiquidacionesView(root, { doc: document, viewer: admin });
 
     const nav = document.getElementById('liquidaciones-pagination');
-    expect(nav.querySelector('.rrhh-pagination-status').textContent).toBe(
-      'Página 1 de 2 · 30 registro(s)'
-    );
+    const buttonByLabel = (label) =>
+      [...nav.querySelectorAll('button')].find((button) => button.textContent === label);
+    const status = () => nav.querySelector('.rrhh-pagination-status');
+    expect(status().textContent).toBe('Página 1 de 2 · 30 registro(s)');
+    expect(nav.getAttribute('aria-label')).toBe('Paginación de resultados');
+    expect(status().getAttribute('aria-live')).toBe('polite');
+    expect(buttonByLabel('Anterior').disabled).toBe(true);
     expect(document.querySelectorAll('#liquidaciones-list [data-liquidacion-id]')).toHaveLength(25);
 
-    const next = [...nav.querySelectorAll('button')].find(
-      (button) => button.textContent === 'Siguiente'
-    );
+    const next = buttonByLabel('Siguiente');
     next.focus();
     next.click();
     expect(document.querySelectorAll('#liquidaciones-list [data-liquidacion-id]')).toHaveLength(5);
-    expect(nav.contains(document.activeElement)).toBe(true);
+    expect(status().textContent).toBe('Página 2 de 2 · 30 registro(s)');
+    expect(document.activeElement).toBe(buttonByLabel('Anterior'));
+    expect(document.activeElement.textContent).toBe('Anterior');
 
     const filter = document.getElementById('liquidaciones-periodo');
     filter.focus();
     setValue('liquidaciones-periodo', '');
-    expect(document.activeElement.id).toBe('liquidaciones-periodo');
+    const recreatedFilter = document.getElementById('liquidaciones-periodo');
+    expect(recreatedFilter).not.toBe(filter);
+    expect(recreatedFilter.tagName).toBe('SELECT');
+    expect(document.activeElement).toBe(recreatedFilter);
+    expect(status().textContent).toBe('Página 1 de 2 · 30 registro(s)');
+    expect(buttonByLabel('Anterior').disabled).toBe(true);
+    expect(document.querySelectorAll('#liquidaciones-list [data-liquidacion-id]')).toHaveLength(25);
+  });
+
+  it('mantiene el detalle como hermano de la fila activa y lo reemplaza al elegir otra (T129)', () => {
+    setupPlanillaData();
+    setupPlanillaData({
+      name: 'Luisa Medina',
+      code: 'TR-002',
+      taxId: '9.876.543-3',
+      cargo: 'Técnica'
+    });
+    renderPlanillaView(root, { doc: document, viewer: analista });
+    setValue('planilla-periodo', '2026-09');
+    click(document.getElementById('planilla-calcular'));
+
+    const rows = [...document.querySelectorAll('#planilla-resultados [data-liquidacion-id]')];
+    expect(rows).toHaveLength(2);
+    click(rows[0]);
+    let detail = document.getElementById('planilla-liquidacion-detalle');
+    expect(detail).not.toBeNull();
+    expect(rows[0].nextElementSibling).toBe(detail);
+    expect(rows[0].classList.contains('rrhh-table-row-selected')).toBe(true);
+
+    click(rows[1]);
+    detail = document.getElementById('planilla-liquidacion-detalle');
+    expect(document.querySelectorAll('#planilla-liquidacion-detalle')).toHaveLength(1);
+    expect(rows[1].nextElementSibling).toBe(detail);
+    expect(rows[0].nextElementSibling).not.toBe(detail);
+    expect(rows[0].classList.contains('rrhh-table-row-selected')).toBe(false);
+    expect(rows[1].classList.contains('rrhh-table-row-selected')).toBe(true);
+    expect(detail.textContent).toContain('Luisa Medina');
   });
 });

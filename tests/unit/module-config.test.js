@@ -154,16 +154,24 @@ describe('module-config', () => {
       expect(config.theme.accentColor).toBe('#0f62fe');
     });
 
-    it('accepts a three-digit hex accent color', () => {
-      const { config, errors } = normalizeConfig({ theme: { accentColor: '#f0b' } });
+    it('accepts a three-digit hex accent color with AA contrast', () => {
+      const { config, errors } = normalizeConfig({ theme: { accentColor: '#147' } });
       expect(errors).toEqual([]);
-      expect(config.theme.accentColor).toBe('#f0b');
+      expect(config.theme.accentColor).toBe('#147');
     });
 
-    it('accepts uppercase hex digits', () => {
-      const { config, errors } = normalizeConfig({ theme: { accentColor: '#FF8800' } });
+    it('accepts uppercase hex digits with AA contrast', () => {
+      const { config, errors } = normalizeConfig({ theme: { accentColor: '#0F766E' } });
       expect(errors).toEqual([]);
-      expect(config.theme.accentColor).toBe('#FF8800');
+      expect(config.theme.accentColor).toBe('#0F766E');
+    });
+
+    it('rejects light accent colors that fail AA contrast and keeps the default', () => {
+      for (const bad of ['#fbbf24', '#f0b', '#FF8800']) {
+        const { config, errors } = normalizeConfig({ theme: { accentColor: bad } });
+        expect(errors.some((e) => e.includes('theme.accentColor'))).toBe(true);
+        expect(config.theme.accentColor).toBe(DEFAULT_CONFIG.theme.accentColor);
+      }
     });
 
     it('rejects non-hex accent colors and keeps the default', () => {

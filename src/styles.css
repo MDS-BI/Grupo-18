@@ -491,6 +491,12 @@ h3 {
   font-size: 0.78rem;
 }
 
+.rrhh-field-error {
+  display: block;
+  flex-basis: 100%;
+  width: 100%;
+}
+
 .custom-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -688,6 +694,19 @@ h3 {
 @media (max-width: 1020px) {
   .management-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .view-header {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .hero-badge {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 }
 
@@ -1111,6 +1130,11 @@ table.rrhh-resumen-table tbody tr:last-child td {
   grid-column: span 2;
 }
 
+.rrhh-list-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .rrhh-list {
   display: grid;
   gap: 12px;
@@ -1143,6 +1167,11 @@ table.rrhh-resumen-table tbody tr:last-child td {
   margin: 0;
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.rrhh-list-meta,
+.rrhh-list-observation {
+  overflow-wrap: anywhere;
 }
 
 .rrhh-rejection-reason {
@@ -1201,6 +1230,7 @@ table.rrhh-resumen-table tbody tr:last-child td {
 
 .rrhh-table-cell {
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .rrhh-table-cell .panel-copy {
@@ -1644,16 +1674,16 @@ input[type='password']::-ms-clear {
   flex: 0 0 auto;
   min-width: 40px;
   height: 38px;
-  border: 1px solid var(--color-border, #cbd5e1);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--color-surface, #fff);
+  background: var(--surface);
   color: inherit;
   cursor: pointer;
   line-height: 1;
 }
 
 .rrhh-password-toggle:focus-visible {
-  outline: 2px solid var(--color-focus, #2563eb);
+  outline: 2px solid var(--accent-strong);
   outline-offset: 2px;
 }
 
@@ -1679,7 +1709,7 @@ input[type='password']::-ms-clear {
   width: min(560px, 100%);
   height: 100%;
   overflow-y: auto;
-  background: var(--color-surface, #fff);
+  background: var(--surface);
   box-shadow: -8px 0 24px rgba(15, 23, 42, 0.2);
   padding: 16px 20px 24px;
 }
@@ -1711,7 +1741,7 @@ input[type='password']::-ms-clear {
 }
 
 .rrhh-table-row-selected {
-  outline: 2px solid var(--color-focus, #2563eb);
+  outline: 2px solid var(--accent-strong);
   outline-offset: -2px;
 }
 
@@ -1719,8 +1749,8 @@ input[type='password']::-ms-clear {
   grid-column: 1 / -1;
   margin: 6px 0 12px;
   padding: 8px 12px;
-  border-left: 3px solid var(--color-focus, #2563eb);
-  background: var(--color-surface-muted, #f8fafc);
+  border-left: 3px solid var(--accent-strong);
+  background: var(--surface-alt);
 }
 
 #rrhh-liquidacion-root {
@@ -1742,7 +1772,7 @@ input[type='password']::-ms-clear {
 
 .rrhh-pagination-status {
   font-size: 0.875rem;
-  color: var(--color-text-muted, #475569);
+  color: var(--muted);
 }
 
 /* Accessible report bars (FR-111). */
@@ -1757,7 +1787,7 @@ input[type='password']::-ms-clear {
 .rrhh-grafico-barra {
   display: block;
   min-height: 12px;
-  background: var(--color-primary, #2563eb);
+  background: var(--accent);
   border-radius: 4px;
 }
 

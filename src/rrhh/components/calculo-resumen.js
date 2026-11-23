@@ -1,6 +1,7 @@
 /** Pre-confirmation payroll calculation summary. */
 
 import { el, formatMoney } from './dom.js';
+import { setFieldErrors } from './feedback.js';
 
 /**
  * Render the calculation summary.
@@ -58,6 +59,7 @@ export function renderCalculoResumen(container, { doc, resumen = {}, periodo } =
     for (const warning of resumen.advertencias) list.appendChild(el(doc, 'li', null, warning));
     warnings.appendChild(list);
     wrapper.appendChild(warnings);
+    setFieldErrors(wrapper, { advertencias: resumen.advertencias }, { advertencias: warnings.id });
   }
 
   if (Array.isArray(resumen.trabajadoresExcluidos) && resumen.trabajadoresExcluidos.length > 0) {
@@ -70,6 +72,15 @@ export function renderCalculoResumen(container, { doc, resumen = {}, periodo } =
     }
     excluded.appendChild(list);
     wrapper.appendChild(excluded);
+    setFieldErrors(
+      wrapper,
+      {
+        excluidos: resumen.trabajadoresExcluidos.map(
+          (row) => `${row.nombre || row.entityId}: ${row.motivo}`
+        )
+      },
+      { excluidos: excluded.id }
+    );
   }
 
   container.appendChild(wrapper);

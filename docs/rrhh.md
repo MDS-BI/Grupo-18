@@ -90,16 +90,17 @@ Los nombres incluyen grupos con inicial compartida (`Claudia`/`Carlos`/`Cristób
 
 ## 8. Estado y brechas
 
-Este documento cierra T161. El estado de implementación y las brechas restantes se rastrean en `specs/001-rrhh-planilla/tasks.md` (T163–T169). No implica que todas las tareas estén completas.
+Este documento cierra T161. El estado de implementación y las brechas restantes se rastrean en `specs/001-rrhh-planilla/tasks.md`. Phase 16 quedó cerrada en lo alcanzable; T141, T142, T151 y T155 permanecen bloqueadas por US7, US8, US10 y la matriz T116 respectivamente. El checklist visual SC-030/SC-031 está en `specs/001-rrhh-planilla/checklists/visual.md`.
 
 ## 9. Verificación de calidad (T162)
 
-Ejecutada el 2026-11-17 desde la raíz del repositorio:
+Ejecutada el 2026-11-23 desde la raíz del repositorio:
 
 | Comando | Resultado |
 |---|---|
 | `npm run lint` | OK, sin errores ni advertencias |
 | `npm run format:check` | OK, todos los archivos coinciden con Prettier |
-| `npm run test:run` | OK, 46/46 archivos y 338/338 pruebas |
+| `npm run test:run` | OK, 43/43 archivos y 339/339 pruebas |
+| `npm run build` | OK, build de producción generado |
 
 No se ejecutó `/speckit.implement` ni se realizó commit.

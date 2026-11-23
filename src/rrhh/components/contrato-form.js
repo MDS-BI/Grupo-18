@@ -10,6 +10,23 @@ import {
   registrarCambioSueldo
 } from '../utils/contratos-service.js';
 import { el, feedback, hideFeedback, input, select, showFeedback } from './dom.js';
+import { clearFieldErrors, setFieldErrors } from './feedback.js';
+
+const CONTRATO_FIELDS = [
+  'entityId',
+  'tipoContrato',
+  'sueldoBase',
+  'jornadaHorasSemanales',
+  'fechaInicio',
+  'fechaTermino',
+  'modalidadGratificacion',
+  'asignacionColacion',
+  'asignacionMovilizacion',
+  'observacion'
+];
+const CONTRATO_FIELD_MAP = Object.fromEntries(
+  CONTRATO_FIELDS.map((field) => [field, `contrato-${field}`])
+);
 
 function workerOptions(trabajadores = []) {
   return [
@@ -221,6 +238,7 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
     modalidadSelect.value = 'art50';
     colacionInput.value = '0';
     movilizacionInput.value = '0';
+    clearFieldErrors(form);
     hideFeedback(messages);
     cancel.hidden = true;
     submit.textContent = 'Guardar contrato';
@@ -231,6 +249,7 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
   function edit(current) {
     editing = current;
     cambioSueldo = false;
+    clearFieldErrors(form);
     setValues(current);
     workerSelect.disabled = true;
     inicioInput.disabled = true;
@@ -245,6 +264,7 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
   function prepareCambio(current) {
     editing = null;
     cambioSueldo = true;
+    clearFieldErrors(form);
     workerSelect.disabled = false;
     inicioInput.disabled = false;
     terminoInput.disabled = false;
@@ -267,6 +287,7 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    clearFieldErrors(form);
     hideFeedback(messages);
     const values = getValues();
     try {
@@ -285,6 +306,7 @@ export function renderContratoForm(root, { doc, viewer, trabajadores, contrato, 
       showFeedback(messages, message, 'ok');
       onSaved?.();
     } catch (error) {
+      setFieldErrors(form, error.errors, CONTRATO_FIELD_MAP);
       showFeedback(messages, errorMessages(error).join(' '), 'error');
     }
   });

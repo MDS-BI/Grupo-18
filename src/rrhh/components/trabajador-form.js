@@ -3,6 +3,20 @@
 import { actualizarTrabajador, crearTrabajador } from '../utils/trabajadores-service.js';
 import { listCatalogos } from '../utils/catalogos-service.js';
 import { el, feedback, hideFeedback, input, select, showFeedback } from './dom.js';
+import { clearFieldErrors, setFieldErrors } from './feedback.js';
+
+const WORKER_FIELD_MAP = {
+  name: 'trabajador-name',
+  code: 'trabajador-code',
+  rut: 'trabajador-rut',
+  email: 'trabajador-email',
+  phone: 'trabajador-phone',
+  fechaIngreso: 'trabajador-fechaIngreso',
+  jefeId: 'trabajador-jefeId',
+  cargoId: 'trabajador-cargo',
+  departamentoId: 'trabajador-departamento',
+  centroCostoId: 'trabajador-centro-costo'
+};
 
 function optionsFor(catalogos, tipo) {
   return [
@@ -189,6 +203,7 @@ export function renderTrabajadorForm(
     hiddenId.value = '';
     refreshJefes();
     jefeSelect.value = '';
+    clearFieldErrors(form);
     hideFeedback(messages);
     cancel.hidden = true;
     submit.textContent = 'Guardar trabajador';
@@ -197,6 +212,7 @@ export function renderTrabajadorForm(
 
   function edit(trabajador) {
     editing = trabajador;
+    clearFieldErrors(form);
     setValues(trabajador);
     cancel.hidden = false;
     submit.textContent = 'Guardar cambios';
@@ -206,6 +222,7 @@ export function renderTrabajadorForm(
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    clearFieldErrors(form);
     hideFeedback(messages);
     const values = getValues();
     try {
@@ -221,6 +238,7 @@ export function renderTrabajadorForm(
       showFeedback(messages, message, 'ok');
       onSaved?.();
     } catch (error) {
+      setFieldErrors(form, error.errors, WORKER_FIELD_MAP);
       showFeedback(messages, errorMessages(error).join(' '), 'error');
     }
   });

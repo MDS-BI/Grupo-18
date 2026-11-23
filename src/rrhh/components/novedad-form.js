@@ -19,6 +19,25 @@ import {
   select,
   showFeedback
 } from './dom.js';
+import { clearFieldErrors, setFieldErrors } from './feedback.js';
+
+const NOVEDAD_FIELD_MAP = [
+  { key: 'trabajador', id: 'novedad-trabajador', match: [/trabajador/i, /entity_id/i] },
+  { key: 'periodo', id: 'novedad-periodo', match: [/per.odo/i] },
+  { key: 'tipo', id: 'novedad-tipo', match: [/^el tipo/i] },
+  { key: 'cantidad', id: 'novedad-cantidad', match: [/cantidad/i, /los d[íi]as/i] },
+  { key: 'unidad', id: 'novedad-tipo', match: [/la unidad/i] },
+  { key: 'fechaInicio', id: 'novedad-fecha-inicio', match: [/fecha de inicio/i] },
+  { key: 'fechaFin', id: 'novedad-fecha-fin', match: [/fecha de fin/i] },
+  { key: 'fechas', id: 'novedad-fecha-inicio', match: [/fechas de la novedad/i] },
+  { key: 'justificacion', id: 'novedad-justificacion', match: [/horas extra superan/i] },
+  {
+    key: 'observacion',
+    id: 'novedad-observacion',
+    match: [/observaci[óo]n/i, /cl[íi]nic/i, /diagn/i]
+  },
+  { key: 'estado', id: 'novedad-tipo', match: [/^el estado/i] }
+];
 
 function entitiesForOptions(viewer) {
   try {
@@ -244,6 +263,7 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
     quantityInput.value = '';
     observationField.querySelector('textarea').value = '';
     justificationField.querySelector('textarea').value = '';
+    clearFieldErrors(form);
     hideFeedback(errorsNode);
     observationField.hidden = false;
     justificationField.hidden = true;
@@ -254,6 +274,7 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
   }
 
   function edit(novedad) {
+    clearFieldErrors(form);
     if (novedad?.estado && novedad.estado !== 'pendiente') {
       showFeedback(
         errorsNode,
@@ -282,6 +303,7 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
+    clearFieldErrors(form);
     hideFeedback(errorsNode);
     const values = getValues();
     const validation = validarNovedad(
@@ -289,6 +311,7 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
       { entities, permitirMultiPeriodo: true }
     );
     if (!validation.valid) {
+      setFieldErrors(form, validation.errors, NOVEDAD_FIELD_MAP);
       showFeedback(errorsNode, validation.errors.join(' '), 'error');
       return;
     }
@@ -305,6 +328,7 @@ export function renderNovedadForm(root, { doc, viewer, periodo, onSaved } = {}) 
       showFeedback(errorsNode, message, 'ok');
       onSaved?.();
     } catch (error) {
+      setFieldErrors(form, error.errors, NOVEDAD_FIELD_MAP);
       const messages = error.errors || [error.message];
       showFeedback(errorsNode, messages.join(' '), 'error');
     }

@@ -39,9 +39,9 @@
 
 ### Registro de verificación
 
-Fecha: 2026-11-08.
+Fecha: 2026-11-23.
 
-- `npm run test:run`: 43 archivos y 323 pruebas aprobadas, incluyendo la suite
+- `npm run test:run`: 43 archivos y 339 pruebas aprobadas, incluyendo la suite
   de integración de US5 sin cambios en su contrato DOM/CSS.
 - US5: desglose por línea, panel explicativo, snapshot legal congelado, líneas
   manuales, modo de impresión limpia, cancelación de impresión y estados sin

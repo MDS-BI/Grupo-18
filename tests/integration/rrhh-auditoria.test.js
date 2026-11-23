@@ -272,23 +272,41 @@ describe('US6 - automatic audit of sensitive consultations and changes', () => {
     });
 
     const nav = document.getElementById('auditoria-pagination');
-    expect(nav.querySelector('.rrhh-pagination-status').textContent).toBe(
-      'Página 1 de 2 · 30 registro(s)'
-    );
+    const buttonByLabel = (label) =>
+      [...nav.querySelectorAll('button')].find((button) => button.textContent === label);
+    const status = () => nav.querySelector('.rrhh-pagination-status');
+    expect(nav.getAttribute('aria-label')).toBe('Paginación de resultados');
+    expect(status().getAttribute('aria-live')).toBe('polite');
+    for (const button of nav.querySelectorAll('button')) expect(button.type).toBe('button');
+    expect(status().textContent).toBe('Página 1 de 2 · 30 registro(s)');
     expect(document.getElementById('auditoria-list').classList.contains('rrhh-table-cols-6')).toBe(
       true
     );
     expect(
       document.querySelectorAll('#auditoria-list .rrhh-table-row:not(.rrhh-table-head)')
     ).toHaveLength(25);
+    expect(buttonByLabel('Anterior').disabled).toBe(true);
+    expect(buttonByLabel('Siguiente').disabled).toBe(false);
 
-    const next = [...nav.querySelectorAll('button')].find(
-      (button) => button.textContent === 'Siguiente'
-    );
+    const next = buttonByLabel('Siguiente');
+    next.focus();
     next.click();
+    expect(status().textContent).toBe('Página 2 de 2 · 30 registro(s)');
     expect(
       document.querySelectorAll('#auditoria-list .rrhh-table-row:not(.rrhh-table-head)')
     ).toHaveLength(5);
+    expect(buttonByLabel('Anterior').disabled).toBe(false);
+    expect(buttonByLabel('Siguiente').disabled).toBe(true);
+    expect(document.activeElement).toBe(buttonByLabel('Anterior'));
+    expect(document.activeElement.textContent).toBe('Anterior');
+
+    const filter = document.getElementById('auditoria-tabla');
+    filter.focus();
+    filter.value = 'liquidaciones';
+    filter.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    expect(status().textContent).toBe('Página 1 de 2 · 30 registro(s)');
+    expect(buttonByLabel('Anterior').disabled).toBe(true);
+    expect(buttonByLabel('Siguiente').disabled).toBe(false);
   });
 
   it('muestra la fecha y hora de auditoría en hora local', () => {
@@ -308,9 +326,16 @@ describe('US6 - automatic audit of sensitive consultations and changes', () => {
       viewer: { role: 'auditor', usuario: 'Auditora Interna' }
     });
 
-    const cell = document.querySelector(
-      '#auditoria-list .rrhh-table-row:not(.rrhh-table-head) .rrhh-table-cell'
+    const row = document.querySelector(
+      '#auditoria-list .rrhh-table-row:not(.rrhh-table-head)[role="row"]'
     );
-    expect(cell.textContent).toBe(new Date(fecha).toLocaleString('es-CL'));
+    expect(row).not.toBeNull();
+    const cell = row.firstElementChild;
+    expect(cell).toBe(row.children[0]);
+    expect(cell.getAttribute('role')).toBe('cell');
+    expect(cell.textContent).toBe(
+      new Date(fecha).toLocaleString('es-CL', { timeZone: 'America/Santiago' })
+    );
+    expect(cell.textContent).not.toBe(new Date(fecha).toLocaleString('es-CL', { timeZone: 'UTC' }));
   });
 });

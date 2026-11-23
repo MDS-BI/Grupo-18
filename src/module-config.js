@@ -108,9 +108,33 @@ export const DEFAULT_CONFIG = {
 
 const HEX_COLOR = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const LABEL_KEYS = ['entity', 'entities', 'document', 'documents'];
+const MIN_ACCENT_CONTRAST = 4.5;
+const WHITE_LUMINANCE = 1;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function channelLuminance(channel) {
+  const value = channel / 255;
+  return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+}
+
+function accentLuminance(hex) {
+  const digits = hex.slice(1);
+  const full = digits.length === 3 ? digits.replace(/./g, (digit) => digit + digit) : digits;
+  const red = parseInt(full.slice(0, 2), 16);
+  const green = parseInt(full.slice(2, 4), 16);
+  const blue = parseInt(full.slice(4, 6), 16);
+  return (
+    0.2126 * channelLuminance(red) +
+    0.7152 * channelLuminance(green) +
+    0.0722 * channelLuminance(blue)
+  );
+}
+
+function contrastWithWhite(hex) {
+  return (WHITE_LUMINANCE + 0.05) / (accentLuminance(hex) + 0.05);
 }
 
 function defaultConfig() {
@@ -290,7 +314,14 @@ export function normalizeConfig(input) {
       ) {
         errors.push('theme.accentColor debe ser un color hex válido (p. ej. #2563eb).');
       } else {
-        config.theme.accentColor = input.theme.accentColor.trim();
+        const accentColor = input.theme.accentColor.trim();
+        if (contrastWithWhite(accentColor) < MIN_ACCENT_CONTRAST) {
+          errors.push(
+            `theme.accentColor debe tener contraste AA de al menos ${MIN_ACCENT_CONTRAST}:1 con texto blanco (p. ej. #2563eb).`
+          );
+        } else {
+          config.theme.accentColor = accentColor;
+        }
       }
     }
   }

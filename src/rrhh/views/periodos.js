@@ -8,6 +8,7 @@ import {
 } from '../utils/periodos-service.js';
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
 import { renderPeriodoList } from '../components/periodo-list.js';
+import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import {
   button,
   currentPeriodoId,
@@ -77,11 +78,32 @@ export function renderPeriodosView(root, { doc, viewer } = {}) {
   const listContainer = el(documentRef, 'div', 'rrhh-list-container');
   container.appendChild(listContainer);
 
+  function showPeriodError(detail) {
+    setFieldErrors(
+      container,
+      [detail],
+      [{ key: 'periodo', id: periodInput.id, match: /per.odo|formato/i }]
+    );
+  }
+
+  function showCloseError(periodoId, detail) {
+    const row = [...listContainer.querySelectorAll('[data-periodo-id]')].find(
+      (node) => node.dataset.periodoId === String(periodoId)
+    );
+    const action = row?.querySelector('button');
+    if (!action) return;
+    if (!action.id) action.id = `periodo-cerrar-${periodoId}`;
+    setFieldErrors(listContainer, [detail], [{ key: 'periodo', id: action.id, match: /./ }]);
+  }
+
   function openSelectedPeriod() {
     const value = periodInput.value;
+    clearFieldErrors(container);
     hideFeedback(messages);
     if (!parsePeriodo(value)) {
-      showFeedback(messages, 'Selecciona un período válido con formato AAAA-MM.', 'error');
+      const detail = 'Selecciona un período válido con formato AAAA-MM.';
+      showPeriodError(detail);
+      showFeedback(messages, detail, 'error');
       return;
     }
     try {
@@ -89,17 +111,20 @@ export function renderPeriodosView(root, { doc, viewer } = {}) {
       showFeedback(messages, `Período ${etiquetaPeriodo(value)} abierto.`, 'ok');
       refresh();
     } catch (error) {
+      showPeriodError(error.message);
       showFeedback(messages, error.message, 'error');
     }
   }
 
   function closePeriod(periodoId) {
+    clearFieldErrors(container);
     hideFeedback(messages);
     try {
       cerrarPeriodo(periodoId, viewer);
       showFeedback(messages, `Período ${etiquetaPeriodo(periodoId)} cerrado y congelado.`, 'ok');
       refresh();
     } catch (error) {
+      showCloseError(periodoId, error.message);
       showFeedback(messages, error.message, 'error');
     }
   }

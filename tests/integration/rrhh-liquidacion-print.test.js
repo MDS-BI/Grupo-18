@@ -14,6 +14,65 @@ const css = fs.readFileSync(
   'utf8'
 );
 
+function printRuleSet() {
+  const source = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const start = source.search(/@media\s+print/);
+  expect(start).toBeGreaterThanOrEqual(0);
+  const open = source.indexOf('{', start);
+  let depth = 0;
+  let close = -1;
+  for (let index = open; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    if (source[index] === '}' && --depth === 0) {
+      close = index;
+      break;
+    }
+  }
+  expect(close).toBeGreaterThan(open);
+  const body = source.slice(open + 1, close);
+  const rules = [];
+  let cursor = 0;
+  while (cursor < body.length) {
+    const ruleOpen = body.indexOf('{', cursor);
+    if (ruleOpen === -1) break;
+    const selectors = body
+      .slice(cursor, ruleOpen)
+      .split(',')
+      .map((selector) => selector.trim())
+      .filter(Boolean);
+    let level = 1;
+    let ruleClose = ruleOpen + 1;
+    while (ruleClose < body.length && level > 0) {
+      if (body[ruleClose] === '{') level += 1;
+      if (body[ruleClose] === '}' && --level === 0) break;
+      ruleClose += 1;
+    }
+    rules.push({
+      selectors,
+      declarations: body
+        .slice(ruleOpen + 1, ruleClose)
+        .split(';')
+        .map((declaration) => declaration.trim().replace(/\s*!important\s*$/, ''))
+        .filter(Boolean)
+    });
+    cursor = ruleClose + 1;
+  }
+  return rules;
+}
+
+function hasDecl(selector, prop, value) {
+  const prefix = `${prop}:`;
+  return printRuleSet().some(
+    (rule) =>
+      rule.selectors.includes(selector) &&
+      rule.declarations.some((declaration) => {
+        if (!declaration.startsWith(prefix)) return false;
+        const actual = declaration.slice(prefix.length).trim();
+        return value instanceof RegExp ? value.test(actual) : actual === value;
+      })
+  );
+}
+
 let dom;
 
 beforeEach(() => {
@@ -184,22 +243,23 @@ describe('US5 - clean printing and PDF', () => {
   });
 
   it('declares print rules that isolate the comprobante and keep selected explanations', () => {
-    expect(css).toMatch(/@media\s+print/);
-    expect(css).toMatch(/\.print-clean[^{]*\.topbar|\.topbar[^{]*\{[^}]*display:\s*none/s);
-    expect(css).toMatch(/\.print-clean[^{]*\.sidebar|\.sidebar[^{]*\{[^}]*display:\s*none/s);
-    expect(css).toMatch(/\.print-clean[^{]*\.nav-module|\.nav-module[^{]*\{[^}]*display:\s*none/s);
-    expect(css).toMatch(
-      /\.print-clean[^{]*#view-rrhh\s*>\s*\.view-header[^{]*\{[^}]*display:\s*none/s
-    );
-    expect(css).toMatch(
-      /\.print-clean[^{]*#rrhh-liquidaciones-view[^{]*\.rrhh-list-container[^{]*\{[^}]*display:\s*none/s
-    );
-    expect(css).toMatch(/\.print-clean[^{]*\.liq-explanation-hint[^{]*\{[^}]*display:\s*none/s);
-    expect(css).not.toMatch(/\.print-clean\s+#liq-explanation\s*\{[^}]*display:\s*none/s);
-    expect(css).toMatch(/\.print-clean[^{]*#rrhh-liquidacion-root[^{]*\{[^}]*width:\s*100%/s);
-    expect(css).toMatch(/\.print-clean[^{]*#rrhh-print-host[^{]*\{[^}]*display:\s*block/s);
-    expect(css).toMatch(/\.print-clean[^{]*\.app-shell[^{]*\{[^}]*display:\s*none/s);
-    expect(css).toMatch(/page-break-inside:\s*avoid/);
-    expect(css).toMatch(/size:\s*(letter|A4)/i);
+    expect(printRuleSet().length).toBeGreaterThan(0);
+    expect(hasDecl('.print-clean .topbar', 'display', 'none')).toBe(true);
+    expect(hasDecl('.print-clean .sidebar', 'display', 'none')).toBe(true);
+    expect(hasDecl('.print-clean .nav-module', 'display', 'none')).toBe(true);
+    expect(hasDecl('.print-clean #view-rrhh > .view-header', 'display', 'none')).toBe(true);
+    expect(
+      hasDecl('.print-clean #rrhh-liquidaciones-view > .rrhh-list-container', 'display', 'none')
+    ).toBe(true);
+    expect(
+      hasDecl('.print-clean #liq-explanation > .liq-explanation-hint', 'display', 'none')
+    ).toBe(true);
+    expect(hasDecl('.print-clean #liq-explanation', 'display', 'none')).toBe(false);
+    expect(hasDecl('.print-clean #rrhh-liquidacion-root', 'width', '100%')).toBe(true);
+    expect(hasDecl('.print-clean #rrhh-print-host', 'display', 'block')).toBe(true);
+    expect(hasDecl('.print-clean .app-shell', 'display', 'none')).toBe(true);
+    expect(hasDecl('.print-clean .liq-line', 'page-break-inside', 'avoid')).toBe(true);
+    expect(hasDecl('.print-clean .liq-meta-block', 'page-break-inside', 'avoid')).toBe(true);
+    expect(hasDecl('@page', 'size', /^(letter|A4)/i)).toBe(true);
   });
 });
