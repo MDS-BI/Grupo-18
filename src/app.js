@@ -1,4 +1,5 @@
 import { loadModuleConfig, setActiveConfig, getConfig } from './module-config.js';
+import { applyTheme } from './components/shell.js';
 import { validateDemoCredentials } from './rrhh/seguridad/auth.js';
 import {
   completeLoginSession,
@@ -334,6 +335,7 @@ export async function initApp(result, _options = {}) {
   const normalized = result || (await loadModuleConfig());
   setActiveConfig(normalized.config || null);
   modelConfig = getConfig();
+  applyTheme(modelConfig);
   ensureSeedOnFirstBoot();
   bindEvents();
   showConfigErrors(normalized.errors);

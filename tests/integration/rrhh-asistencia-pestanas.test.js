@@ -31,6 +31,18 @@ describe('Rótulo Asistencia y pestañas del Trabajador', () => {
     expect(html).toMatch(/data-rrhh-tab="novedades"[^>]*>Asistencia<\/button>/);
   });
 
+  it('vincula pestañas y paneles con aria-controls y aria-labelledby', () => {
+    const html = readFileSync(`${rootDir}index.html`, 'utf8');
+    const doc = new JSDOM(html).window.document;
+    for (const name of ['resumen', 'novedades', 'liquidaciones', 'auditoria']) {
+      const tab = doc.querySelector(`[data-rrhh-tab="${name}"]`);
+      const panel = doc.getElementById(`rrhh-panel-${name}`);
+      expect(tab.id).toBe(`rrhh-tab-${name}`);
+      expect(tab.getAttribute('aria-controls')).toBe(panel.id);
+      expect(panel.getAttribute('aria-labelledby')).toBe(tab.id);
+    }
+  });
+
   it('muestra solo Resumen y Liquidaciones al Trabajador', () => {
     const dom = makeDom();
     const doc = dom.window.document;
@@ -43,6 +55,11 @@ describe('Rótulo Asistencia y pestañas del Trabajador', () => {
       .filter((tab) => !tab.hidden)
       .map((tab) => tab.dataset.rrhhTab);
     expect(visible).toEqual(['resumen', 'liquidaciones']);
+    const liquidacionesTab = doc.querySelector('[data-rrhh-tab="liquidaciones"]');
+    expect(liquidacionesTab.getAttribute('aria-controls')).toBe('rrhh-panel-liquidaciones');
+    expect(doc.getElementById('rrhh-panel-liquidaciones').getAttribute('aria-labelledby')).toBe(
+      liquidacionesTab.id
+    );
     workspace.dispose();
     dom.window.close();
   });

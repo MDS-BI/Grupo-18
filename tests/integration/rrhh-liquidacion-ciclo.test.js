@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { addEntity } from '../../src/storage.js';
+import { createDemoLiquidacion } from '../../src/rrhh/utils/liquidacion-data.js';
 import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 import { renderPlanillaView } from '../../src/rrhh/views/planilla.js';
 import { RrhhWorkspace } from '../../src/rrhh/views/workspace.js';
@@ -12,7 +15,8 @@ import {
   getLiquidacion,
   listLiquidacionesPeriodo,
   loadLiquidacion,
-  pagarLiquidacion
+  pagarLiquidacion,
+  saveLiquidacion
 } from '../../src/rrhh/utils/liquidacion-service.js';
 import { abrirPeriodo } from '../../src/rrhh/utils/periodos-service.js';
 import { renderLiquidacionesView } from '../../src/rrhh/views/liquidaciones.js';
@@ -247,5 +251,62 @@ describe('UI de cálculo de planilla', () => {
     } finally {
       workspace.dispose();
     }
+  });
+
+  it('usa grilla de 5 columnas y paginador en Planilla', () => {
+    const css = readFileSync(
+      fileURLToPath(new URL('../../src/styles.css', import.meta.url)),
+      'utf8'
+    );
+    expect(css).toMatch(/\.rrhh-table-cols-5\s+\.rrhh-table-row\s*\{[^}]*grid-template-columns:/s);
+    setupPlanillaData();
+    renderPlanillaView(root, { doc: document, viewer: analista });
+    setValue('planilla-periodo', '2026-09');
+    click(document.getElementById('planilla-calcular'));
+
+    expect(
+      document.getElementById('planilla-resultados').classList.contains('rrhh-table-cols-5')
+    ).toBe(true);
+    const nav = document.getElementById('planilla-pagination');
+    expect(nav.querySelector('.rrhh-pagination-status').textContent).toMatch(
+      /^Página 1 de 1 · \d+ registro\(s\)$/
+    );
+  });
+
+  it('pagina Liquidaciones a 25 y conserva el foco al paginar y filtrar', () => {
+    const demo = createDemoLiquidacion();
+    for (let index = 0; index < 30; index += 1) {
+      saveLiquidacion({
+        ...demo,
+        id: `liq-pag-${index}`,
+        numero: `LIQ-PAG-${index}`,
+        trabajador: {
+          ...demo.trabajador,
+          id: `trab-pag-${index}`,
+          nombre: `Trabajador ${index}`
+        },
+        periodo: { ...demo.periodo, id: '2026-09', periodo: '2026-09' }
+      });
+    }
+    renderLiquidacionesView(root, { doc: document, viewer: admin });
+
+    const nav = document.getElementById('liquidaciones-pagination');
+    expect(nav.querySelector('.rrhh-pagination-status').textContent).toBe(
+      'Página 1 de 2 · 30 registro(s)'
+    );
+    expect(document.querySelectorAll('#liquidaciones-list [data-liquidacion-id]')).toHaveLength(25);
+
+    const next = [...nav.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Siguiente'
+    );
+    next.focus();
+    next.click();
+    expect(document.querySelectorAll('#liquidaciones-list [data-liquidacion-id]')).toHaveLength(5);
+    expect(nav.contains(document.activeElement)).toBe(true);
+
+    const filter = document.getElementById('liquidaciones-periodo');
+    filter.focus();
+    setValue('liquidaciones-periodo', '');
+    expect(document.activeElement.id).toBe('liquidaciones-periodo');
   });
 });

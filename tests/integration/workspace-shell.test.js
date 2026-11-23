@@ -39,4 +39,12 @@ describe('RRHH-only workspace shell', () => {
     expect(document.getElementById('view-rrhh').hidden).toBe(true);
     expect(document.getElementById('rrhh-sidebar')).toBeNull();
   });
+
+  it('aplica el acento configurado sin renderizar el shell completo', async () => {
+    const originalTitle = document.title;
+    await bootWith({ theme: { accentColor: '#123456' } });
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#123456');
+    expect(document.getElementById('logo-mark').textContent).toBe('');
+    expect(document.title).toBe(originalTitle);
+  });
 });

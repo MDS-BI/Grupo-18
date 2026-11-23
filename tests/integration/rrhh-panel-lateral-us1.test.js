@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { addEntity } from '../../src/storage.js';
 import { readFileSync } from 'node:fs';
@@ -117,6 +117,41 @@ describe('Panel lateral de formularios de alta (FR-116)', () => {
     expect(feedback.textContent).toMatch(/registrado/i);
     expect(qs('contratos-form-drawer').hidden).toBe(false);
     expect(qs('contrato-entityId').value).toBe('');
+    vista.dispose();
+  });
+
+  it('confina el foco dentro del drawer modal', () => {
+    const vista = renderTrabajadoresView(root, { doc: document, viewer: admin });
+    qs('trabajadores-registrar').click();
+    const drawer = qs('trabajadores-form-drawer');
+    const focusables = [...drawer.querySelectorAll('button, input, select, textarea')].filter(
+      (node) => !node.disabled && !node.hidden && !node.closest('[hidden]')
+    );
+    expect(document.activeElement).toBe(drawer.querySelector('.rrhh-drawer-header button'));
+    const last = focusables[focusables.length - 1];
+    last.focus();
+    last.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    expect(document.activeElement).toBe(focusables[0]);
+    vista.dispose();
+  });
+
+  it('solo pide descartar cambios cuando hubo una edición real', () => {
+    dom.window.confirm = vi.fn(() => false);
+    const vista = renderTrabajadoresView(root, { doc: document, viewer: admin });
+    const drawer = qs('trabajadores-form-drawer');
+    const close = () => drawer.querySelector('.rrhh-drawer-header button').click();
+
+    qs('trabajadores-registrar').click();
+    qs('trabajador-name').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    close();
+    expect(dom.window.confirm).not.toHaveBeenCalled();
+    expect(drawer.hidden).toBe(true);
+
+    qs('trabajadores-registrar').click();
+    setValue('trabajador-name', 'Cambio real');
+    close();
+    expect(dom.window.confirm).toHaveBeenCalledWith('Descartar los cambios sin guardar?');
+    expect(drawer.hidden).toBe(false);
     vista.dispose();
   });
 });

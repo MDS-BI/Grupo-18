@@ -43,17 +43,44 @@ export function createFormPanel(
 
   let lastFocused = null;
   let dirty = false;
+  let baseline = '';
+
+  function formSnapshot() {
+    return [...content.querySelectorAll('form')]
+      .map((form) =>
+        [...form.querySelectorAll('input, select, textarea')]
+          .filter((field) => !field.disabled && field.type !== 'hidden')
+          .map((field) => {
+            const key = field.name || field.id || field.type;
+            const value =
+              field.type === 'checkbox' || field.type === 'radio'
+                ? field.checked
+                  ? String(field.value || 'on')
+                  : ''
+                : String(field.value || '');
+            return `${key}:${field.type}:${value.trim()}`;
+          })
+          .join('&')
+      )
+      .join('|');
+  }
 
   function hasUnsavedChanges() {
-    if (!dirty) return false;
-    const forms = content.querySelectorAll('form');
-    return [...forms].some((form) => {
-      const values = new FormData(form);
-      for (const [_key, value] of values.entries()) {
-        if (String(value || '').trim() !== '') return true;
-      }
-      return false;
-    });
+    return dirty && formSnapshot() !== baseline;
+  }
+
+  function focusableElements() {
+    return [
+      ...panel.querySelectorAll('button, [href], input, select, textarea, [tabindex]')
+    ].filter(
+      (node) =>
+        !node.disabled &&
+        !node.hidden &&
+        node.type !== 'hidden' &&
+        node.getAttribute('tabindex') !== '-1' &&
+        node.getAttribute('aria-hidden') !== 'true' &&
+        !node.closest('[hidden]')
+    );
   }
 
   function close({ force = false } = {}) {
@@ -69,6 +96,7 @@ export function createFormPanel(
     }
     overlay.hidden = true;
     dirty = false;
+    baseline = formSnapshot();
     lastFocused?.focus?.();
     onClose?.();
     return true;
@@ -76,12 +104,15 @@ export function createFormPanel(
 
   function open() {
     lastFocused = documentRef.activeElement;
+    baseline = formSnapshot();
+    dirty = false;
     overlay.hidden = false;
     closeButton.focus?.();
   }
 
   function markSaved() {
     dirty = false;
+    baseline = formSnapshot();
   }
 
   closeButton.addEventListener('click', () => close());
@@ -89,13 +120,31 @@ export function createFormPanel(
     if (event.target === overlay) close();
   });
   overlay.addEventListener('input', () => {
-    dirty = true;
+    if (formSnapshot() !== baseline) dirty = true;
   });
   overlay.addEventListener('change', () => {
-    dirty = true;
+    if (formSnapshot() !== baseline) dirty = true;
   });
   overlay.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') close();
+    if (event.key === 'Escape') {
+      close();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusables = focusableElements();
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (!panel.contains(documentRef.activeElement)) {
+      event.preventDefault();
+      first.focus?.();
+    } else if (event.shiftKey && documentRef.activeElement === first) {
+      event.preventDefault();
+      last.focus?.();
+    } else if (!event.shiftKey && documentRef.activeElement === last) {
+      event.preventDefault();
+      first.focus?.();
+    }
   });
 
   return {

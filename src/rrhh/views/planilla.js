@@ -8,6 +8,7 @@ import { getPeriodo, isPeriodoCerrado, listPeriodos } from '../utils/periodos-se
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
 import { can } from '../seguridad/roles.js';
 import { renderCalculoResumen } from '../components/calculo-resumen.js';
+import { createPagination } from '../components/pagination.js';
 import { renderLiquidacion } from './liquidacion.js';
 import {
   button,
@@ -128,6 +129,18 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
   let selectedRow = null;
   let detailNode = null;
   let detailController = null;
+  let currentResult = null;
+
+  const paginationHost = el(documentRef, 'div', 'rrhh-pagination-host');
+  container.appendChild(paginationHost);
+  const pagination = createPagination(documentRef, {
+    id: 'planilla-pagination',
+    onChange: () => {
+      if (currentResult) renderResults(currentResult);
+    }
+  });
+  pagination.element.hidden = true;
+  paginationHost.appendChild(pagination.element);
 
   function renderEligibility() {
     const periodo = getPeriodo(selected);
@@ -188,8 +201,11 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
     detailController = null;
     detailNode = null;
     selectedRow = null;
+    currentResult = result;
     resultsContainer.textContent = '';
-    const list = el(documentRef, 'div', 'rrhh-table');
+    pagination.render(result.liquidaciones.length);
+    pagination.element.hidden = result.liquidaciones.length === 0;
+    const list = el(documentRef, 'div', 'rrhh-table rrhh-table-cols-5');
     list.id = 'planilla-resultados';
     list.setAttribute('role', 'table');
     list.setAttribute('aria-label', 'Liquidaciones calculadas en el período');
@@ -201,7 +217,7 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
       head.appendChild(cell);
     }
     list.appendChild(head);
-    for (const liquidacion of result.liquidaciones) {
+    for (const liquidacion of pagination.slice(result.liquidaciones)) {
       const row = el(documentRef, 'div', 'rrhh-table-row');
       row.setAttribute('role', 'row');
       row.tabIndex = 0;
@@ -273,6 +289,7 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
         resumen: result.resumen,
         periodo: result.periodo
       });
+      pagination.reset();
       renderResults(result);
       renderEligibility();
       const exclusion = result.trabajadoresExcluidos.length
@@ -294,6 +311,9 @@ export function renderPlanillaView(root, { doc, config, viewer, onNavigate } = {
     hideFeedback(messages);
     summaryContainer.textContent = '';
     resultsContainer.textContent = '';
+    pagination.reset();
+    pagination.element.hidden = true;
+    currentResult = null;
     navigateButton.hidden = true;
     renderEligibility();
   });

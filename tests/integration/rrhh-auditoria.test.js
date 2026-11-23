@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { addEntity } from '../../src/storage.js';
 import { aprobarNovedad, crearNovedad } from '../../src/rrhh/utils/novedades-service.js';
 import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
@@ -16,7 +18,8 @@ import {
   editarAuditoria,
   eliminarAuditoria,
   listAuditoria,
-  readAuditoria
+  readAuditoria,
+  registrarAuditoria
 } from '../../src/rrhh/seguridad/auditoria.js';
 import { setRole } from '../../src/rrhh/seguridad/session.js';
 import { renderAuditoriaView } from '../../src/rrhh/views/auditoria.js';
@@ -244,5 +247,70 @@ describe('US6 - automatic audit of sensitive consultations and changes', () => {
     });
     expect(document.getElementById('auditoria-access-denied')).not.toBeNull();
     expect(document.getElementById('auditoria-list')).toBeNull();
+  });
+
+  it('pagina la bitácora en 25 registros y usa la grilla de 6 columnas', () => {
+    const css = readFileSync(
+      fileURLToPath(new URL('../../src/styles.css', import.meta.url)),
+      'utf8'
+    );
+    expect(css).toMatch(/\.rrhh-table-cols-6\s+\.rrhh-table-row\s*\{[^}]*grid-template-columns:/s);
+    localStorage.removeItem(AUDITORIA_KEY);
+    for (let index = 0; index < 30; index += 1) {
+      registrarAuditoria({
+        accion: 'crear',
+        tabla: 'liquidaciones',
+        registroId: `liq-${index}`,
+        motivo: 'Carga de prueba',
+        actor: `usuario-${index}`,
+        rol: 'analista'
+      });
+    }
+    renderAuditoriaView(root, {
+      doc: document,
+      viewer: { role: 'auditor', usuario: 'Auditora Interna' }
+    });
+
+    const nav = document.getElementById('auditoria-pagination');
+    expect(nav.querySelector('.rrhh-pagination-status').textContent).toBe(
+      'Página 1 de 2 · 30 registro(s)'
+    );
+    expect(document.getElementById('auditoria-list').classList.contains('rrhh-table-cols-6')).toBe(
+      true
+    );
+    expect(
+      document.querySelectorAll('#auditoria-list .rrhh-table-row:not(.rrhh-table-head)')
+    ).toHaveLength(25);
+
+    const next = [...nav.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Siguiente'
+    );
+    next.click();
+    expect(
+      document.querySelectorAll('#auditoria-list .rrhh-table-row:not(.rrhh-table-head)')
+    ).toHaveLength(5);
+  });
+
+  it('muestra la fecha y hora de auditoría en hora local', () => {
+    localStorage.removeItem(AUDITORIA_KEY);
+    const fecha = '2026-09-01T10:00:00.000Z';
+    registrarAuditoria({
+      accion: 'crear',
+      tabla: 'liquidaciones',
+      registroId: 'liq-fecha',
+      motivo: 'Prueba de zona horaria',
+      fecha,
+      actor: 'usuario-prueba',
+      rol: 'analista'
+    });
+    renderAuditoriaView(root, {
+      doc: document,
+      viewer: { role: 'auditor', usuario: 'Auditora Interna' }
+    });
+
+    const cell = document.querySelector(
+      '#auditoria-list .rrhh-table-row:not(.rrhh-table-head) .rrhh-table-cell'
+    );
+    expect(cell.textContent).toBe(new Date(fecha).toLocaleString('es-CL'));
   });
 });

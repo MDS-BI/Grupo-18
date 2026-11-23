@@ -48,14 +48,30 @@ export function createPagination(
   function render() {
     const pages = pageCount();
     if (page > pages) page = pages;
+    const active = documentRef.activeElement;
+    const focusedLabel = element.contains(active) ? active.textContent : null;
     element.textContent = '';
-    element.appendChild(makeButton('Anterior', page <= 1, () => go(page - 1)));
+    const previous = makeButton('Anterior', page <= 1, () => go(page - 1));
     const status = documentRef.createElement('span');
     status.className = 'rrhh-pagination-status';
     status.setAttribute('aria-live', 'polite');
     status.textContent = `Página ${page} de ${pages} · ${total} registro(s)`;
+    const next = makeButton('Siguiente', page >= pages, () => go(page + 1));
+    element.appendChild(previous);
     element.appendChild(status);
-    element.appendChild(makeButton('Siguiente', page >= pages, () => go(page + 1)));
+    element.appendChild(next);
+    const focusTarget = focusedLabel
+      ? focusedLabel === 'Anterior' && !previous.disabled
+        ? previous
+        : focusedLabel === 'Siguiente' && !next.disabled
+          ? next
+          : !previous.disabled
+            ? previous
+            : !next.disabled
+              ? next
+              : null
+      : null;
+    focusTarget?.focus?.();
   }
 
   render();

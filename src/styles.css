@@ -1182,6 +1182,14 @@ table.rrhh-resumen-table tbody tr:last-child td {
   background: var(--surface);
 }
 
+.rrhh-table-cols-5 .rrhh-table-row {
+  grid-template-columns: 1.4fr 0.8fr 0.9fr 0.9fr 1.2fr;
+}
+
+.rrhh-table-cols-6 .rrhh-table-row {
+  grid-template-columns: 1.3fr 0.9fr 0.7fr 1fr 1.1fr 1.4fr;
+}
+
 .rrhh-table-head {
   font-weight: 700;
   font-size: 0.8rem;
@@ -1703,6 +1711,7 @@ table.rrhh-resumen-table tbody tr:last-child td {
 }
 
 .rrhh-planilla-detalle {
+  grid-column: 1 / -1;
   margin: 6px 0 12px;
   padding: 8px 12px;
   border-left: 3px solid var(--color-focus, #2563eb);
@@ -1720,6 +1729,10 @@ table.rrhh-resumen-table tbody tr:last-child td {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 10px;
+}
+
+.rrhh-pagination[hidden] {
+  display: none;
 }
 
 .rrhh-pagination-status {

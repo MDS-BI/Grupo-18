@@ -3,6 +3,7 @@
 import { listAuditoria } from '../seguridad/auditoria.js';
 import { can } from '../seguridad/roles.js';
 import { badge, el, select } from '../components/dom.js';
+import { createPagination } from '../components/pagination.js';
 
 const ACCION_LABELS = {
   ver_sensible: 'Consulta sensible',
@@ -26,7 +27,7 @@ function formatDateTime(value) {
   if (!value) return '—';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleString('es-CL', { timeZone: 'UTC' });
+  return date.toLocaleString('es-CL');
 }
 
 export function renderAuditoriaView(root, { doc, viewer } = {}) {
@@ -80,6 +81,7 @@ export function renderAuditoriaView(root, { doc, viewer } = {}) {
   });
   filter.addEventListener('change', () => {
     selectedTabla = filter.value;
+    pagination.reset();
     render();
   });
   toolbar.appendChild(filter);
@@ -87,17 +89,27 @@ export function renderAuditoriaView(root, { doc, viewer } = {}) {
 
   const listContainer = el(documentRef, 'div', 'rrhh-list-container');
   container.appendChild(listContainer);
+  const paginationHost = el(documentRef, 'div', 'rrhh-pagination-host');
+  container.appendChild(paginationHost);
+  const pagination = createPagination(documentRef, {
+    id: 'auditoria-pagination',
+    onChange: render
+  });
+  pagination.element.hidden = true;
+  paginationHost.appendChild(pagination.element);
 
   function render() {
     const rows = listAuditoria(selectedTabla ? { tabla: selectedTabla } : {}).reverse();
     listContainer.textContent = '';
+    pagination.render(rows.length);
+    pagination.element.hidden = rows.length === 0;
     if (rows.length === 0) {
       const empty = el(documentRef, 'div', 'empty-state', 'Todavía no hay registros de auditoría.');
       empty.id = 'auditoria-empty';
       listContainer.appendChild(empty);
       return;
     }
-    const table = el(documentRef, 'div', 'rrhh-table');
+    const table = el(documentRef, 'div', 'rrhh-table rrhh-table-cols-6');
     table.id = 'auditoria-list';
     table.setAttribute('role', 'table');
     table.setAttribute('aria-label', 'Bitácora de auditoría');
@@ -110,7 +122,7 @@ export function renderAuditoriaView(root, { doc, viewer } = {}) {
     }
     table.appendChild(head);
 
-    for (const entry of rows) {
+    for (const entry of pagination.slice(rows)) {
       const row = el(documentRef, 'div', 'rrhh-table-row');
       row.setAttribute('role', 'row');
       row.dataset.auditoriaId = entry.id;

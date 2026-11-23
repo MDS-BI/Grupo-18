@@ -9,6 +9,7 @@ import { ESTADO_LIQUIDACION_LABELS, estadosSiguientes } from '../utils/liquidaci
 import { isPeriodoCerrado } from '../utils/periodos-service.js';
 import { can, canViewLiquidacion } from '../seguridad/roles.js';
 import { registrarAuditoria } from '../seguridad/auditoria.js';
+import { createPagination } from '../components/pagination.js';
 import { renderLiquidacion } from './liquidacion.js';
 import {
   badge,
@@ -95,6 +96,14 @@ export function renderLiquidacionesView(
 
   const listContainer = el(documentRef, 'div', 'rrhh-list-container');
   container.appendChild(listContainer);
+  const paginationHost = el(documentRef, 'div', 'rrhh-pagination-host');
+  container.appendChild(paginationHost);
+  const pagination = createPagination(documentRef, {
+    id: 'liquidaciones-pagination',
+    onChange: () => refresh()
+  });
+  pagination.element.hidden = true;
+  paginationHost.appendChild(pagination.element);
 
   const liquidationRoot = el(documentRef, 'div');
   liquidationRoot.id = 'rrhh-liquidacion-root';
@@ -136,6 +145,7 @@ export function renderLiquidacionesView(
     const periods = [...new Set(all.map(periodoKey).filter(Boolean))].sort((a, b) =>
       b.localeCompare(a)
     );
+    const hadFocus = documentRef.activeElement?.id === 'liquidaciones-periodo';
     filterContainer.textContent = '';
     const filter = select(documentRef, {
       id: 'liquidaciones-periodo',
@@ -151,9 +161,11 @@ export function renderLiquidacionesView(
     filter.addEventListener('change', () => {
       selectedPeriod = filter.value;
       selectedId = null;
+      pagination.reset();
       refresh();
     });
     filterContainer.appendChild(filter);
+    if (hadFocus) filter.focus?.();
     return rows;
   }
 
@@ -168,6 +180,8 @@ export function renderLiquidacionesView(
   function renderList(rows) {
     if (liquidationRoot.parentNode) liquidationRoot.parentNode.removeChild(liquidationRoot);
     listContainer.textContent = '';
+    pagination.render(rows.length);
+    pagination.element.hidden = rows.length === 0;
     if (rows.length === 0) {
       const empty = el(
         documentRef,
@@ -182,7 +196,7 @@ export function renderLiquidacionesView(
     const list = el(documentRef, 'div', 'rrhh-list');
     list.id = 'liquidaciones-list';
     list.setAttribute('role', 'list');
-    for (const liquidacion of rows) {
+    for (const liquidacion of pagination.slice(rows)) {
       const item = el(documentRef, 'article', 'rrhh-list-item');
       item.setAttribute('role', 'listitem');
       item.dataset.liquidacionId = liquidacion.id;

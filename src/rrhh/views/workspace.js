@@ -63,7 +63,12 @@ export class RrhhWorkspace {
     for (const tab of this.tabs) {
       const name = tab.dataset.rrhhTab;
       const panel = this.doc.getElementById(`rrhh-panel-${name}`);
-      if (panel) this.panels.set(name, panel);
+      if (!panel) continue;
+      if (!panel.id) panel.id = `rrhh-panel-${name}`;
+      if (!tab.id) tab.id = `rrhh-tab-${name}`;
+      tab.setAttribute('aria-controls', panel.id);
+      panel.setAttribute('aria-labelledby', tab.id);
+      this.panels.set(name, panel);
     }
     // hide panels not allowed
     for (const t of this.allTabs) {

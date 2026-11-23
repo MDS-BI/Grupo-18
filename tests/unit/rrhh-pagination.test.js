@@ -26,4 +26,28 @@ describe('Paginación de 25 filas (FR-108)', () => {
     expect(changes).toEqual([2]);
     expect(pagination.slice(Array.from({ length: 30 }, (_, i) => i))).toHaveLength(5);
   });
+
+  it('conserva el foco y los textos accesibles al paginar', () => {
+    const dom = new JSDOM('<!DOCTYPE html><body></body>', { url: 'http://localhost/' });
+    const pagination = createPagination(dom.window.document);
+    dom.window.document.body.appendChild(pagination.element);
+    pagination.render(30);
+    const nav = pagination.element;
+    expect(nav.getAttribute('aria-label')).toBe('Paginación de resultados');
+    expect(nav.querySelector('.rrhh-pagination-status').textContent).toBe(
+      'Página 1 de 2 · 30 registro(s)'
+    );
+    const next = [...nav.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Siguiente'
+    );
+    next.focus();
+    next.click();
+    expect(nav.querySelector('.rrhh-pagination-status').textContent).toBe(
+      'Página 2 de 2 · 30 registro(s)'
+    );
+    const focused = dom.window.document.activeElement;
+    expect(nav.contains(focused)).toBe(true);
+    expect(focused.textContent).toBe('Anterior');
+    expect(focused.disabled).toBe(false);
+  });
 });
