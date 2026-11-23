@@ -15,9 +15,70 @@ import { renderPeriodosView } from './periodos.js';
 import { renderPlanillaView } from './planilla.js';
 import { renderLiquidacionesView } from './liquidaciones.js';
 import { renderAuditoriaView } from './auditoria.js';
+import { can } from '../seguridad/roles.js';
 import { renderVacacionesView } from './vacaciones.js';
 import { renderCargasView } from './cargas.js';
 import { renderReportesView } from './reportes.js';
+
+/**
+ * "Planilla y liquidaciones" is a single sheet: the payroll calculation on top
+ * (only for roles that can calculate) and the liquidations below. The former
+ * `planilla` tab name is kept as an alias of `liquidaciones`.
+ */
+const TAB_ALIASES = { planilla: 'liquidaciones' };
+
+function renderPlanillaYLiquidaciones(panel, context) {
+  const documentRef = context.doc || panel.ownerDocument;
+  const puedeCalcular = can(context.viewer?.role, 'canCalculate');
+  const planillaRoot = documentRef.createElement('div');
+  planillaRoot.id = 'rrhh-planilla-seccion';
+  planillaRoot.className = 'rrhh-sheet-section';
+  const liquidacionesRoot = documentRef.createElement('div');
+  liquidacionesRoot.id = 'rrhh-liquidaciones-seccion';
+  liquidacionesRoot.className = 'rrhh-sheet-section';
+  liquidacionesRoot.tabIndex = -1;
+
+  let planilla = null;
+  let liquidaciones = null;
+
+  function montarLiquidaciones(periodo) {
+    liquidaciones?.dispose?.();
+    liquidacionesRoot.textContent = '';
+    liquidaciones = renderLiquidacionesView(liquidacionesRoot, {
+      ...context,
+      initialPeriodo: periodo
+    });
+  }
+
+  if (puedeCalcular) {
+    panel.appendChild(planillaRoot);
+    planilla = renderPlanillaView(planillaRoot, {
+      ...context,
+      onNavigate: (tab, payload) => {
+        if (tab !== 'liquidaciones') {
+          context.onNavigate?.(tab, payload);
+          return;
+        }
+        montarLiquidaciones(payload?.periodo);
+        liquidacionesRoot.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+        liquidacionesRoot.focus?.({ preventScroll: true });
+      }
+    });
+  }
+  panel.appendChild(liquidacionesRoot);
+  montarLiquidaciones(context.initialPeriodo);
+
+  return {
+    refresh() {
+      planilla?.refresh?.();
+      liquidaciones?.refresh?.();
+    },
+    dispose() {
+      planilla?.dispose?.();
+      liquidaciones?.dispose?.();
+    }
+  };
+}
 
 export const RRHH_TABS = [
   'resumen',
@@ -26,7 +87,6 @@ export const RRHH_TABS = [
   'catalogos',
   'novedades',
   'periodos',
-  'planilla',
   'liquidaciones',
   'vacaciones',
   'cargas',
@@ -44,8 +104,7 @@ const RENDERERS = {
   catalogos: renderCatalogosView,
   novedades: renderNovedadesView,
   periodos: renderPeriodosView,
-  planilla: renderPlanillaView,
-  liquidaciones: renderLiquidacionesView,
+  liquidaciones: renderPlanillaYLiquidaciones,
   vacaciones: renderVacacionesView,
   cargas: renderCargasView,
   reportes: renderReportesView,
@@ -86,10 +145,9 @@ export class RrhhWorkspace {
       if (panel && !this.panels.has(name)) panel.hidden = true;
     }
     this.bind();
+    const requested = TAB_ALIASES[initialTab] || initialTab;
     const start =
-      RRHH_TABS.includes(initialTab) && this.panels.has(initialTab)
-        ? initialTab
-        : this.defaultTab();
+      RRHH_TABS.includes(requested) && this.panels.has(requested) ? requested : this.defaultTab();
     if (start) this.show(start);
   }
 
@@ -121,7 +179,7 @@ export class RrhhWorkspace {
         if (['administrador', 'analista', 'jefatura'].includes(role)) allowed.push(tab);
         continue;
       }
-      if (name === 'periodos' || name === 'planilla') {
+      if (name === 'periodos') {
         if (role === 'administrador' || role === 'analista') allowed.push(tab);
         continue;
       }
@@ -181,7 +239,8 @@ export class RrhhWorkspace {
     }
   }
 
-  show(name) {
+  show(requested) {
+    const name = TAB_ALIASES[requested] || requested;
     if (!name || !this.panels.has(name)) return;
     if (this.activeTab === name) {
       this.renderTab(name);
@@ -210,7 +269,8 @@ export class RrhhWorkspace {
       onRoleRequired: this.onRoleRequired,
       onLiquidationView: this.onLiquidationView,
       onNavigate: (tab, payload) => {
-        const target = this.panels.has(tab) ? tab : name;
+        const alias = TAB_ALIASES[tab] || tab;
+        const target = this.panels.has(alias) ? alias : name;
         this.pendingPayload = payload || null;
         this.show(target);
       }

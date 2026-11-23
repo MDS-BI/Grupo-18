@@ -2,6 +2,15 @@ import { contratosPorVencer, resumenContratoTrabajador } from '../utils/alertas-
 import { TIPO_CONTRATO_LABELS } from '../utils/contratos-service.js';
 import { alertasSaldoMaximo, resumenVacacionesTrabajador } from '../utils/vacaciones-service.js';
 import { avisosEdadLimite, resumenCargasTrabajador } from '../utils/cargas-service.js';
+import { SALDO_MAXIMO } from '../utils/vacaciones-service.js';
+import { metricasEquipo, metricasGenerales } from '../utils/resumen-metricas.js';
+import {
+  barrasHorizontales,
+  columnas,
+  formatoNumero,
+  kpiTile,
+  medidor
+} from '../components/graficos-resumen.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -87,6 +96,14 @@ function renderWorkerBenefits(viewer) {
         <h3>Mis vacaciones y cargas</h3>
         <p class="panel-copy">Detalle en las pestañas Vacaciones y Cargas familiares.</p>
       </div>
+      ${medidor({
+        id: 'rrhh-medidor-vacaciones',
+        titulo: 'Saldo de vacaciones',
+        valor: vacaciones.saldo.disponible,
+        maximo: SALDO_MAXIMO,
+        formato: 'dias',
+        nota: 'El saldo no puede superar 30 días hábiles acumulados.'
+      })}
       <table class="rrhh-table rrhh-resumen-table">
         <tbody>
           <tr><th scope="row">Saldo de vacaciones</th><td>${esc(dias(vacaciones.saldo.disponible))} día(s) hábil(es)</td></tr>
@@ -141,6 +158,120 @@ function renderBenefitAlerts(role) {
   `;
 }
 
+function variacionTexto(kpis) {
+  if (kpis.variacionCosto === null || !kpis.periodoAnterior) {
+    return 'Sin período anterior para comparar';
+  }
+  const signo = kpis.variacionCosto > 0 ? '▲' : kpis.variacionCosto < 0 ? '▼' : '■';
+  return `${signo} ${Math.abs(kpis.variacionCosto).toLocaleString('es-CL')} % vs. ${kpis.periodoAnterior.etiqueta}`;
+}
+
+/** KPI row and charts for administrators and payroll analysts. */
+function renderDashboardGeneral() {
+  const { kpis, series } = metricasGenerales();
+  const tiles = [
+    kpiTile({
+      id: 'kpi-trabajadores',
+      etiqueta: 'Trabajadores activos',
+      valor: formatoNumero(kpis.trabajadoresActivos),
+      detalle: `${kpis.desvinculados} desvinculado(s)`
+    }),
+    kpiTile({
+      id: 'kpi-costo',
+      etiqueta: kpis.costoUltimoPeriodo
+        ? `Costo empleador · ${kpis.costoUltimoPeriodo.etiqueta}`
+        : 'Costo empleador',
+      valor: kpis.costoUltimoPeriodo ? formatoNumero(kpis.costoUltimoPeriodo.valor, 'dinero') : '—',
+      detalle: kpis.costoUltimoPeriodo ? variacionTexto(kpis) : 'Aún no hay planillas calculadas'
+    }),
+    kpiTile({
+      id: 'kpi-contratos',
+      etiqueta: 'Contratos por vencer (30 días)',
+      valor: formatoNumero(kpis.contratosPorVencer),
+      detalle: `${kpis.contratosVencidos} vencido(s) sin terminar`,
+      tono: kpis.contratosPorVencer + kpis.contratosVencidos > 0 ? 'atencion' : ''
+    }),
+    kpiTile({
+      id: 'kpi-novedades',
+      etiqueta: 'Novedades pendientes',
+      valor: formatoNumero(kpis.novedadesPendientes),
+      detalle: 'Bloquean el cálculo de su período',
+      tono: kpis.novedadesPendientes > 0 ? 'atencion' : ''
+    }),
+    kpiTile({
+      id: 'kpi-vacaciones',
+      etiqueta: 'Vacaciones por aprobar',
+      valor: formatoNumero(kpis.vacacionesPendientes),
+      detalle: 'Solicitudes en estado Pendiente'
+    })
+  ].join('');
+  return `
+    <section class="rrhh-dashboard" id="rrhh-resumen-dashboard" aria-labelledby="rrhh-dashboard-titulo">
+      <h3 id="rrhh-dashboard-titulo">Indicadores</h3>
+      <div class="rrhh-kpi-row">${tiles}</div>
+      <div class="rrhh-chart-grid">
+        ${columnas({
+          id: 'grafico-costo-periodo',
+          titulo: 'Costo empleador por período',
+          descripcion: 'Suma del costo empleador de las liquidaciones no anuladas.',
+          datos: series.costoPorPeriodo,
+          formato: 'dinero',
+          vacioMensaje: 'Aún no hay planillas calculadas.'
+        })}
+        ${barrasHorizontales({
+          id: 'grafico-dotacion',
+          titulo: 'Trabajadores activos por departamento',
+          datos: series.dotacionPorDepartamento,
+          encabezado: 'Departamento',
+          vacioMensaje: 'No hay trabajadores activos.'
+        })}
+        ${barrasHorizontales({
+          id: 'grafico-novedades',
+          titulo: 'Novedades registradas por tipo',
+          descripcion: 'Cantidad de registros vigentes (sin rechazadas ni anuladas).',
+          datos: series.novedadesPorTipo,
+          encabezado: 'Tipo de novedad',
+          vacioMensaje: 'No hay novedades registradas.'
+        })}
+      </div>
+    </section>
+  `;
+}
+
+/** KPI row and chart for a jefatura: only its team, no money. */
+function renderDashboardEquipo(viewer) {
+  const { kpis, series } = metricasEquipo(viewer);
+  return `
+    <section class="rrhh-dashboard" id="rrhh-resumen-dashboard" aria-labelledby="rrhh-dashboard-titulo">
+      <h3 id="rrhh-dashboard-titulo">Mi equipo</h3>
+      <div class="rrhh-kpi-row">
+        ${kpiTile({ id: 'kpi-equipo', etiqueta: 'Integrantes activos', valor: formatoNumero(kpis.miembrosActivos) })}
+        ${kpiTile({
+          id: 'kpi-novedades',
+          etiqueta: 'Novedades por resolver',
+          valor: formatoNumero(kpis.novedadesPendientes),
+          tono: kpis.novedadesPendientes > 0 ? 'atencion' : ''
+        })}
+        ${kpiTile({
+          id: 'kpi-vacaciones',
+          etiqueta: 'Vacaciones por aprobar',
+          valor: formatoNumero(kpis.vacacionesPendientes),
+          tono: kpis.vacacionesPendientes > 0 ? 'atencion' : ''
+        })}
+      </div>
+      <div class="rrhh-chart-grid">
+        ${barrasHorizontales({
+          id: 'grafico-novedades',
+          titulo: 'Novedades de mi equipo por tipo',
+          datos: series.novedadesPorTipo,
+          encabezado: 'Tipo de novedad',
+          vacioMensaje: 'Tu equipo no tiene novedades registradas.'
+        })}
+      </div>
+    </section>
+  `;
+}
+
 function renderAlerts() {
   const atencion = contratosPorVencer({ dias: 30 }).slice(0, 10);
   const rows =
@@ -168,6 +299,7 @@ export function renderResumenView({ viewer } = {}) {
   if (role === 'trabajador') return renderWorkerSummary(viewer);
   if (role === 'jefatura') {
     return `
+      ${renderDashboardEquipo(viewer)}
       <section class="panel" id="rrhh-resumen-jefatura">
         <div class="panel-header">
           <h3>Resumen</h3>
@@ -176,5 +308,5 @@ export function renderResumenView({ viewer } = {}) {
       </section>
     `;
   }
-  return renderAlerts() + renderBenefitAlerts(role);
+  return renderDashboardGeneral() + renderAlerts() + renderBenefitAlerts(role);
 }

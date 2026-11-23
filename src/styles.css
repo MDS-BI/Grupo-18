@@ -1830,3 +1830,242 @@ input[type='password']::-ms-clear {
     grid-row: auto;
   }
 }
+
+/* ------------------------------------------------ resumen: KPIs y gráficos */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.rrhh-dashboard {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.rrhh-dashboard > h3 {
+  margin: 0;
+}
+
+.rrhh-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.rrhh-kpi {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.rrhh-kpi-atencion {
+  border-left: 4px solid #b45309;
+}
+
+.rrhh-kpi-label,
+.rrhh-kpi-detail {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.rrhh-kpi-value {
+  font-size: 1.75rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.rrhh-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.rrhh-chart h4 {
+  margin: 0 0 4px;
+}
+
+/* Ranked horizontal bars: name, bar and figure per row. */
+.rrhh-hbar-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.rrhh-hbar-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 34%) 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.rrhh-hbar-label {
+  color: var(--text);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.rrhh-hbar-track {
+  display: block;
+  height: 14px;
+}
+
+.rrhh-hbar,
+.rrhh-col-bar {
+  position: relative;
+  display: block;
+  background: var(--accent);
+  outline-offset: 2px;
+}
+
+.rrhh-hbar {
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+}
+
+.rrhh-hbar-value {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Columns over time: baseline at the bottom, rounded data end on top. */
+.rrhh-col-chart {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 2px;
+  align-items: end;
+  height: 180px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rrhh-col {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  min-width: 0;
+}
+
+.rrhh-col-plot {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  padding: 22px 6px 0;
+}
+
+.rrhh-col-bar {
+  width: 100%;
+  max-width: 48px;
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--accent) 45%, white);
+}
+
+.rrhh-col-bar-current {
+  background: var(--accent);
+}
+
+.rrhh-col-figure {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.rrhh-col-label {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+/* Tooltip on hover and keyboard focus. */
+.rrhh-hbar[data-tooltip]:hover::after,
+.rrhh-hbar[data-tooltip]:focus-visible::after,
+.rrhh-col-bar[data-tooltip]:hover::after,
+.rrhh-col-bar[data-tooltip]:focus-visible::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.rrhh-chart-table {
+  margin-top: 12px;
+}
+
+.rrhh-chart-table summary {
+  cursor: pointer;
+  color: var(--accent-strong);
+  font-size: 0.85rem;
+}
+
+/* Meter: one ratio against its limit. */
+.rrhh-meter {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.rrhh-meter-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.rrhh-meter-track {
+  height: 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, white);
+  overflow: hidden;
+}
+
+.rrhh-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .rrhh-hbar-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .rrhh-hbar-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

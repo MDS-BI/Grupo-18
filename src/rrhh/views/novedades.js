@@ -14,6 +14,7 @@ import { getPeriodo, isPeriodoCerrado, listPeriodos } from '../utils/periodos-se
 import { etiquetaPeriodo, parsePeriodo } from '../utils/periodos.js';
 import { renderNovedadForm } from '../components/novedad-form.js';
 import { renderNovedadList } from '../components/novedad-list.js';
+import { renderRegistroAsistencia } from '../components/registro-asistencia.js';
 import { createPagination } from '../components/pagination.js';
 import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { can } from '../seguridad/roles.js';
@@ -190,6 +191,9 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
 
   root.appendChild(container);
 
+  // Full, queryable attendance history across every period.
+  const registro = renderRegistroAsistencia(container, { doc: documentRef, viewer });
+
   function renderSummary(rows) {
     summary.textContent = '';
     const totals = summarizeRows(rows);
@@ -294,6 +298,7 @@ export function renderNovedadesView(root, { doc, viewer, initialPeriodo } = {}) 
       }
     });
     form?.setPeriodo(periodo);
+    registro?.refresh();
   }
 
   function act(operation, successMessage) {
