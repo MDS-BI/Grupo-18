@@ -19,6 +19,9 @@ export const TRABAJADORES_TABLE = 'trabajadores';
 
 export const ESTADOS_LABORALES = ['Activo', 'Desvinculado'];
 
+/** Optional, sensitive (FR-099): used only by the pay-equity report, never in lists. */
+export const GENEROS = ['Femenino', 'Masculino', 'No binario', 'Prefiere no informar'];
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const CATALOG_FIELDS = [
@@ -277,6 +280,7 @@ export function crearTrabajador(input = {}, viewer) {
       fechaIngreso: input.fechaIngreso || '',
       fechaDesvinculacion: '',
       jefeId: input.jefeId || '',
+      genero: GENEROS.includes(input.genero) ? input.genero : '',
       estadoLaboral: input.estadoLaboral || 'Activo',
       activo: true
     },
@@ -352,6 +356,9 @@ export function actualizarTrabajador(entityId, changes = {}, viewer) {
   ]) {
     if (changes[key] !== undefined) profileChanges[key] = changes[key];
   }
+  if (changes.genero !== undefined) {
+    profileChanges.genero = GENEROS.includes(changes.genero) ? changes.genero : '';
+  }
   if (profile) {
     update(TRABAJADORES_TABLE, profile.id, profileChanges);
   } else {
@@ -385,6 +392,11 @@ export function actualizarTrabajador(entityId, changes = {}, viewer) {
   });
 
   return getTrabajador(id);
+}
+
+/** Sensitive field read only by the pay-equity report and the edit form. */
+export function generoDeTrabajador(entityId) {
+  return profileFor(entityId)?.genero || '';
 }
 
 export function tieneNovedadesPendientes(entityId) {

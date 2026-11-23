@@ -19,6 +19,9 @@ export const RRHH_ROUTES = {
   periodos: 'Períodos',
   planilla: 'Planilla',
   liquidaciones: 'Liquidaciones',
+  vacaciones: 'Vacaciones',
+  cargas: 'Cargas familiares',
+  reportes: 'Reportes',
   auditoria: 'Auditoría'
 };
 

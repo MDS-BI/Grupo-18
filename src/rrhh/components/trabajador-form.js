@@ -1,6 +1,11 @@
 /** Worker file form with RUT validation and catalog selectors. */
 
-import { actualizarTrabajador, crearTrabajador } from '../utils/trabajadores-service.js';
+import {
+  GENEROS,
+  actualizarTrabajador,
+  crearTrabajador,
+  generoDeTrabajador
+} from '../utils/trabajadores-service.js';
 import { listCatalogos } from '../utils/catalogos-service.js';
 import { el, feedback, hideFeedback, input, select, showFeedback } from './dom.js';
 import { clearFieldErrors, setFieldErrors } from './feedback.js';
@@ -15,7 +20,8 @@ const WORKER_FIELD_MAP = {
   jefeId: 'trabajador-jefeId',
   cargoId: 'trabajador-cargo',
   departamentoId: 'trabajador-departamento',
-  centroCostoId: 'trabajador-centro-costo'
+  centroCostoId: 'trabajador-centro-costo',
+  genero: 'trabajador-genero'
 };
 
 function optionsFor(catalogos, tipo) {
@@ -130,6 +136,17 @@ export function renderTrabajadorForm(
   });
   fields.appendChild(wrap(documentRef, 'trabajador-centro-costo', 'Centro de costo', centroSelect));
 
+  const generoSelect = select(documentRef, {
+    id: 'trabajador-genero',
+    options: [
+      { value: '', label: 'Sin informar' },
+      ...GENEROS.map((value) => ({ value, label: value }))
+    ]
+  });
+  fields.appendChild(
+    wrap(documentRef, 'trabajador-genero', 'Género (opcional, dato sensible)', generoSelect)
+  );
+
   form.appendChild(fields);
 
   const messages = feedback(documentRef, 'trabajador-form-errors', 'field-error rrhh-form-errors');
@@ -178,7 +195,8 @@ export function renderTrabajadorForm(
       jefeId: jefeSelect.value,
       cargoId: cargoSelect.value,
       departamentoId: departamentoSelect.value,
-      centroCostoId: centroSelect.value
+      centroCostoId: centroSelect.value,
+      genero: generoSelect.value
     };
   }
 
@@ -195,6 +213,7 @@ export function renderTrabajadorForm(
     cargoSelect.value = trabajador.cargoId || '';
     departamentoSelect.value = trabajador.departamentoId || '';
     centroSelect.value = trabajador.centroCostoId || '';
+    generoSelect.value = trabajador.entityId ? generoDeTrabajador(trabajador.entityId) : '';
   }
 
   function reset() {

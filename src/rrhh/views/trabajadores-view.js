@@ -11,6 +11,8 @@ import { renderTrabajadorForm } from '../components/trabajador-form.js';
 import { clearFieldErrors, setFieldErrors } from '../components/feedback.js';
 import { createFormPanel } from '../components/form-panel.js';
 import { createPagination } from '../components/pagination.js';
+import { puedeVerVacaciones, resumenVacacionesTrabajador } from '../utils/vacaciones-service.js';
+import { puedeVerCargas, resumenCargasTrabajador } from '../utils/cargas-service.js';
 import {
   badge,
   button,
@@ -37,7 +39,7 @@ function statusTone(estado) {
   return estado === 'Activo' ? 'ok' : 'neutral';
 }
 
-export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {}) {
+export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired, onNavigate } = {}) {
   const documentRef = doc || root.ownerDocument;
 
   if (!puedeVerTrabajadores(viewer)) {
@@ -186,6 +188,79 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
 
   layout.appendChild(listPanel);
   container.appendChild(layout);
+
+  // FR-112: vacation and dependants summary of a worker, linking to each screen.
+  const resumenPanel = el(documentRef, 'section', 'panel rrhh-trabajador-resumen');
+  resumenPanel.id = 'trabajador-resumen';
+  resumenPanel.setAttribute('aria-live', 'polite');
+  resumenPanel.hidden = true;
+  container.appendChild(resumenPanel);
+
+  function dias(value) {
+    return Number(value || 0).toLocaleString('es-CL', { maximumFractionDigits: 2 });
+  }
+
+  function mostrarResumen(row) {
+    resumenPanel.textContent = '';
+    const heading = el(documentRef, 'h4', null, `Vacaciones y cargas de ${row.name}`);
+    heading.id = 'trabajador-resumen-title';
+    resumenPanel.setAttribute('aria-labelledby', heading.id);
+    resumenPanel.appendChild(heading);
+    const table = el(documentRef, 'table', 'rrhh-table rrhh-resumen-table');
+    const tbodyResumen = el(documentRef, 'tbody');
+    const addRow = (label, value) => {
+      const tr = el(documentRef, 'tr');
+      const th = el(documentRef, 'th', null, label);
+      th.scope = 'row';
+      tr.appendChild(th);
+      tr.appendChild(el(documentRef, 'td', null, value));
+      tbodyResumen.appendChild(tr);
+    };
+    const actions = el(documentRef, 'div', 'form-actions');
+    if (puedeVerVacaciones(viewer)) {
+      const vacaciones = resumenVacacionesTrabajador(row.entityId);
+      if (vacaciones) {
+        addRow('Saldo de vacaciones', `${dias(vacaciones.saldo.disponible)} día(s) hábil(es)`);
+        addRow(
+          'Próximas vacaciones',
+          vacaciones.proxima
+            ? `${vacaciones.proxima.fechaInicio} a ${vacaciones.proxima.fechaFin} (${vacaciones.proxima.estado})`
+            : 'Sin solicitudes próximas'
+        );
+      }
+      actions.appendChild(
+        button(documentRef, {
+          id: 'trabajador-ir-vacaciones',
+          label: 'Ver vacaciones',
+          className: 'button button-secondary button-small',
+          onClick: () => onNavigate?.('vacaciones', { entityId: row.entityId })
+        })
+      );
+    }
+    if (puedeVerCargas(viewer)) {
+      const cargas = resumenCargasTrabajador(row.entityId);
+      addRow('Cargas familiares vigentes', String(cargas.vigentes));
+      if (cargas.proximoAviso) {
+        addRow(
+          'Próximo aviso de edad límite',
+          `${cargas.proximoAviso.carga}: deja de ser carga el ${cargas.proximoAviso.fechaFinVigencia}`
+        );
+      }
+      actions.appendChild(
+        button(documentRef, {
+          id: 'trabajador-ir-cargas',
+          label: 'Ver cargas familiares',
+          className: 'button button-secondary button-small',
+          onClick: () => onNavigate?.('cargas', { entityId: row.entityId })
+        })
+      );
+    }
+    table.appendChild(tbodyResumen);
+    resumenPanel.appendChild(table);
+    resumenPanel.appendChild(actions);
+    resumenPanel.hidden = false;
+    resumenPanel.scrollIntoView?.({ block: 'nearest' });
+  }
   root.appendChild(container);
 
   const form = canManage
@@ -340,6 +415,16 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired } = {
             label: 'Ver',
             className: 'button button-secondary button-small',
             onClick: () => onRoleRequired?.()
+          })
+        );
+      }
+      if (puedeVerVacaciones(viewer) || puedeVerCargas(viewer)) {
+        actions.appendChild(
+          button(documentRef, {
+            label: 'Vacaciones y cargas',
+            className: 'button button-ghost button-small',
+            ariaLabel: `Ver vacaciones y cargas de ${row.name}`,
+            onClick: () => mostrarResumen(row)
           })
         );
       }

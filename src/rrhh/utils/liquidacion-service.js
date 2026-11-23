@@ -14,8 +14,9 @@ import {
 import { estadoElegibilidad, novedadesAprobadas } from './novedades-service.js';
 import { contratosEnPeriodo, diasContratoEnPeriodo } from './contratos-service.js';
 import { etiquetaPeriodo, parsePeriodo, rangoPeriodo } from './periodos.js';
-import { parametrosVigentes } from './parametros-service.js';
+import { parametrosVigentes, tramosAsignacionVigentes } from './parametros-service.js';
 import { resumenCostoEmpleador } from './costo-empleador.js';
+import { cargasParaAsignacion } from './cargas-service.js';
 
 export const STORAGE_KEY = 'erp_rrhh:liquidaciones';
 export const LIQUIDACIONES_TABLE = 'liquidaciones';
@@ -261,6 +262,16 @@ export function calcularPeriodo({
 
   const fechaFin = normalized.fechaFin || rangoPeriodo(normalized.id).fechaFin;
   const legalParams = parametros || parametrosVigentes(fechaFin);
+  // The family-allowance brackets are a mandatory part of the month's parameters (US8/US12).
+  const tramosAsignacion = tramosAsignacionVigentes(fechaFin);
+  if (tramosAsignacion.length === 0) {
+    const error = new Error(
+      `No se puede calcular la planilla: faltan los tramos de asignación familiar vigentes para ${normalized.etiqueta || normalized.id}.`
+    );
+    error.code = 'PARAMETROS_INCOMPLETOS';
+    error.errors = ['Faltan los tramos de asignación familiar del período.'];
+    throw error;
+  }
   const eligibility = estadoElegibilidad(normalized.id);
   if (eligibility.pendientes > 0) {
     const error = new Error(
@@ -323,7 +334,11 @@ export function calcularPeriodo({
       novedades: workerNovedades,
       parametros: legalParams,
       periodo: normalized,
-      diasTrabajados
+      diasTrabajados,
+      tramosAsignacion,
+      cargasFamiliares: trabajador.entityId
+        ? cargasParaAsignacion(trabajador.entityId, normalized)
+        : 0
     });
     const liquidacion = construyeLiquidacion(resultado, trabajador, contrato, normalized, viewer);
     liquidacion.advertencias = [...new Set([...advertencias, ...resultado.advertencias])];

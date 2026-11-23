@@ -16,11 +16,12 @@ export function renderGraficoReporte(
   section.appendChild(heading);
   const description = documentRef.createElement('p');
   description.className = 'panel-copy';
-  description.textContent = datos.map((fila) => `${fila.etiqueta}: ${fila.valor}`).join('; ');
+  const texto = (fila) => fila.texto ?? String(fila.valor);
+  description.textContent = datos.map((fila) => `${fila.etiqueta}: ${texto(fila)}`).join('; ');
   description.id = `grafico-${Math.random().toString(36).slice(2, 9)}`;
   section.appendChild(description);
 
-  const max = Math.max(1, ...datos.map((fila) => Number(fila.valor) || 0));
+  const max = Math.max(1, ...datos.map((fila) => Math.abs(Number(fila.valor) || 0)));
   for (const fila of datos) {
     const row = documentRef.createElement('div');
     row.className = 'rrhh-grafico-fila';
@@ -28,11 +29,11 @@ export function renderGraficoReporte(
     label.textContent = fila.etiqueta;
     const bar = documentRef.createElement('span');
     bar.className = 'rrhh-grafico-barra';
-    bar.style.width = `${Math.round(((Number(fila.valor) || 0) / max) * 100)}%`;
+    bar.style.width = `${Math.round((Math.abs(Number(fila.valor) || 0) / max) * 100)}%`;
     bar.setAttribute('role', 'img');
-    bar.setAttribute('aria-label', `${fila.etiqueta}: ${fila.valor}`);
+    bar.setAttribute('aria-label', `${fila.etiqueta}: ${texto(fila)}`);
     const value = documentRef.createElement('strong');
-    value.textContent = String(fila.valor);
+    value.textContent = texto(fila);
     row.appendChild(label);
     row.appendChild(bar);
     row.appendChild(value);

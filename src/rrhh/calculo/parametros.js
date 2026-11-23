@@ -305,6 +305,62 @@ export function resolverTramoImpuesto(baseUTM, tramos = TRAMOS_IMPUESTO_INICIALE
   );
 }
 
+/**
+ * Family-allowance brackets (US8). The upper limit of each bracket is
+ * inclusive; bracket D pays nothing. Reference values, Ley 18.987.
+ */
+export const TRAMOS_ASIGNACION_FAMILIAR_INICIALES = [
+  {
+    id: 'asig-a',
+    tramo: 'A',
+    hastaCLP: 620251,
+    montoPorCarga: 22007,
+    vigenciaDesde: '2026-01-01',
+    fuente: 'Ley 18.987'
+  },
+  {
+    id: 'asig-b',
+    tramo: 'B',
+    hastaCLP: 905941,
+    montoPorCarga: 13505,
+    vigenciaDesde: '2026-01-01',
+    fuente: 'Ley 18.987'
+  },
+  {
+    id: 'asig-c',
+    tramo: 'C',
+    hastaCLP: 1412957,
+    montoPorCarga: 4267,
+    vigenciaDesde: '2026-01-01',
+    fuente: 'Ley 18.987'
+  },
+  {
+    id: 'asig-d',
+    tramo: 'D',
+    hastaCLP: Infinity,
+    montoPorCarga: 0,
+    vigenciaDesde: '2026-01-01',
+    fuente: 'Ley 18.987'
+  }
+];
+
+/** Bracket for a taxable income; an income equal to a bracket limit stays in it. */
+export function resolverTramoAsignacion(
+  imponible,
+  tramos = TRAMOS_ASIGNACION_FAMILIAR_INICIALES,
+  fecha
+) {
+  const value = Number(imponible);
+  if (!Number.isFinite(value)) return null;
+  const rows = tramos
+    .filter((row) => !fecha || isVigente(row, normalizarFecha(fecha)))
+    .sort((a, b) => (a.hastaCLP ?? Infinity) - (b.hastaCLP ?? Infinity));
+  // Stored tables lose `Infinity` (JSON turns it into null): an empty limit is open.
+  const limite = (row) =>
+    row.hastaCLP === null || row.hastaCLP === undefined ? Infinity : Number(row.hastaCLP);
+  return rows.find((row) => value <= limite(row)) || null;
+}
+
 /** Convert a percentage parameter (e.g. 7) to a rate (0.07). */
 export function tasaDesdePorcentaje(valor) {
   return Number(valor) / 100;

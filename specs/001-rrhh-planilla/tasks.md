@@ -237,17 +237,25 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 
 ### Tests for User Story 7
 
-- [ ] T073 [P] [US7] Crear pruebas unitarias de saldo y días hábiles en `tests/unit/rrhh-vacaciones-saldo.test.js` y `tests/unit/rrhh-vacaciones-dias-habiles.test.js`
-- [ ] T074 [P] [US7] Crear pruebas unitarias de aprobación y validaciones en `tests/unit/rrhh-vacaciones-aprobacion.test.js` y `tests/unit/rrhh-vacaciones-validaciones.test.js`
-- [ ] T075 [P] [US7] Crear prueba de integración del flujo completo en `tests/integration/rrhh-vacaciones-flow.test.js`
+- [X] T073 [P] [US7] Crear pruebas unitarias de saldo y días hábiles en `tests/unit/rrhh-vacaciones-saldo.test.js` y `tests/unit/rrhh-vacaciones-dias-habiles.test.js`
+  - Evidencia: `tests/unit/rrhh-vacaciones.test.js` (días hábiles, devengo, tope de 30 días, saldo proyectado y días completos; se agruparon en un solo archivo).
+- [X] T074 [P] [US7] Crear pruebas unitarias de aprobación y validaciones en `tests/unit/rrhh-vacaciones-aprobacion.test.js` y `tests/unit/rrhh-vacaciones-validaciones.test.js`
+  - Evidencia: `tests/unit/rrhh-vacaciones.test.js` (aprobación por jefatura directa o administrador/a, motivo de rechazo, anulación y superposición con licencias).
+- [X] T075 [P] [US7] Crear prueba de integración del flujo completo en `tests/integration/rrhh-vacaciones-flow.test.js`
+  - Evidencia: `tests/integration/rrhh-vacaciones-cargas-reportes.test.js` (solicitud desde la pantalla y aprobación por la jefatura).
 
 ### Implementation for User Story 7
 
-- [ ] T076 [US7] Implementar calendario de feriados y unicidad por fecha en `src/rrhh/utils/feriados-service.js`
-- [ ] T077 [US7] Implementar devengo, saldo, solicitudes y recalculo por feriado en `src/rrhh/utils/vacaciones-service.js`
-- [ ] T078 [P] [US7] Construir formulario de solicitud en `src/rrhh/components/vacacion-form.js`
-- [ ] T079 [US7] Construir vista de saldo, solicitudes y feriados en `src/rrhh/views/vacaciones.js`
-- [ ] T080 [US7] Agregar alerta de saldo máximo, congelamiento por baja y auditoría en `src/rrhh/utils/alertas-service.js` y `src/rrhh/seguridad/auditoria.js`
+- [X] T076 [US7] Implementar calendario de feriados y unicidad por fecha en `src/rrhh/utils/feriados-service.js`
+  - Evidencia: `src/rrhh/utils/feriados-service.js` (solo administrador/a, sin fechas repetidas, auditado).
+- [X] T077 [US7] Implementar devengo, saldo, solicitudes y recalculo por feriado en `src/rrhh/utils/vacaciones-service.js`
+  - Evidencia: `src/rrhh/utils/vacaciones-service.js` (`saldoVacaciones`, `saldoProyectado`, `crearSolicitud`, `aprobarSolicitud`, `registrarFeriado` con recálculo).
+- [X] T078 [P] [US7] Construir formulario de solicitud en `src/rrhh/components/vacacion-form.js`
+  - Evidencia: Formulario integrado en `src/rrhh/views/vacaciones.js` (no se creó `vacacion-form.js` aparte).
+- [X] T079 [US7] Construir vista de saldo, solicitudes y feriados en `src/rrhh/views/vacaciones.js`
+  - Evidencia: `src/rrhh/views/vacaciones.js` (saldo, solicitudes paginadas y calendario de feriados).
+- [X] T080 [US7] Agregar alerta de saldo máximo, congelamiento por baja y auditoría en `src/rrhh/utils/alertas-service.js` y `src/rrhh/seguridad/auditoria.js`
+  - Evidencia: `alertasSaldoMaximo` en `vacaciones-service.js` mostrada en `src/rrhh/views/resumen-view.js`; saldo congelado al desvincular; auditoría vía `registrarAuditoria`.
 
 **Checkpoint**: US7 independently functional.
 
@@ -261,16 +269,23 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 
 ### Tests for User Story 8
 
-- [ ] T081 [P] [US8] Crear pruebas unitarias de cargas, vigencia y asignación en `tests/unit/rrhh-cargas-familiares.test.js`
-- [ ] T082 [P] [US8] Crear prueba de integración del flujo de asignación en `tests/integration/rrhh-cargas-familiares.test.js`
+- [X] T081 [P] [US8] Crear pruebas unitarias de cargas, vigencia y asignación en `tests/unit/rrhh-cargas-familiares.test.js`
+  - Evidencia: `tests/unit/rrhh-cargas-familiares.test.js`.
+- [X] T082 [P] [US8] Crear prueba de integración del flujo de asignación en `tests/integration/rrhh-cargas-familiares.test.js`
+  - Evidencia: `tests/integration/rrhh-vacaciones-cargas-reportes.test.js` (registro desde la pantalla) y la línea en `tests/unit/rrhh-cargas-familiares.test.js`.
 
 ### Implementation for User Story 8
 
-- [ ] T083 [US8] Implementar servicios de cargas, RUT y unicidad vigente en `src/rrhh/utils/cargas-service.js`
-- [ ] T084 [US8] Implementar tramos de asignación familiar por conjunto mensual en `src/rrhh/calculo/parametros-mes.js`, usando el esquema de T014
-- [ ] T085 [US8] Agregar línea `ASIG_FAMILIAR` como haber no imponible en `src/rrhh/calculo/motor.js`
-- [ ] T086 [P] [US8] Construir vista y formulario de cargas en `src/rrhh/views/cargas.js` y `src/rrhh/components/carga-form.js`
-- [ ] T087 [US8] Aplicar permisos de terceros y auditoría en `src/rrhh/seguridad/acceso-datos.js` y `src/rrhh/seguridad/auditoria.js`
+- [X] T083 [US8] Implementar servicios de cargas, RUT y unicidad vigente en `src/rrhh/utils/cargas-service.js`
+  - Evidencia: `src/rrhh/utils/cargas-service.js` (RUT módulo 11, resolución obligatoria, RUT vigente único, edad límite).
+- [X] T084 [US8] Implementar tramos de asignación familiar por conjunto mensual en `src/rrhh/calculo/parametros-mes.js`, usando el esquema de T014
+  - Evidencia: Tramos versionados en la tabla `erp_rrhh:tramos_asignacion` (`src/rrhh/utils/parametros-service.js`: `listTramosAsignacion`, `tramosAsignacionVigentes`), con valores iniciales y `resolverTramoAsignacion` (tope inclusivo) en `src/rrhh/calculo/parametros.js`; el cálculo se bloquea si faltan para el período. `parametros-mes.js` (US12) aún no existe.
+- [X] T085 [US8] Agregar línea `ASIG_FAMILIAR` como haber no imponible en `src/rrhh/calculo/motor.js`
+  - Evidencia: `src/rrhh/calculo/motor.js` (línea `ASIG_FAMILIAR`, no imponible ni tributable) y `liquidacion-service.js` (`cargasParaAsignacion`).
+- [X] T086 [P] [US8] Construir vista y formulario de cargas en `src/rrhh/views/cargas.js` y `src/rrhh/components/carga-form.js`
+  - Evidencia: Vista y formulario en `src/rrhh/views/cargas.js` (no se creó `carga-form.js` aparte).
+- [X] T087 [US8] Aplicar permisos de terceros y auditoría en `src/rrhh/seguridad/acceso-datos.js` y `src/rrhh/seguridad/auditoria.js`
+  - Evidencia: Permisos en `cargas-service.js` (`puedeVerCargas`, `puedeGestionarCargas`) y en `workspace.js`; auditoría vía `registrarAuditoria`.
 
 **Checkpoint**: US8 independently functional.
 
@@ -284,18 +299,27 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 
 ### Tests for User Story 10
 
-- [ ] T088 [P] [US10] Crear pruebas unitarias de indicadores agregados en `tests/unit/rrhh-reportes.test.js`
-- [ ] T089 [P] [US10] Crear pruebas unitarias de permisos y ocultamiento de género en `tests/unit/rrhh-reportes-permisos.test.js`
-- [ ] T090 [P] [US10] Crear prueba de integración de reportes y estado vacío en `tests/integration/rrhh-reportes-flow.test.js`
+- [X] T088 [P] [US10] Crear pruebas unitarias de indicadores agregados en `tests/unit/rrhh-reportes.test.js`
+  - Evidencia: `tests/unit/rrhh-reportes.test.js`.
+- [X] T089 [P] [US10] Crear pruebas unitarias de permisos y ocultamiento de género en `tests/unit/rrhh-reportes-permisos.test.js`
+  - Evidencia: `tests/unit/rrhh-reportes.test.js` (permisos por rol, mínimo de 5 personas y brecha Femenino/Masculino).
+- [X] T090 [P] [US10] Crear prueba de integración de reportes y estado vacío en `tests/integration/rrhh-reportes-flow.test.js`
+  - Evidencia: `tests/integration/rrhh-vacaciones-cargas-reportes.test.js` (estado vacío, grupos ocultos y opciones de la jefatura).
 
 ### Implementation for User Story 10
 
-- [ ] T091 [P] [US10] Implementar funciones de mediana y variación porcentual en `src/rrhh/calculo/estadisticas.js`
-- [ ] T092 [US10] Implementar servicios de reportes sobre períodos cerrados en `src/rrhh/utils/reportes-service.js`
-- [ ] T093 [P] [US10] Declarar el campo opcional sensible `genero` en `src/module-config.js` y consumirlo en `src/rrhh/components/trabajador-form.js` (FR-099)
-- [ ] T094 [P] [US10] Construir componente de gráficos en `src/rrhh/components/grafico-reporte.js`
-- [ ] T095 [US10] Construir vista de reportes con filtros en `src/rrhh/views/reportes.js`
-- [ ] T096 [US10] Integrar ruta, permisos y auditoría de brecha en `src/rrhh/views/rrhh-router.js` y `src/rrhh/seguridad/auditoria.js`
+- [X] T091 [P] [US10] Implementar funciones de mediana y variación porcentual en `src/rrhh/calculo/estadisticas.js`
+  - Evidencia: `src/rrhh/calculo/estadisticas.js` (`mediana`, `variacionPorcentual`, `brechaPorcentual`).
+- [X] T092 [US10] Implementar servicios de reportes sobre períodos cerrados en `src/rrhh/utils/reportes-service.js`
+  - Evidencia: `src/rrhh/utils/reportes-service.js` (dotación, costo, horas extra, ausentismo y brecha sobre períodos cerrados).
+- [X] T093 [P] [US10] Declarar el campo opcional sensible `genero` en `src/module-config.js` y consumirlo en `src/rrhh/components/trabajador-form.js` (FR-099)
+  - Evidencia: Campo `genero` en `src/rrhh/utils/trabajadores-service.js` (`GENEROS`, `generoDeTrabajador`) y `trabajador-form.js`; no se agrega a los listados (FR-099).
+- [X] T094 [P] [US10] Construir componente de gráficos en `src/rrhh/components/grafico-reporte.js`
+  - Evidencia: `src/rrhh/components/grafico-reporte.js` (ahora muestra valores con formato).
+- [X] T095 [US10] Construir vista de reportes con filtros en `src/rrhh/views/reportes.js`
+  - Evidencia: `src/rrhh/views/reportes.js` (filtros por rango de períodos y departamento; tabla + gráfico).
+- [X] T096 [US10] Integrar ruta, permisos y auditoría de brecha en `src/rrhh/views/rrhh-router.js` y `src/rrhh/seguridad/auditoria.js`
+  - Evidencia: Pestañas en `index.html`, `workspace.js` y `rrhh-router.js`; auditoría `ver_sensible` de la brecha y `acceso_denegado` en `reportes-service.js`.
 
 **Checkpoint**: US10 independently functional.
 

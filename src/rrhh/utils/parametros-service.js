@@ -1,15 +1,19 @@
 import { list, insert } from '../storage-rrhh.js';
 import {
   PARAMETROS_INICIALES,
+  TRAMOS_ASIGNACION_FAMILIAR_INICIALES,
   TRAMOS_IMPUESTO_INICIALES,
   congelarParametros,
   mapaParametrosVigentes,
   resolverParametro,
+  resolverTramoAsignacion,
   resolverTramoImpuesto
 } from '../calculo/parametros.js';
 
 export const PARAMETROS_TABLE = 'parametros';
 export const TRAMOS_TABLE = 'tramos_impuesto';
+/** Family-allowance brackets, a mandatory part of each month's legal parameters (US8/US12). */
+export const TRAMOS_ASIGNACION_TABLE = 'tramos_asignacion';
 
 let seeded = false;
 
@@ -40,6 +44,11 @@ export function inicializarParametros({ force = false } = {}) {
       if (!ids.has(row.id)) insert(TRAMOS_TABLE, row, { prefix: 'tra' });
     }
   }
+  const existentesAsignacion = list(TRAMOS_ASIGNACION_TABLE);
+  const idsAsignacion = force ? new Set() : new Set(existentesAsignacion.map((row) => row.id));
+  for (const row of TRAMOS_ASIGNACION_FAMILIAR_INICIALES) {
+    if (!idsAsignacion.has(row.id)) insert(TRAMOS_ASIGNACION_TABLE, row, { prefix: 'asig' });
+  }
   seeded = true;
   return listParametros();
 }
@@ -47,6 +56,24 @@ export function inicializarParametros({ force = false } = {}) {
 export function listParametros() {
   const rows = list(PARAMETROS_TABLE);
   return rows.length > 0 ? rows : PARAMETROS_INICIALES.map(clone);
+}
+
+export function listTramosAsignacion() {
+  const rows = list(TRAMOS_ASIGNACION_TABLE);
+  return rows.length > 0 ? rows : TRAMOS_ASIGNACION_FAMILIAR_INICIALES.map(clone);
+}
+
+/** Brackets valid on a date; an empty result means the month's set is incomplete. */
+export function tramosAsignacionVigentes(fecha) {
+  return listTramosAsignacion().filter(
+    (row) =>
+      (!row.vigenciaDesde || row.vigenciaDesde <= fecha) &&
+      (!row.vigenciaHasta || fecha <= row.vigenciaHasta)
+  );
+}
+
+export function obtenerTramoAsignacion(imponible, fecha) {
+  return resolverTramoAsignacion(imponible, listTramosAsignacion(), fecha);
 }
 
 export function listTramos() {

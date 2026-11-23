@@ -39,6 +39,7 @@ import {
 } from '../utils/novedades-service.js';
 import {
   PARAMETROS_TABLE,
+  TRAMOS_ASIGNACION_TABLE,
   TRAMOS_TABLE,
   inicializarParametros,
   parametrosVigentes,
@@ -51,6 +52,15 @@ import {
   marcarPeriodoCalculado
 } from '../utils/periodos-service.js';
 import { etiquetaPeriodo, rangoPeriodo } from '../utils/periodos.js';
+import { calcularDigitoVerificador } from '../calculo/rut.js';
+import { clearFeriados, crearFeriado } from '../utils/feriados-service.js';
+import {
+  aprobarSolicitud,
+  clearSolicitudesVacacion,
+  crearSolicitud
+} from '../utils/vacaciones-service.js';
+import { clearCargas, crearCarga } from '../utils/cargas-service.js';
+import { hoyISO, sumarAnios, sumarDias } from '../utils/fechas.js';
 import {
   actualizarTrabajador,
   clearTrabajadores,
@@ -582,6 +592,9 @@ function removePreviousWorkerEntities() {
 
 function resetOperationalData() {
   removePreviousWorkerEntities();
+  clearFeriados();
+  clearCargas();
+  clearSolicitudesVacacion();
   clearNovedades();
   clearLiquidaciones();
   clearContratos();
@@ -590,6 +603,7 @@ function resetOperationalData() {
   clearCatalogos();
   clearTable(PARAMETROS_TABLE);
   clearTable(TRAMOS_TABLE);
+  clearTable(TRAMOS_ASIGNACION_TABLE);
   clearTable(CONCEPTOS_TABLE);
   resetAuditoria();
   resetParametrosSeed();
@@ -622,13 +636,143 @@ function createWorkers(catalogs) {
         departamentoId: catalogs.get(definition.departamentoCodigo),
         centroCostoId: catalogs.get(definition.centroCostoCodigo),
         fechaIngreso: definition.fechaIngreso,
-        estadoLaboral: definition.estadoLaboral
+        estadoLaboral: definition.estadoLaboral,
+        genero: GENEROS_SEED[definition.key] || ''
       },
       ADMIN
     );
     workers.set(definition.key, worker);
   }
   return workers;
+}
+
+/** Optional, sensitive field used only by the pay-equity report (US10). */
+const GENEROS_SEED = {
+  ana: 'Femenino',
+  luis: 'Masculino',
+  camila: 'Femenino',
+  mateo: 'Masculino',
+  renata: 'Femenino',
+  claudia: 'Femenino',
+  carlos: 'Masculino',
+  cristobal: 'Masculino',
+  marta: 'Femenino',
+  mauricio: 'Masculino',
+  marcela: 'Femenino',
+  diego: 'Prefiere no informar'
+};
+
+/** Chilean public holidays of 2026 (reference calendar for US7). */
+const FERIADOS_SEED = [
+  ['2026-01-01', 'Año Nuevo'],
+  ['2026-04-03', 'Viernes Santo'],
+  ['2026-04-04', 'Sábado Santo'],
+  ['2026-05-01', 'Día Nacional del Trabajo'],
+  ['2026-05-21', 'Día de las Glorias Navales'],
+  ['2026-06-29', 'San Pedro y San Pablo'],
+  ['2026-07-16', 'Día de la Virgen del Carmen'],
+  ['2026-08-15', 'Asunción de la Virgen'],
+  ['2026-09-18', 'Independencia Nacional'],
+  ['2026-09-19', 'Día de las Glorias del Ejército'],
+  ['2026-10-12', 'Encuentro de Dos Mundos'],
+  ['2026-10-31', 'Día de las Iglesias Evangélicas'],
+  ['2026-11-01', 'Día de Todos los Santos'],
+  ['2026-12-08', 'Inmaculada Concepción'],
+  ['2026-12-25', 'Navidad']
+];
+
+function createFeriados() {
+  for (const [fecha, nombre] of FERIADOS_SEED) {
+    crearFeriado({ fecha, nombre }, ADMIN, { audit: false });
+  }
+}
+
+function rutSeed(body) {
+  return `${body}-${calcularDigitoVerificador(body)}`;
+}
+
+/** Dependants: Mateo (bracket B) gets the allowance; one child turns 18 soon. */
+function createCargas(workers) {
+  const mateo = workers.get('mateo');
+  const carlos = workers.get('carlos');
+  const base = { tipo: 'simple', resolucionFecha: '2025-01-15', vigenteDesde: '2025-01-01' };
+  crearCarga(
+    {
+      ...base,
+      entityId: mateo.entityId,
+      nombre: 'Tomás Fuentes Rojas',
+      rut: rutSeed('23456789'),
+      parentesco: 'hijo',
+      fechaNacimiento: '2018-04-12',
+      resolucionNumero: 'IPS-2025-0412'
+    },
+    ADMIN
+  );
+  crearCarga(
+    {
+      ...base,
+      entityId: mateo.entityId,
+      nombre: 'Josefa Fuentes Rojas',
+      rut: rutSeed('22345678'),
+      parentesco: 'hijo',
+      fechaNacimiento: sumarAnios(sumarDias(hoyISO(), 15), -18),
+      resolucionNumero: 'IPS-2025-0413'
+    },
+    ADMIN
+  );
+  crearCarga(
+    {
+      ...base,
+      entityId: carlos.entityId,
+      nombre: 'Paula Díaz Morales',
+      rut: rutSeed('16789012'),
+      parentesco: 'conyuge',
+      fechaNacimiento: '1990-09-30',
+      tipo: 'invalidez',
+      resolucionNumero: 'IPS-2026-0815',
+      resolucionFecha: '2026-08-15',
+      vigenteDesde: '2026-08-10'
+    },
+    ADMIN
+  );
+}
+
+/** Next Monday at least `dias` days from today, so demo ranges are business days. */
+function lunesDesde(dias) {
+  let day = sumarDias(hoyISO(), dias);
+  while (new Date(`${day}T00:00:00Z`).getUTCDay() !== 1) day = sumarDias(day, 1);
+  return day;
+}
+
+/** One approved request (Ana, no direct manager) and one pending for the jefatura. */
+function createVacaciones(workers) {
+  const ana = workers.get('ana');
+  const claudia = workers.get('claudia');
+  try {
+    const inicioAna = lunesDesde(21);
+    const aprobada = crearSolicitud(
+      {
+        entityId: ana.entityId,
+        fechaInicio: inicioAna,
+        fechaFin: sumarDias(inicioAna, 4),
+        observacion: 'Vacaciones de verano'
+      },
+      { role: 'trabajador', usuario: ana.name, trabajadorId: ana.entityId }
+    );
+    aprobarSolicitud(aprobada.id, ADMIN);
+    const inicioClaudia = lunesDesde(35);
+    crearSolicitud(
+      {
+        entityId: claudia.entityId,
+        fechaInicio: inicioClaudia,
+        fechaFin: sumarDias(inicioClaudia, 1),
+        observacion: 'Trámite personal'
+      },
+      { role: 'trabajador', usuario: claudia.name, trabajadorId: claudia.entityId }
+    );
+  } catch {
+    // Demo data must never block the seed (e.g. a holiday lands on the range).
+  }
 }
 
 function applyJefaturas(workers) {
@@ -857,7 +1001,10 @@ export function loadSeedData({ reset = true, mark = true } = {}) {
   applyJefaturas(workers);
   createContracts(workers);
   createNovedades(workers);
+  createFeriados();
+  createCargas(workers);
   applyDesvinculaciones(workers);
+  createVacaciones(workers);
 
   const workerIds = workerEntityIdsFromStorage();
   calcularPeriodo({

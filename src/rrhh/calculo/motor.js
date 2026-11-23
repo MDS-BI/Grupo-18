@@ -7,8 +7,10 @@
 
 import {
   PARAMETROS_INICIALES,
+  TRAMOS_ASIGNACION_FAMILIAR_INICIALES,
   TRAMOS_IMPUESTO_INICIALES,
   resolverParametro,
+  resolverTramoAsignacion,
   resolverTramoImpuesto
 } from './parametros.js';
 import { diasNoTrabajados, normalizarTipo } from '../utils/novedades-data.js';
@@ -198,7 +200,9 @@ export function calcularLiquidacionTrabajador({
   periodo,
   diasTrabajados,
   bonosImponibles = 0,
-  descuentosVoluntarios = []
+  descuentosVoluntarios = [],
+  cargasFamiliares = 0,
+  tramosAsignacion = TRAMOS_ASIGNACION_FAMILIAR_INICIALES
 } = {}) {
   const fecha = fechaDelPeriodo(periodo);
   const etiqueta = etiquetaDe(periodo);
@@ -248,7 +252,14 @@ export function calcularLiquidacionTrabajador({
   const imponible = redondearPeso(
     sueldo + montoHorasExtra + gratificacion.monto + (Number(bonosImponibles) || 0)
   );
-  const noImponible = colacion + movilizacion;
+  // Family allowance (US8): non-taxable, non-contributory; bracket by taxable income.
+  const cargasAsignacion = Math.max(0, Number(cargasFamiliares) || 0);
+  const tramoAsignacion =
+    cargasAsignacion > 0 ? resolverTramoAsignacion(imponible, tramosAsignacion, fecha) : null;
+  const asignacionFamiliar = tramoAsignacion
+    ? redondearPeso(Number(tramoAsignacion.montoPorCarga) * cargasAsignacion)
+    : 0;
+  const noImponible = colacion + movilizacion + asignacionFamiliar;
   const totalHaberes = imponible + noImponible;
 
   const topeAfpSalud = valor('TOPE_IMPONIBLE_AFP_SALUD', fecha, parametros, 90) * uf;
@@ -401,6 +412,32 @@ export function calcularLiquidacionTrabajador({
     );
   }
 
+  if (asignacionFamiliar > 0) {
+    const montoPorCarga = Number(tramoAsignacion.montoPorCarga);
+    lineas.push(
+      makeLine({
+        id: nextId(),
+        concepto: 'Asignación familiar',
+        tipo: 'haber',
+        monto: asignacionFamiliar,
+        base: montoPorCarga,
+        factor: cargasAsignacion,
+        formula: '{base} × {factor} = {monto}',
+        parametroLegal: {
+          codigo: 'ASIG_FAMILIAR',
+          descripcion: `Asignación familiar tramo ${tramoAsignacion.tramo}: ${cargasAsignacion} carga(s) × ${formulaValue(montoPorCarga)} (no imponible ni tributable)`,
+          fechaVigencia: tramoAsignacion.vigenciaDesde || null,
+          valorAplicado: montoPorCarga,
+          fuente: tramoAsignacion.fuente || 'Ley 18.987',
+          tramo: tramoAsignacion.tramo,
+          cargas: cargasAsignacion,
+          congeladoEnPeriodo: etiqueta,
+          congeladoEn: new Date().toISOString()
+        }
+      })
+    );
+  }
+
   lineas.push(
     makeLine({
       id: nextId(),
@@ -548,6 +585,8 @@ export function calcularLiquidacionTrabajador({
       valorHoraExtra: valorHora,
       imponible,
       noImponible,
+      asignacionFamiliar,
+      tramoAsignacion: tramoAsignacion?.tramo || null,
       tributable,
       baseAfpSalud,
       baseAfc,

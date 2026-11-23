@@ -15,6 +15,9 @@ import { renderPeriodosView } from './periodos.js';
 import { renderPlanillaView } from './planilla.js';
 import { renderLiquidacionesView } from './liquidaciones.js';
 import { renderAuditoriaView } from './auditoria.js';
+import { renderVacacionesView } from './vacaciones.js';
+import { renderCargasView } from './cargas.js';
+import { renderReportesView } from './reportes.js';
 
 export const RRHH_TABS = [
   'resumen',
@@ -25,6 +28,9 @@ export const RRHH_TABS = [
   'periodos',
   'planilla',
   'liquidaciones',
+  'vacaciones',
+  'cargas',
+  'reportes',
   'auditoria'
 ];
 
@@ -40,6 +46,9 @@ const RENDERERS = {
   periodos: renderPeriodosView,
   planilla: renderPlanillaView,
   liquidaciones: renderLiquidacionesView,
+  vacaciones: renderVacacionesView,
+  cargas: renderCargasView,
+  reportes: renderReportesView,
   auditoria: renderAuditoriaView
 };
 
@@ -88,7 +97,9 @@ export class RrhhWorkspace {
     const role = this.viewer?.role || '';
     const allowed = [];
     if (role === 'trabajador') {
-      return tabs.filter((tab) => ['resumen', 'liquidaciones'].includes(tab.dataset.rrhhTab));
+      return tabs.filter((tab) =>
+        ['resumen', 'liquidaciones', 'vacaciones', 'cargas'].includes(tab.dataset.rrhhTab)
+      );
     }
     for (const tab of tabs) {
       const name = tab.dataset.rrhhTab;
@@ -99,6 +110,15 @@ export class RrhhWorkspace {
       }
       if (name === 'auditoria') {
         if (role === 'administrador') allowed.push(tab);
+        continue;
+      }
+      if (name === 'cargas') {
+        // Third-party personal data: the jefatura has no access (US8).
+        if (role === 'administrador' || role === 'analista') allowed.push(tab);
+        continue;
+      }
+      if (name === 'vacaciones' || name === 'reportes') {
+        if (['administrador', 'analista', 'jefatura'].includes(role)) allowed.push(tab);
         continue;
       }
       if (name === 'periodos' || name === 'planilla') {
@@ -186,6 +206,7 @@ export class RrhhWorkspace {
       config: this.config,
       viewer: this.viewer,
       initialPeriodo: name === 'liquidaciones' ? payload?.periodo : undefined,
+      payload,
       onRoleRequired: this.onRoleRequired,
       onLiquidationView: this.onLiquidationView,
       onNavigate: (tab, payload) => {
