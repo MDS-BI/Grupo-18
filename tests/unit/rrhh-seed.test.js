@@ -46,7 +46,7 @@ describe('Datos de prueba RRHH', () => {
     expect(getSeedSummary()).toMatchObject({
       trabajadores: 12,
       contratos: 12,
-      novedades: 5,
+      novedades: 8,
       periodos: 3,
       liquidaciones: 20,
       catalogos: 13

@@ -283,7 +283,7 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 - [X] T085 [US8] Agregar línea `ASIG_FAMILIAR` como haber no imponible en `src/rrhh/calculo/motor.js`
   - Evidencia: `src/rrhh/calculo/motor.js` (línea `ASIG_FAMILIAR`, no imponible ni tributable) y `liquidacion-service.js` (`cargasParaAsignacion`).
 - [X] T086 [P] [US8] Construir vista y formulario de cargas en `src/rrhh/views/cargas.js` y `src/rrhh/components/carga-form.js`
-  - Evidencia: Vista y formulario en `src/rrhh/views/cargas.js` (no se creó `carga-form.js` aparte).
+  - Evidencia: Implementado inicialmente en `src/rrhh/views/cargas.js`; por cambio de producto el apartado separado se eliminó y las cargas se gestionan en la ficha del trabajador (`src/rrhh/components/cargas-ficha.js`, `src/rrhh/components/trabajador-form.js`, `src/rrhh/views/trabajadores-view.js`).
 - [X] T087 [US8] Aplicar permisos de terceros y auditoría en `src/rrhh/seguridad/acceso-datos.js` y `src/rrhh/seguridad/auditoria.js`
   - Evidencia: Permisos en `cargas-service.js` (`puedeVerCargas`, `puedeGestionarCargas`) y en `workspace.js`; auditoría vía `registrarAuditoria`.
 
@@ -426,7 +426,7 @@ description: "Task list for RR.HH. y Planilla feature implementation"
 - [X] T139 [P] [US3] Aplicar la paginación de T136 al listado de Asistencia/novedades en `src/rrhh/views/novedades.js` (FR-108)
 - [X] T140 [P] [US5] Aplicar la paginación de T136 al listado de liquidaciones en `src/rrhh/views/liquidaciones.js` (FR-108)
 - [ ] T141 [P] [US7] Aplicar la paginación de T136 al listado de solicitudes de vacaciones en `src/rrhh/views/vacaciones.js` (FR-108). **Bloqueada por T076–T079: la vista `vacaciones.js` no existe.**
-- [ ] T142 [P] [US8] Aplicar la paginación de T136 al listado de cargas familiares en `src/rrhh/views/cargas.js` (FR-108). **Bloqueada por T083/T086: la vista `cargas.js` no existe.**
+- [X] T142 [P] [US8] Aplicar la paginación de T136 al listado de cargas familiares en `src/rrhh/views/cargas.js` (FR-108). **No aplica**: el apartado separado `cargas.js` fue eliminado; las cargas familiares se gestionan en la ficha del trabajador, sin listado independiente.
 - [X] T144 [P] Crear componente de avisos visibles de éxito/error, anunciados a lectores de pantalla, y mostrar cada error de validación junto al campo que lo causa en `src/rrhh/components/feedback.js` (FR-109)
 - [X] T145 [P] [US1] Aplicar el componente de T144 en formularios y listados de fichas y catálogos en `src/rrhh/views/trabajadores-view.js` y `src/rrhh/views/catalogos-view.js` (FR-109)
 - [X] T146 [P] [US2] Aplicar el componente de T144 en contratos en `src/rrhh/views/contratos-view.js` (FR-109)

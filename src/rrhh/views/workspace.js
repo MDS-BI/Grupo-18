@@ -17,7 +17,6 @@ import { renderLiquidacionesView } from './liquidaciones.js';
 import { renderAuditoriaView } from './auditoria.js';
 import { can } from '../seguridad/roles.js';
 import { renderVacacionesView } from './vacaciones.js';
-import { renderCargasView } from './cargas.js';
 import { renderReportesView } from './reportes.js';
 
 /**
@@ -89,7 +88,6 @@ export const RRHH_TABS = [
   'periodos',
   'liquidaciones',
   'vacaciones',
-  'cargas',
   'reportes',
   'auditoria'
 ];
@@ -106,7 +104,6 @@ const RENDERERS = {
   periodos: renderPeriodosView,
   liquidaciones: renderPlanillaYLiquidaciones,
   vacaciones: renderVacacionesView,
-  cargas: renderCargasView,
   reportes: renderReportesView,
   auditoria: renderAuditoriaView
 };
@@ -156,7 +153,7 @@ export class RrhhWorkspace {
     const allowed = [];
     if (role === 'trabajador') {
       return tabs.filter((tab) =>
-        ['resumen', 'liquidaciones', 'vacaciones', 'cargas'].includes(tab.dataset.rrhhTab)
+        ['resumen', 'liquidaciones', 'vacaciones'].includes(tab.dataset.rrhhTab)
       );
     }
     for (const tab of tabs) {
@@ -168,11 +165,6 @@ export class RrhhWorkspace {
       }
       if (name === 'auditoria') {
         if (role === 'administrador') allowed.push(tab);
-        continue;
-      }
-      if (name === 'cargas') {
-        // Third-party personal data: the jefatura has no access (US8).
-        if (role === 'administrador' || role === 'analista') allowed.push(tab);
         continue;
       }
       if (name === 'vacaciones' || name === 'reportes') {

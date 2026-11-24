@@ -9,10 +9,8 @@ import {
 import { crearContrato } from '../../src/rrhh/utils/contratos-service.js';
 import { asegurarPeriodo } from '../../src/rrhh/utils/periodos-service.js';
 import { listSolicitudes } from '../../src/rrhh/utils/vacaciones-service.js';
-import { listCargas } from '../../src/rrhh/utils/cargas-service.js';
 import { hoyISO, sumarDias } from '../../src/rrhh/utils/fechas.js';
 import { renderVacacionesView } from '../../src/rrhh/views/vacaciones.js';
-import { renderCargasView } from '../../src/rrhh/views/cargas.js';
 import { renderReportesView } from '../../src/rrhh/views/reportes.js';
 import { RrhhWorkspace } from '../../src/rrhh/views/workspace.js';
 import { renderTrabajadoresView } from '../../src/rrhh/views/trabajadores-view.js';
@@ -126,33 +124,8 @@ describe('US7 - pantalla de vacaciones', () => {
   });
 });
 
-describe('US8 - pantalla de cargas familiares', () => {
-  it('el analista registra una carga y la ve en el listado', () => {
-    const analista = { role: 'analista', usuario: 'Analista' };
-    renderCargasView(root, { doc: document, viewer: analista });
-    setValue('carga-trabajador', worker.entityId);
-    setValue('carga-nombre', 'Sofía Pérez');
-    setValue('carga-rut', '22.222.222-2');
-    setValue('carga-parentesco', 'hijo');
-    setValue('carga-nacimiento', '2015-05-10');
-    setValue('carga-resolucion-numero', 'RES-1');
-    setValue('carga-resolucion-fecha', '2025-01-15');
-    setValue('carga-desde', '2025-01-01');
-    submit(document.getElementById('carga-submit'));
-    expect(document.getElementById('cargas-feedback').dataset.tone).toBe('ok');
-    expect(listCargas({ viewer: analista })).toHaveLength(1);
-    expect(document.getElementById('cargas-tabla').textContent).toContain('Sofía Pérez');
-  });
-
-  it('la jefatura no puede ver cargas familiares', () => {
-    renderCargasView(root, {
-      doc: document,
-      viewer: { role: 'jefatura', trabajadorId: jefe.entityId }
-    });
-    expect(root.textContent).toContain('no tiene autorización');
-    expect(document.getElementById('cargas-tabla')).toBeNull();
-  });
-});
+/* El apartado independiente de cargas familiares fue eliminado; las cargas se
+ * gestionan desde la ficha del trabajador. */
 
 describe('US10 - pantalla de reportes', () => {
   it('muestra el estado vacío sin períodos cerrados', () => {
@@ -194,16 +167,17 @@ describe('Navegación por rol', () => {
 
   it('muestra las pestañas nuevas según el rol', () => {
     expect(visibles('administrador')).toEqual(
-      expect.arrayContaining(['vacaciones', 'cargas', 'reportes'])
+      expect.arrayContaining(['vacaciones', 'reportes'])
     );
+    expect(visibles('administrador')).not.toContain('cargas');
     expect(visibles('jefatura')).toEqual(expect.arrayContaining(['vacaciones', 'reportes']));
     expect(visibles('jefatura')).not.toContain('cargas');
-    expect(visibles('trabajador')).toEqual(['resumen', 'liquidaciones', 'vacaciones', 'cargas']);
+    expect(visibles('trabajador')).toEqual(['resumen', 'liquidaciones', 'vacaciones']);
   });
 });
 
 describe('FR-112 - resumen en la ficha del trabajador', () => {
-  it('muestra saldo y cargas con enlaces a cada pantalla filtrada', () => {
+  it('muestra saldo y cargas en el resumen del trabajador, sin apartado separado', () => {
     const navegaciones = [];
     renderTrabajadoresView(root, {
       doc: document,
@@ -216,8 +190,8 @@ describe('FR-112 - resumen en la ficha del trabajador', () => {
     expect(resumen.hidden).toBe(false);
     expect(resumen.textContent).toContain('Saldo de vacaciones');
     expect(resumen.textContent).toContain('Cargas familiares vigentes');
-    document.getElementById('trabajador-ir-cargas').click();
-    expect(navegaciones[0]).toEqual(['cargas', { entityId: worker.entityId }]);
+    expect(document.getElementById('trabajador-ir-cargas')).toBeNull();
+    expect(navegaciones).toEqual([]);
   });
 
   it('la jefatura ve el resumen de vacaciones pero no el de cargas', () => {

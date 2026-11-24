@@ -102,7 +102,8 @@ const JEFATURA = {
 
 export const SEED_DATASET = Object.freeze({
   periodos: [
-    { id: PERIODO_CERRADO, estado: 'cerrado' },
+    // Se crea abierto para registrar novedades de ejemplo; crearLiquidacionesPeriodoCerrado lo cierra al final.
+    { id: PERIODO_CERRADO, estado: 'abierto' },
     { id: PERIODO_CALCULADO, estado: 'abierto' },
     { id: PERIODO_ABIERTO, estado: 'abierto' }
   ],
@@ -466,6 +467,38 @@ export const SEED_DATASET = Object.freeze({
     }
   ],
   novedades: [
+    {
+      trabajadorKey: 'ana',
+      periodo: PERIODO_CERRADO,
+      tipo: 'horas_extra',
+      cantidad: 8,
+      fechaInicio: '2026-08-10',
+      fechaFin: '2026-08-11',
+      justificacion: 'Apoyo en cierre de nómina de agosto.',
+      observacion: 'Horas extra aprobadas para el período cerrado de ejemplo.',
+      estadoFinal: 'aprobada'
+    },
+    {
+      trabajadorKey: 'mateo',
+      periodo: PERIODO_CERRADO,
+      tipo: 'ausencia',
+      cantidad: 1,
+      fechaInicio: '2026-08-18',
+      fechaFin: '2026-08-18',
+      observacion: 'Ausencia registrada en período cerrado para reportes.',
+      estadoFinal: 'aprobada'
+    },
+    {
+      trabajadorKey: 'luis',
+      periodo: PERIODO_CERRADO,
+      tipo: 'horas_extra',
+      cantidad: 5,
+      fechaInicio: '2026-08-24',
+      fechaFin: '2026-08-26',
+      justificacion: 'Regularización contable de fin de mes.',
+      observacion: 'Horas extra aprobadas para el período cerrado de ejemplo.',
+      estadoFinal: 'aprobada'
+    },
     {
       trabajadorKey: 'ana',
       periodo: PERIODO_CALCULADO,

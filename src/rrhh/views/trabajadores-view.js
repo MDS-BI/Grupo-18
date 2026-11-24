@@ -256,15 +256,7 @@ export function renderTrabajadoresView(root, { doc, viewer, onRoleRequired, onNa
           `${cargas.proximoAviso.carga}: deja de ser carga el ${cargas.proximoAviso.fechaFinVigencia}`
         );
       }
-      actions.appendChild(
-        button(documentRef, {
-          id: 'trabajador-ir-cargas',
-          label: 'Ver cargas familiares',
-          className: 'button button-secondary button-small',
-          onClick: () => onNavigate?.('cargas', { entityId: row.entityId })
-        })
-      );
-    }
+      }
     table.appendChild(tbodyResumen);
     resumenPanel.appendChild(table);
     resumenPanel.appendChild(actions);

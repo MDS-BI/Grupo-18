@@ -94,7 +94,7 @@ function renderWorkerBenefits(viewer) {
     <section class="panel" id="rrhh-resumen-beneficios">
       <div class="panel-header">
         <h3>Mis vacaciones y cargas</h3>
-        <p class="panel-copy">Detalle en las pestañas Vacaciones y Cargas familiares.</p>
+        <p class="panel-copy">Detalle en la pestaña Vacaciones. Las cargas familiares vigentes se muestran aquí mismo.</p>
       </div>
       ${medidor({
         id: 'rrhh-medidor-vacaciones',
